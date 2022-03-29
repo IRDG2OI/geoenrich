@@ -19,9 +19,9 @@ if not(os.path.exists(sat_path)):
 
 # Gbif Credentials
 
-email = 'gaetan.morand@ird.fr'
-gbif_username = 'gaetanm'
-gbif_pw = 'g2oi_gbif'
+email = ''
+gbif_username = ''
+gbif_pw = ''
 
 
 # Opendap credentials
@@ -29,6 +29,6 @@ gbif_pw = 'g2oi_gbif'
 
 dap_creds = {
 	'cmems-du.eu': { # Copernicus
-		'user': 'gmorand',
-		'pw': 'G2OIcmems'}
+		'user': '',
+		'pw'  : ''}
 			}
