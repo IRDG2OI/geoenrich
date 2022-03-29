@@ -1,7 +1,7 @@
 Welcome to geoenrich's documentation!
 =====================================
 
-.. automodule:: geoenrich.geoenrich
+.. automodule:: geoenrich.main
    :members:
 
 .. toctree::
