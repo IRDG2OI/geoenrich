@@ -28,7 +28,7 @@ tqdm.pandas()
 pd.options.mode.chained_assignment = None 
 #caching(True) # gbif caching
 
-from credentials import *
+from geoenrich.credentials import *
 
 
 ###########################################################################
