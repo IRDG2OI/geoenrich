@@ -36,7 +36,12 @@ from credentials import *
 
 def get_taxon_key(query):
 
-    # Return taxon ID for the best match to the query
+    """ Return taxon ID for the best match to the query.
+
+    :param string query: scientific name of the genus or species to search for
+    :rtype: int 
+    
+    """
 
     search_results = species.name_suggest(query)
     taxon = ''
