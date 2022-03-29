@@ -1,7 +1,13 @@
 Welcome to geoenrich's documentation!
 =====================================
 
-.. automodule:: geoenrich.main
+.. automodule:: geoenrich.enrichment
+   :members:
+
+.. automodule:: geoenrich.satellite
+   :members:
+
+.. automodule:: geoenrich.biodiv
    :members:
 
 .. toctree::
