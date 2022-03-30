@@ -5,3 +5,4 @@ netCDF4
 python-dwca-reader
 matplotlib
 appdirs
+geojson-rewind
