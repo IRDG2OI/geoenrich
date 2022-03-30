@@ -9,4 +9,3 @@ geojson-rewind
 geomet
 requests_cache
 tqdm
-sphinx-rtd-theme
