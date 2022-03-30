@@ -1,6 +1,4 @@
 """
-enrichment module
-====================================
 The core module of geoenrich
 """
 

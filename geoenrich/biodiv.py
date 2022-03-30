@@ -1,6 +1,4 @@
 """
-biodiv module
-====================================
 The module to load biodiversity data from GBIF or a local DarwinCore archive 
 """
 
@@ -27,12 +25,12 @@ except:
 def get_taxon_key(query):
     
     """
-    Return taxon ID for the best match to the query.
+    Look for a taxonomic category in GBIF database, print the best result and return its unique ID.
 
-    Parameters
-    ----------
-    query
-        scientific name of the genus or species to search for.
+    Args:
+        query (str): Scientific name of the genus or species to search for.
+    Returns:
+        int: Gbif taxon ID
     """
 
     search_results = species.name_suggest(query)
@@ -54,8 +52,19 @@ def get_taxon_key(query):
 
 def request_from_gbif(taxonKey, override = False):
 
-    # Make a download request and return the download request key
-    # Request all occurences of the given taxson that have coordinates
+
+    """
+    Request all georeferenced occurrences for the given taxonKey. Return the request key.
+    If the same request was already done for this gbif account, return the key of the first request.
+    In this case a new request can be made with *override = True*.
+    
+    Args:
+        taxonKey (int): GBIF ID of the taxonomic category to request.
+        override (bool): Force new request to be made if one already exists.
+    Returns:
+        int: Request key
+
+    """
 
     l = occ.download_list(user = gbif_username, pwd = gbif_pw, limit = 100)
 
@@ -86,8 +95,15 @@ def request_from_gbif(taxonKey, override = False):
 
 def download_requested(request_key):
 
-    # Download gbif data for the given request key.
-    # Need to wait a few minutes between request and download
+    """
+    Download gbif data for the given request key.
+    Download previously requested data if available, otherwise print request status.
+    
+    Args:
+        request_key (int): Request key as returned by the request_from_gbif function.
+    Returns:
+        No return
+    """
 
     metadata = occ.download_meta(request_key)
 
@@ -118,6 +134,19 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     # Return a geodataframe with all occurences if fewer than max_number.
     # Return a random sample of max_number occurrences otherwise
 
+    """
+    Load data from DarwinCoreArchive located at given path.
+    If no path is given, try to open a previously downloaded gbif archive for the given taxonomic key.
+    Remove rows with a missing event date. Return a geodataframe with all occurences if fewer than max_number.
+    Otherwise, return a random sample of max_number occurrences.
+    
+    Args:
+        path (str): Path to the DarwinCoreArchive (.zip) to open.
+        taxonKey (int): Taxonomic key of a previously downloaded archive from GBIF.
+        max_number (int): Maximum number of rows to import. A random sample is selected.
+    Returns:
+        GeoDataFrame: occurrences data (only relevant columns are included)
+    """
 
     # Load file
 

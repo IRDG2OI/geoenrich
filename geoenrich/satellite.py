@@ -1,6 +1,4 @@
 """
-satellite module
-====================================
 The module that handles netCDF files
 """
 
