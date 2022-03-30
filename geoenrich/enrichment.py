@@ -351,7 +351,7 @@ def create_enrichment_file(gdf, dataset_ref):
     Create database file that will be used to save enrichment data.
     
     Args:  
-        gdf (geopandas.GeoDataFrame): data to enrich (output of :function:`geoenrich.Biodiv.open_dwca`)
+        gdf (geopandas.GeoDataFrame): data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`)
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
     Returns:
         None

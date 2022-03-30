@@ -30,7 +30,7 @@ def get_taxon_key(query):
     Args:
         query (str): Scientific name of the genus or species to search for.
     Returns:
-        int: Gbif taxon ID
+        int: GBIF taxon ID
     """
 
     search_results = species.name_suggest(query)
@@ -96,11 +96,11 @@ def request_from_gbif(taxonKey, override = False):
 def download_requested(request_key):
 
     """
-    Download gbif data for the given request key.
+    Download GBIF data for the given request key.
     Download previously requested data if available, otherwise print request status.
     
     Args:
-        request_key (int): Request key as returned by the :function:`geoenrich.Biodiv.request_from_gbif` function.
+        request_key (int): Request key as returned by the :ref:`geoenrich.Biodiv.request_from_gbif` function.
     Returns:
         None
     """
