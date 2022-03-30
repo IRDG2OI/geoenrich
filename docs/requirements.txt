@@ -4,4 +4,4 @@ geopandas
 netCDF4
 python-dwca-reader
 matplotlib
-git+https://github.com/rvanasa/pygbif#egg=pygbif
+git+https://github.com/rvanasa/pygbif.git
