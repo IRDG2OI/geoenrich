@@ -1,0 +1,2 @@
+.. automodule:: geoenrich.satellite
+   :members:
