@@ -53,7 +53,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request 
     If the enrichment file is large, use slice argument to only enrich some rows.
     
     Args:
-        dataset_ref (str): Reference of the enrichment file to use.
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         var_id (str) : ID of the variable to download
         geo_buf (int) : Geographic buffer for which to download data around occurrence point (kilometers)
         time_buff (int) : Time buffer for which to download data around occurrence time (hours)
@@ -351,8 +351,8 @@ def create_enrichment_file(gdf, dataset_ref):
     Create database file that will be used to save enrichment data.
     
     Args:  
-        gdf (GeoDataFrame): data to enrich (output of :function:`geoenrich.Biodiv.open_dwca`)
-        dataset_ref (str): a unique id referring to the source dataset (e.g. gbif_taxonKey)
+        gdf (geopandas.GeoDataFrame): data to enrich (output of :function:`geoenrich.Biodiv.open_dwca`)
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
     Returns:
         None
     """
@@ -377,7 +377,7 @@ def reset_enrichment_file(dataset_ref):
     Remove all enrichment data from the enrichment file. Does not remove downloaded data from netCDF files
 
     Args:
-        dataset_ref (str): a unique id referring to the source dataset (e.g. gbif_taxonKey)
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
     Returns:
         None
     """
@@ -391,7 +391,16 @@ def reset_enrichment_file(dataset_ref):
 
 
 
-def enrichment_state(dataset_ref):
+def enrichment_status(dataset_ref):
+
+    """
+    Return the number of occurrences of the given dataset that are already enriched, for each variable.
+
+    Args:
+        datset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+    Returns:
+        pandas.DataFrame: A table of variables and statuses of enrichment.
+    """
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
@@ -439,7 +448,15 @@ def parse_columns(df):
 
 def retrieve_data(dataset_ref, occ_id):
 
-    # Retrieve all downloaded data for a specific occurrence
+    """
+    Retrieve all available data for a specific occurrence.
+    
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :function:`geoenrich.Enrichment.read_ids`
+    Returns:
+        dict: A dictionary of all available variables with corresponding data, unit, and coordinates.
+    """
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
