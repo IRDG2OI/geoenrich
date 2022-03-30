@@ -3,7 +3,7 @@ import os
 
 # Paths
 
-root_path = '/media/Data/Data/'
+root_path = '.'
 
 biodiv_path = root_path + 'biodiv/'
 sat_path = root_path + 'sat/'
