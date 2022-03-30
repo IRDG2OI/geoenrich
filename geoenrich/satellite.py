@@ -17,9 +17,17 @@ except:
 
 def get_metadata(ds, varname):
 
-    # Download and format useful metadata on dimensions and variables
-    # Generate a dictionary where dimensions can be accessed both with
-    # their original name and their standard name (if available)
+    """
+    Download and format useful metadata on dimensions and variables.
+    Generate a dictionary where dimensions can be accessed both with their original name and their standard name (if available).
+    For internal use.
+    
+    Args:
+        ds (netCDF4.Dataset): Dataset of interest.
+        varname (str): Name of the variable of interest in the dataset.
+    Returns:
+        dict, dict: dictionary with standardized information on dimensions, dictionary with information on the variable.
+    """
 
     dimdict = {}
     var = None
@@ -92,10 +100,16 @@ def get_metadata(ds, varname):
 
 def get_var_catalog():
 
-    # Return available variables, with dataset attributes
-    # Return variable id, variable name in dataset, and dataset url
-    # catalog.csv can be edited to add additional variables
+    """
+    Return available variables, with dataset attributes.
+    catalog.csv can be edited to add additional variables.
+    For internal use.
 
+    Args:
+        None
+    Returns:
+        dict: Dictionary with variable id, variable name in dataset, and dataset url
+    """
     var_catalog = pd.read_csv(sat_path + 'catalog.csv', index_col = 0).to_dict('index')
 
     for v in var_catalog:
@@ -113,7 +127,16 @@ def get_var_catalog():
 
 def create_nc(var):
 
-    # Create empty netcdf file for requested variable. Same dimensions as the online dataset.
+    """
+    Create empty netcdf file for requested variable for subsequent local storage.
+    Same dimensions as the online dataset.
+    For internal use.
+
+    Args:
+        var (dict): Variable dictionary, as returned by get_var_catalog.
+    Returns:
+        None
+    """
 
     path = sat_path + var['var_id'] + '.nc'
     pathd = sat_path + var['var_id'] + '_downloaded.nc'
@@ -152,7 +175,17 @@ def create_nc(var):
 
 def multidimensional_slice(nc_dataset, varname, ind):
 
-    # Return a slice from a dataset (can be local or remote)
+    """
+    Return a slice from a dataset (can be local or remote).
+    For internal use.
+    
+    Args:
+        nc_dataset (netCDF4.Dataset): Dataset to query.
+        varname (str): Variable name in the dataset.
+        ind (dict): Dictionary with ordered slicing indices for all dimensions.
+    Returns:
+        numpy.masked_array: Requested data.
+    """
 
     data = None
 
@@ -178,7 +211,18 @@ def multidimensional_slice(nc_dataset, varname, ind):
 
 def insert_multidimensional_slice(nc_dataset, varname, data, ind):
 
-    # Insert a slice into a local dataset
+    """
+    Insert a slice into a local dataset.
+    For internal use.
+
+    Args:
+        nc_dataset (netCDF4.Dataset): Dataset to query.
+        varname (str): Variable name in the dataset.
+        data (numpy.array): Data to insert.
+        ind (dict): Dictionary with ordered slicing indices for all dimensions.
+    Returns:
+        None
+    """
 
     if len(ind) == 2:
         nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max']] \

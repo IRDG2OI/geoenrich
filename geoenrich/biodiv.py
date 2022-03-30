@@ -129,10 +129,6 @@ def download_requested(request_key):
 
 def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
-    # Load Darwin Core archive located at given path.
-    # Remove rows with missing coordinates or missing event date
-    # Return a geodataframe with all occurences if fewer than max_number.
-    # Return a random sample of max_number occurrences otherwise
 
     """
     Load data from DarwinCoreArchive located at given path.

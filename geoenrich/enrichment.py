@@ -42,10 +42,6 @@ pd.options.mode.chained_assignment = None
 
 def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request = 'surface', slice = None, time_offset = 0):
 
-    # Open local enrichment file, enrich with requested variable
-    # Update local netcdf file with downloaded data
-    # If the enrichment file is large, use slice argument to only enrich some rows.
-
     """
     Enrich the given dataset with data of the requested variable.
     All Data within the given buffers are downloaded (if needed) and stored locally in netCDF files.
@@ -54,12 +50,12 @@ def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request 
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        var_id (str) : ID of the variable to download
-        geo_buf (int) : Geographic buffer for which to download data around occurrence point (kilometers)
-        time_buff (int) : Time buffer for which to download data around occurrence time (hours)
-        depth_request (str) : For 4D data: 'surface' only download surface data. Anything else downloads everything.
-        slice (int tuple) : Slice of the enrichment file to use for enrichment.
-        time_offset (int) : Download environmental data *time_offset* days before occurrence time.
+        var_id (str): ID of the variable to download.
+        geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        time_buff (int): Time buffer for which to download data around occurrence time (hours).
+        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        slice (int tuple): Slice of the enrichment file to use for enrichment.
+        time_offset (int): Download environmental data *time_offset* days before occurrence time.
     Returns:
         None
     """
@@ -97,11 +93,24 @@ def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request 
 
 def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, time_offset):
     
-    # Download data for the requested occurrences and buffer into loca netcdf file
-    # Add columns to geodf with indices of the data of interest in the ncdf file
-    # Returns updated GeoDataFrame
+    """
+    Download data for the requested occurrences and buffer into local netcdf file
+    Calculate and return indices of the data of interest in the ncdf file.
+    For internal use.
 
-    
+    Args:
+        geodf (geopandas.GeoDataFrame): Data to be enriched.
+        varname(str): Variable name in the dataset.
+        var_id (str): ID of the variable to download.
+        url (str): Dataset url (including credentials if needed).
+        geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        time_buff (int): Time buffer for which to download data around occurrence time (hours).
+        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        time_offset (int): Download environmental data *time_offset* days before occurrence time.
+    Returns:
+        pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
+
+    """
     # Calculate cube bounds
 
     geodf = add_bounds(geodf, geo_buff, time_buff, time_offset)
@@ -154,8 +163,20 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
 def add_bounds(geodf, geo_buff, time_buff, time_offset):
 
-    # Calculate geo buffer and time buffer
-    # Add columns for cube limits: 'minx', 'maxx', 'miny', 'maxy', 'mint', 'maxt'
+    """
+    Calculate geo buffer and time buffer.
+    Add columns for cube limits: 'minx', 'maxx', 'miny', 'maxy', 'mint', 'maxt'.
+    For internal use.
+
+    Args:
+        geodf (geopandas.GeoDataFrame): Data to calculate buffers for.
+        geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        time_buff (int): Time buffer for which to download data around occurrence time (hours).
+        time_offset (int): Download environmental data *time_offset* days before occurrence time.
+    Returns:
+        geopandas.GeoDataFrame: Updated GeoDataFrame with geographical and time boundaries.
+    """
+
 
 
     # Prepare geo bounds
@@ -178,8 +199,23 @@ def add_bounds(geodf, geo_buff, time_buff, time_offset):
 
 def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
 
-    # Query geospatial data for the given GeoDataFrame row
-    # Save netcdf data to disk and return their coordinates
+    """
+    Query geospatial data for the given GeoDataFrame row.
+    Save netCDF data to disk and return their coordinates.
+    For internal use.
+
+    Args:
+        row (pandas.Series): GeoDataFrame row to enrich.
+        remote_ds (netCDF4.Dataset): Remote dataset.
+        local_ds (netCDF4.Dataset): Local dataset.
+        bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+    Returns:
+        pandas.Series: Coordinates of the data of interest in the netCDF file.
+
+    """
 
     # Find indices for region of interest
 
@@ -207,7 +243,18 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
 
 def calculate_indices(dimdict, row, var, depth_request):
 
-    # Calculate indices of interest for the given bounds
+    """
+    Calculate indices of interest for the given bounds, according to variable dimensions.
+    For internal use.
+    
+    Args:
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        row (pandas.Series): GeoDataFrame row to enrich.
+        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+    Returns:
+        dict: Dictionary of indices for each dimension (keys are standard dimension names).
+    """
 
     ind = {}
 
@@ -257,7 +304,19 @@ def calculate_indices(dimdict, row, var, depth_request):
 
 def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
 
-    # Download missing data to the disk
+    """
+    Download missing data from the remote dataset to the local dataset.
+
+    Args:
+        remote_ds (netCDF4.Dataset): Remote dataset.
+        local_ds (netCDF4.Dataset): Local dataset.
+        bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
+        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        ind (dict): Dictionary with ordered slicing indices for all dimensions.
+    Returns:
+        None
+    """
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
@@ -333,7 +392,14 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
 
 def load_enrichment_file(dataset_ref):
 
-    # Load biodiversity file and all geospatial data columns
+    """
+    Load enrichment file.
+
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+    Returns:
+        geopandas.GeoDataFrame: Data to enrich (including previously added columns).
+    """
 
     filepath = biodiv_path + dataset_ref + '.csv'
 
@@ -424,7 +490,15 @@ def enrichment_status(dataset_ref):
 
 def parse_columns(df):
 
-    # Return column indices sorted by variable and dimension.
+    """
+    Return column indices sorted by variable and dimension.
+    For internal use.
+
+    Args:
+        df (pandas.DataFrame): enrichment file as a DataFrame, as returned by geoenrich.enrichment.load_enrichment_file.
+    Returns:
+        dict: Dictionary of column indices, with variable as a primary key, dimension as a secondary key, and min/max as tertiary key.
+    """
 
     cols = [c.split('_') for c in df.columns]
     cat = get_var_catalog()
@@ -501,7 +575,14 @@ def retrieve_data(dataset_ref, occ_id):
 
 def read_ids(dataset_ref):
 
-    # Return a list of all ids of the given dataset
+    """
+    Return a list of all ids of the given dataset
+    
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+    Returns:
+        list: List of all present ids.
+    """
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
