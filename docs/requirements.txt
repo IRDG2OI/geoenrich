@@ -1,0 +1,6 @@
+numpy
+pandas
+geopandas
+netCDF4
+python-dwca-reader
+git+https://github.com/rvanasa/pygbif#egg=pygbif
