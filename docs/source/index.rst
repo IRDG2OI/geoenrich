@@ -5,6 +5,8 @@ Python package to enrich geo-referenced observations with environmental data.
 
 Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`_
 
+Jupyter notebook tutorial at
+
 Installation
 ============
 
