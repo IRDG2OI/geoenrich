@@ -18,8 +18,13 @@ from copy import deepcopy
 
 from tqdm import tqdm
 
-from geoenrich.credentials import *
 from geoenrich.satellite import *
+
+try:
+    from geoenrich.credentials import *
+except:
+    from geoenrich.credentials.example import *
+    print('Please rename credentials.example.py to credentials.py fill in the blanks')
 
 
 tqdm.pandas()

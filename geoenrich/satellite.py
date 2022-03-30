@@ -10,7 +10,11 @@ import netCDF4 as nc
 from datetime import datetime
 from cftime import num2pydate
 
-from geoenrich.credentials import *
+try:
+    from geoenrich.credentials import *
+except:
+    from geoenrich.credentials.example import *
+    print('Please rename credentials.example.py to credentials.py fill in the blanks')
 
 
 def get_metadata(ds, varname):
