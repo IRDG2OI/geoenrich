@@ -6,3 +6,4 @@ python-dwca-reader
 matplotlib
 appdirs
 geojson-rewind
+geomet
