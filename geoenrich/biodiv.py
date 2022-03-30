@@ -100,9 +100,9 @@ def download_requested(request_key):
     Download previously requested data if available, otherwise print request status.
     
     Args:
-        request_key (int): Request key as returned by the request_from_gbif function.
+        request_key (int): Request key as returned by the :function:`geoenrich.Biodiv.request_from_gbif` function.
     Returns:
-        No return
+        None
     """
 
     metadata = occ.download_meta(request_key)

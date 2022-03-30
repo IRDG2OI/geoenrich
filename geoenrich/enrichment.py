@@ -44,8 +44,25 @@ def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request 
 
     # Open local enrichment file, enrich with requested variable
     # Update local netcdf file with downloaded data
-    # Buffer units: meters, hours. Offset unit: days
-    # If the file is large, use slice argumentt to only enrich some rows.
+    # If the enrichment file is large, use slice argument to only enrich some rows.
+
+    """
+    Enrich the given dataset with data of the requested variable.
+    All Data within the given buffers are downloaded (if needed) and stored locally in netCDF files.
+    The enrichment file is updated with the coordinates of the relevant netCDF subsets.
+    If the enrichment file is large, use slice argument to only enrich some rows.
+    
+    Args:
+        dataset_ref (str): Reference of the enrichment file to use.
+        var_id (str) : ID of the variable to download
+        geo_buf (int) : Geographic buffer for which to download data around occurrence point (kilometers)
+        time_buff (int) : Time buffer for which to download data around occurrence time (hours)
+        depth_request (str) : For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        slice (int tuple) : Slice of the enrichment file to use for enrichment.
+        time_offset (int) : Download environmental data *time_offset* days before occurrence time.
+    Returns:
+        None
+    """
 
     # Load biodiv file
     original = load_enrichment_file(dataset_ref)
@@ -330,8 +347,15 @@ def load_enrichment_file(dataset_ref):
 
 def create_enrichment_file(gdf, dataset_ref):
 
-    # Create database file for subsequent enrichment
-    # Save only necessary data to reduce disk usage
+    """
+    Create database file that will be used to save enrichment data.
+    
+    Args:  
+        gdf (GeoDataFrame): data to enrich (output of :function:`geoenrich.Biodiv.open_dwca`)
+        dataset_ref (str): a unique id referring to the source dataset (e.g. gbif_taxonKey)
+    Returns:
+        None
+    """
 
     filepath = biodiv_path + dataset_ref + '.csv'
 
@@ -349,8 +373,14 @@ def create_enrichment_file(gdf, dataset_ref):
 
 def reset_enrichment_file(dataset_ref):
 
-    # Remove all enrichment data from the enrichment file
-    # Does not remove downloaded data from netCDF files
+    """
+    Remove all enrichment data from the enrichment file. Does not remove downloaded data from netCDF files
+
+    Args:
+        dataset_ref (str): a unique id referring to the source dataset (e.g. gbif_taxonKey)
+    Returns:
+        None
+    """
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
