@@ -8,3 +8,4 @@ appdirs
 geojson-rewind
 geomet
 requests_cache
+tqdm
