@@ -116,7 +116,7 @@ def get_var_catalog():
     """
 
     path, _ = os.path.split(geoenrich.__file__)
-    var_catalog = pd.read_csv(path + 'catalog.csv', index_col = 0).to_dict('index')
+    var_catalog = pd.read_csv(path + '/catalog.csv', index_col = 0).to_dict('index')
 
     for v in var_catalog:
         var_catalog[v]['var_id'] = v
