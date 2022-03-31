@@ -15,7 +15,8 @@ try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py fill in the blanks')
+    print('Please rename credentials_example.py to credentials.py and fill in the blanks')
+    print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
 
 def get_metadata(ds, varname):

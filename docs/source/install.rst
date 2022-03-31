@@ -11,14 +11,7 @@ It should work on other operating systems and with other versions of Python 3, b
 2. Prerequisites
 ----------------
 
-Assuming you have Python3 and pip installed
-
-Some libraries are needed:
-
-
-
-The python interfaces for these libraries will be downloaded automatically by pip when installing the package.
-
+Assuming you have Python3 and pip installed.
 
 
 3. Installation
