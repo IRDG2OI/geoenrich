@@ -1,12 +1,15 @@
 """
 The module that handles netCDF files
 """
+import os
 
 import pandas as pd
 import netCDF4 as nc
 
 from datetime import datetime
 from cftime import num2pydate
+
+import geoenrich
 
 try:
     from geoenrich.credentials import *
@@ -110,7 +113,9 @@ def get_var_catalog():
     Returns:
         dict: Dictionary with variable id, variable name in dataset, and dataset url
     """
-    var_catalog = pd.read_csv(sat_path + 'catalog.csv', index_col = 0).to_dict('index')
+
+    path, _ = os.path.split(geoenrich.__file__)
+    var_catalog = pd.read_csv(path + 'catalog.csv', index_col = 0).to_dict('index')
 
     for v in var_catalog:
         var_catalog[v]['var_id'] = v
