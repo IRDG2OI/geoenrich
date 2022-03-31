@@ -24,7 +24,7 @@ The python interfaces for these libraries will be downloaded automatically by pi
 3. Installation
 ---------------
 
-First some package need to be installed::
+First some packages need to be installed::
 
 	pip install matplotlib appdirs geojson_rewind geomet requests_cache
 
