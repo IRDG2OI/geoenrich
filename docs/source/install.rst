@@ -6,21 +6,32 @@ Installation instructions
 -------------------
 
 This package was tested on Ubuntu 20.04 with Python 3.8.
-It should work on other operating systemes and with other versions of Python 3, but his wasn't tested yet.
+It should work on other operating systems and with other versions of Python 3, but this wasn't tested yet.
 
 2. Prerequisites
 ----------------
 
+Assuming you have Python3 and pip installed
+
 Some libraries are needed:
 
+
+
 The python interfaces for these libraries will be downloaded automatically by pip when installing the package.
+
+
 
 3. Installation
 ---------------
 
-Requirements: geopandas, pygbif, netCDF4, python-dwca-reader, shapely, cftime, tqdm
+First some package need to be installed::
 
-Înstallation is done in the classi way::
+	pip install matplotlib appdirs geojson_rewind geomet requests_cache
+
+
+(We are investigating why they are not being installed automatically)
+
+Installation of geoenrich is then done in the classic way::
 
 	pip install geoenrich
 
