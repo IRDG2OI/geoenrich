@@ -55,7 +55,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request 
         var_id (str): ID of the variable to download.
         geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (int): Time buffer for which to download data around occurrence time (hours).
-        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
         time_offset (int): Download environmental data *time_offset* days before occurrence time.
     Returns:
@@ -529,7 +529,7 @@ def retrieve_data(dataset_ref, occ_id):
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :function:`geoenrich.enrichment.read_ids`
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`
     Returns:
         dict: A dictionary of all available variables with corresponding data, unit, and coordinates.
     """
@@ -578,7 +578,7 @@ def retrieve_data(dataset_ref, occ_id):
 def read_ids(dataset_ref):
 
     """
-    Return a list of all ids of the given dataset
+    Return a list of all ids of the given dataset.
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
@@ -590,13 +590,3 @@ def read_ids(dataset_ref):
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
 
     return(list(df.index))
-
-
-##########################################################################
-######                         Exploitation                         ######
-##########################################################################
-
-
-def generate_images(data):
-
-    return('')
