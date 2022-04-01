@@ -57,3 +57,9 @@ At the same location, there is a *catalog.csv* file that you can update to add o
 --------
 
 All done, you can now follow the jupyter notebook tutorial located at the `root of the Github repository <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_
+
+
+6. Precautions
+--------------
+
+If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
