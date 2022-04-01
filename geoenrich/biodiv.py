@@ -103,7 +103,7 @@ def download_requested(request_key):
     Download previously requested data if available, otherwise print request status.
     
     Args:
-        request_key (int): Request key as returned by the :ref:`geoenrich.Biodiv.request_from_gbif` function.
+        request_key (int): Request key as returned by the :func:`geoenrich.biodiv.request_from_gbif` function.
     Returns:
         None
     """

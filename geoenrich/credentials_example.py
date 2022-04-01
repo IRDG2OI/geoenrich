@@ -3,7 +3,9 @@ import os
 
 # Paths
 
-root_path = '.'
+########################################################
+root_path = '.' # <---- Enter your chosen root path here
+########################################################
 
 biodiv_path = root_path + 'biodiv/'
 sat_path = root_path + 'sat/'
@@ -18,14 +20,16 @@ if not(os.path.exists(sat_path)):
 	os.mkdir(sat_path)
 
 
-# Gbif Credentials
+
+################### GBIF Credentials ###################
 
 email = ''
 gbif_username = ''
 gbif_pw = ''
 
 
-# Opendap credentials
+################## OpenDAP credentials #################
+
 # Dictionary key must be domain name
 
 dap_creds = {

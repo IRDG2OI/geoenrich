@@ -98,7 +98,6 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
     """
     Download data for the requested occurrences and buffer into local netcdf file
     Calculate and return indices of the data of interest in the ncdf file.
-    For internal use.
 
     Args:
         geodf (geopandas.GeoDataFrame): Data to be enriched.
@@ -168,7 +167,6 @@ def add_bounds(geodf, geo_buff, time_buff, time_offset):
     """
     Calculate geo buffer and time buffer.
     Add columns for cube limits: 'minx', 'maxx', 'miny', 'maxy', 'mint', 'maxt'.
-    For internal use.
 
     Args:
         geodf (geopandas.GeoDataFrame): Data to calculate buffers for.
@@ -204,7 +202,6 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
     """
     Query geospatial data for the given GeoDataFrame row.
     Save netCDF data to disk and return their coordinates.
-    For internal use.
 
     Args:
         row (pandas.Series): GeoDataFrame row to enrich.
@@ -247,7 +244,6 @@ def calculate_indices(dimdict, row, var, depth_request):
 
     """
     Calculate indices of interest for the given bounds, according to variable dimensions.
-    For internal use.
     
     Args:
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
@@ -494,7 +490,6 @@ def parse_columns(df):
 
     """
     Return column indices sorted by variable and dimension.
-    For internal use.
 
     Args:
         df (pandas.DataFrame): enrichment file as a DataFrame, as returned by geoenrich.enrichment.load_enrichment_file.
@@ -531,7 +526,7 @@ def retrieve_data(dataset_ref, occ_id):
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`
     Returns:
-        dict: A dictionary of all available variables with corresponding data, unit, and coordinates.
+        dict: A dictionary of all available variables with corresponding data (numpy.masked_array), unit (str), and coordinates (ordered list of dimension names and values).
     """
 
     filepath = biodiv_path + dataset_ref + '.csv'
