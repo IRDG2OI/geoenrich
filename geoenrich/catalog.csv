@@ -1,0 +1,27 @@
+variable,source,dataset,spatial_resolution,depth_levels,time_resolution,time_coverage,url,varname
+bathymetry,NOAA,gov.noaa.ngdc.mgg.dem:316,0.017°,,-,-,https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO1_Bed_g_gmt4.nc,z
+sst,Copernicus,010_011,0.05°,surface,1d,1981-10-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/METOFFICE-GLO-SST-L4-REP-OBS-SST,analysed_sst
+surface_current_u,Copernicus,015_004,0.25°,"surface, 15m",3h,1993-10-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-uv-rep-hourly,uo
+surface_current_v,Copernicus,015_004,0.25°,"surface, 15m",3h,1993-10-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-uv-rep-hourly,vo
+wave_height,Copernicus,014_007,2°,surface,1d,2002-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-wave_glo_phy-swh_my_multi-l4-2deg_P1D,VAVH_INST
+ssh,Copernicus,008_047,0.25°,surface,1d,1993-01-01 - 2019-12-31,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.25deg_P1D,sla
+ssh2,Copernicus,008_046,0.25°,surface,1d,2019-12-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-duacs-nrt-global-merged-allsat-phy-l4,sla
+temperature3d,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,to
+salinity3d,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,so
+current3d_u,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,ugo
+current3d_v,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,vgo
+mixed_layer_thickness,Copernicus,015_012,0.25°,surface,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,mlotst
+chlorophyll,Copernicus,009_082,4km,surface,1d,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-chl_interpolated_4km_daily-rep,CHL
+primary_production,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pp_4km_monthly-rep,PP
+diatoms,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DIATO
+dinophytes,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DINO
+haptophytes,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,HAPTO
+green_algae,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,GREEN
+prokaryotes,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,PROKAR
+prochlorophytes,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,PROCHLO
+microphytoplankton,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,MICRO
+nanophytoplankton,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,NANO
+picophytoplankton,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,PICO
+chlorophyll3d,Copernicus,015_010,0.25°,36 levels,7d,1998-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,chl
+backscattering3d,Copernicus,015_010,0.25°,36 levels,7d,1998-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,bbp
+organic_carbon3d,Copernicus,015_010,0.25°,36 levels,7d,1998-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,poc

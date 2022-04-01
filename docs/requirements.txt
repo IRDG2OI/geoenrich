@@ -1,0 +1,11 @@
+numpy
+pandas
+geopandas
+netCDF4
+python-dwca-reader
+matplotlib
+appdirs
+geojson-rewind
+geomet
+requests_cache
+tqdm
