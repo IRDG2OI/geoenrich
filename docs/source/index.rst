@@ -40,7 +40,7 @@ Modules
    The enrichment module: download enrichment data, retrieve downloaded data.
 
 :doc:`satellite`
-   The satellite module: netCDF file handling, data download, data retrieval.
+   The satellite module (internal use): netCDF file handling, data download, data retrieval.
 
 
 

@@ -529,7 +529,7 @@ def retrieve_data(dataset_ref, occ_id):
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :function:`geoenrich.Enrichment.read_ids`
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :function:`geoenrich.enrichment.read_ids`
     Returns:
         dict: A dictionary of all available variables with corresponding data, unit, and coordinates.
     """

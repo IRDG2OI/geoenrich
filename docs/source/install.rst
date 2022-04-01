@@ -35,9 +35,9 @@ Installation of geoenrich is then done in the classic way::
 4.1. First configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first time you import one of the modules, it will display the location of the *credentials-example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
+The first time you import one of the modules, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
 
-You need to specify the *root_path* where all persistent files will be stored. You should pick a stable location with plenty of free space available (depending on your data download needs).
+In this file, you need to specify the *root_path* where all persistent data will be stored. You should pick a stable location with plenty of free space available (depending on your data download needs).
 
 If you want to use services that require authentification, you need to specify your credentials there.
 You will see 3 variables that need to be filled with GBIF credentials if you want to download occurrence data from GBIF. If you don't already have an account you can register on the `GBIF website <https://www.gbif.org/user/profile/>`_.

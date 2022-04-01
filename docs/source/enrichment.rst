@@ -1,6 +1,8 @@
 Enrichment module
 =================
 
+This is the main module of the package. It handles the local enrichment files, as well as the download of enrichment data from remote servers.
+
 Main functions
 --------------
 
