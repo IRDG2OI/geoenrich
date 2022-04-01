@@ -10,12 +10,16 @@ from dwca.read import DwCAReader
 from pygbif import species, caching
 from pygbif import occurrences as occ
 
+import geoenrich
+
 try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py fill in the blanks')
+    print('Please rename credentials_example.py to credentials.py and fill in the blanks')
+    print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
+pd.options.mode.chained_assignment = None
 #caching(True) # gbif caching
 
 
@@ -100,7 +104,7 @@ def download_requested(request_key):
     Download previously requested data if available, otherwise print request status.
     
     Args:
-        request_key (int): Request key as returned by the :ref:`geoenrich.Biodiv.request_from_gbif` function.
+        request_key (int): Request key as returned by the :func:`geoenrich.biodiv.request_from_gbif` function.
     Returns:
         None
     """
@@ -147,7 +151,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     # Load file
 
     if path is None:
-        path = biodiv_path + 'gbif' + '/' + str(taxKey) + '.zip'
+        path = biodiv_path + 'gbif' + '/' + str(taxonKey) + '.zip'
 
     dsA = DwCAReader(path)
 

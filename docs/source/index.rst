@@ -5,7 +5,7 @@ Python package to enrich geo-referenced observations with environmental data.
 
 Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`_
 
-Jupyter notebook tutorial at
+Jupyter notebook tutorial at the `root of the Github repository <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_
 
 Installation
 ============
@@ -40,7 +40,7 @@ Modules
    The enrichment module: download enrichment data, retrieve downloaded data.
 
 :doc:`satellite`
-   The satellite module: netCDF file handling, data download, data retrieval.
+   The satellite module (internal use): netCDF file handling, data download, data retrieval.
 
 
 

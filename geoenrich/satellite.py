@@ -1,6 +1,4 @@
-"""
-The module that handles netCDF files
-"""
+import os
 
 import pandas as pd
 import netCDF4 as nc
@@ -8,11 +6,14 @@ import netCDF4 as nc
 from datetime import datetime
 from cftime import num2pydate
 
+import geoenrich
+
 try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py fill in the blanks')
+    print('Please rename credentials_example.py to credentials.py and fill in the blanks')
+    print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
 
 def get_metadata(ds, varname):
@@ -20,7 +21,6 @@ def get_metadata(ds, varname):
     """
     Download and format useful metadata on dimensions and variables.
     Generate a dictionary where dimensions can be accessed both with their original name and their standard name (if available).
-    For internal use.
     
     Args:
         ds (netCDF4.Dataset): Dataset of interest.
@@ -103,14 +103,15 @@ def get_var_catalog():
     """
     Return available variables, with dataset attributes.
     catalog.csv can be edited to add additional variables.
-    For internal use.
 
     Args:
         None
     Returns:
         dict: Dictionary with variable id, variable name in dataset, and dataset url
     """
-    var_catalog = pd.read_csv(sat_path + 'catalog.csv', index_col = 0).to_dict('index')
+
+    path, _ = os.path.split(geoenrich.__file__)
+    var_catalog = pd.read_csv(path + '/catalog.csv', index_col = 0).to_dict('index')
 
     for v in var_catalog:
         var_catalog[v]['var_id'] = v
@@ -130,10 +131,9 @@ def create_nc(var):
     """
     Create empty netcdf file for requested variable for subsequent local storage.
     Same dimensions as the online dataset.
-    For internal use.
 
     Args:
-        var (dict): Variable dictionary, as returned by get_var_catalog.
+        var (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
     Returns:
         None
     """
@@ -177,7 +177,6 @@ def multidimensional_slice(nc_dataset, varname, ind):
 
     """
     Return a slice from a dataset (can be local or remote).
-    For internal use.
     
     Args:
         nc_dataset (netCDF4.Dataset): Dataset to query.
@@ -213,7 +212,6 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind):
 
     """
     Insert a slice into a local dataset.
-    For internal use.
 
     Args:
         nc_dataset (netCDF4.Dataset): Dataset to query.
