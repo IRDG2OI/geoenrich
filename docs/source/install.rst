@@ -60,7 +60,7 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 5. Usage
 --------
 
-All done, you can now follow the jupyter notebook tutorial located at the `root of the Github repository <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_
+All done, you can now follow the `jupyter notebook tutorial <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_.
 
 
 6. Precautions
