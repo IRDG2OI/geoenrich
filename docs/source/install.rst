@@ -21,7 +21,7 @@ First some packages need to be installed::
 
 	pip install matplotlib appdirs geojson_rewind geomet requests_cache
 
-
+	pip install git+https://github.com/rvanasa/pygbif.git
 
 Installation of geoenrich is then done in the classic way::
 
