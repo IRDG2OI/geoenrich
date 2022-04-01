@@ -22,7 +22,6 @@ First some packages need to be installed::
 	pip install matplotlib appdirs geojson_rewind geomet requests_cache
 
 
-(We are investigating why they are not being installed automatically)
 
 Installation of geoenrich is then done in the classic way::
 
@@ -47,7 +46,9 @@ There is also a dictionary named *dap_creds* that is intended to store credentia
 4.2. Adding other data sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-At the same location, there is a *catalog.csv* file that you can update to add other opendap servers. Three columns are compulsory:
+At the same location, there is a *catalog.csv* file that already contains a list of available variables. If you want to use a dataset from Copernicus, you first need to register on `their website <https://resources.marine.copernicus.eu/registration-form>`_ and write your credentials in the *credentials.py* file.
+
+If you need additional variables, you can update the *catalog.csv* file to add other opendap servers. Three columns are compulsory:
 
 - *variable*: A unique name for that variable (user defined).
 - *url*: OpenDAP URL.

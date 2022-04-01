@@ -19,6 +19,7 @@ except:
     print('Please rename credentials_example.py to credentials.py and fill in the blanks')
     print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
+pd.options.mode.chained_assignment = None
 #caching(True) # gbif caching
 
 
@@ -150,7 +151,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     # Load file
 
     if path is None:
-        path = biodiv_path + 'gbif' + '/' + str(taxKey) + '.zip'
+        path = biodiv_path + 'gbif' + '/' + str(taxonKey) + '.zip'
 
     dsA = DwCAReader(path)
 

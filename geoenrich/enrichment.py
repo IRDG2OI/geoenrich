@@ -561,7 +561,7 @@ def retrieve_data(dataset_ref, occ_id):
             data = multidimensional_slice(ds, var['name'], ordered_indices)
             coordinates = []
             for p in params:
-                i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['min']])
+                i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
                 coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2]])
 
             ds.close()
