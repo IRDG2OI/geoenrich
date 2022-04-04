@@ -209,7 +209,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
         local_ds (netCDF4.Dataset): Local dataset.
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
-        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
     Returns:
         pandas.Series: Coordinates of the data of interest in the netCDF file.
@@ -248,7 +248,7 @@ def calculate_indices(dimdict, row, var, depth_request):
     Args:
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         row (pandas.Series): GeoDataFrame row to enrich.
-        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
     Returns:
         dict: Dictionary of indices for each dimension (keys are standard dimension names).
@@ -309,7 +309,7 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         remote_ds (netCDF4.Dataset): Remote dataset.
         local_ds (netCDF4.Dataset): Local dataset.
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
-        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
     Returns:
@@ -415,7 +415,7 @@ def create_enrichment_file(gdf, dataset_ref):
     Create database file that will be used to save enrichment data.
     
     Args:  
-        gdf (geopandas.GeoDataFrame): data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`)
+        gdf (geopandas.GeoDataFrame): Data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`)
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
     Returns:
         None
@@ -492,7 +492,7 @@ def parse_columns(df):
     Return column indices sorted by variable and dimension.
 
     Args:
-        df (pandas.DataFrame): enrichment file as a DataFrame, as returned by geoenrich.enrichment.load_enrichment_file.
+        df (pandas.DataFrame): Enrichment file as a DataFrame, as returned by geoenrich.enrichment.load_enrichment_file.
     Returns:
         dict: Dictionary of column indices, with variable as a primary key, dimension as a secondary key, and min/max as tertiary key.
     """
@@ -574,9 +574,14 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
 
     
     Args:
-        row (pandas.Series): one row of an enrichment file.
+        row (pandas.Series): One row of an enrichment file.
+        var_id (str): ID of the variable to download.
+        var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
+        ds (netCDF4.Dataset): Local dataset.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
     Returns:
-        numpy.masked_array: raw data.
+        numpy.masked_array: Raw data.
     """
 
     if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
@@ -611,6 +616,8 @@ def read_ids(dataset_ref):
     return(list(df.index))
 
 
+
+
 def produce_stats(dataset_ref):
 
     """
@@ -633,7 +640,7 @@ def produce_stats(dataset_ref):
 
         var_ind = ind[v]
         ds = nc.Dataset(sat_path + v + '.nc')
-        dimdict, var = = get_metadata(ds, cat[v]['varname'])
+        dimdict, var = get_metadata(ds, cat[v]['varname'])
 
         res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var), result_type = 'expand')
 
@@ -645,7 +652,23 @@ def produce_stats(dataset_ref):
 
 
 
-def compute_stats(row, var_id, var_indices, ds, dimdict, var)
+
+def compute_stats(row, var_id, var_indices, ds, dimdict, var):
+
+    """
+    Compute and return stats for the given row.
+
+    
+    Args:
+        row (pandas.Series): One row of an enrichment file.
+        var_id (str): ID of the variable to download.
+        var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
+        ds (netCDF4.Dataset): Local dataset.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+    Returns:
+        pandas.Series: Statistics for the given row.
+    """
 
     data = fetch_data(row, var_id, var_indices, ds, dimdict, var)
 

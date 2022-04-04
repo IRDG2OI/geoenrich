@@ -12,6 +12,8 @@ Main functions
 
 .. autofunction:: geoenrich.enrichment.enrichment_status
 
+.. autofunction:: geoenrich.enrichment.produce_stats
+
 .. autofunction:: geoenrich.enrichment.read_ids
 
 .. autofunction:: geoenrich.enrichment.retrieve_data
@@ -24,9 +26,13 @@ Other functions (for internal use)
 
 .. autofunction:: geoenrich.enrichment.calculate_indices
 
+.. autofunction:: geoenrich.enrichment.compute_stats
+
 .. autofunction:: geoenrich.enrichment.download_data
 
 .. autofunction:: geoenrich.enrichment.enrich_download
+
+.. autofunction:: geoenrich.enrichment.fetch_data
 
 .. autofunction:: geoenrich.enrichment.load_enrichment_file
 
