@@ -21,7 +21,10 @@ First some packages need to be installed::
 
 	pip install matplotlib appdirs geojson_rewind geomet requests_cache
 
+	pip install git+https://github.com/rvanasa/pygbif.git
 
+.. note::
+	pygbif need to be installed from GitHub because the version on PyPI is not up to date. If you have an error message saying that you don't have git installed on your computer, you can either install it or download the whole repository from github in a browser.
 
 Installation of geoenrich is then done in the classic way::
 
@@ -57,7 +60,7 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 5. Usage
 --------
 
-All done, you can now follow the jupyter notebook tutorial located at the `root of the Github repository <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_
+All done, you can now follow the `jupyter notebook tutorial <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_.
 
 
 6. Precautions

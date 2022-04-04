@@ -1,7 +1,11 @@
 geoenrich 0.1 documentation
 ===========================
 
-Python package to enrich geo-referenced observations with environmental data.
+This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays to be used in any way.
+
+The package provides functions to retrieve occurrence data directly from GBIF, or open a custom DarwinCore archive from any source. These occurrences are then stored into csv databases that record the netCDF coordinates for the relevant subsets of each environmental variables.
+
+All environmental variables used for enrichment must have latitude and longitude dimensions. The package also handles time and depth dimensions.
 
 Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`_
 

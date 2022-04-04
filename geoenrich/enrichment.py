@@ -42,7 +42,7 @@ pd.options.mode.chained_assignment = None
 
 
 
-def enrich(dataset_ref, var_id, geo_buff = 115000, time_buff = 0, depth_request = 'surface', slice = None, time_offset = 0):
+def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = 0, depth_request = 'surface', slice = None, time_offset = 0):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -180,7 +180,7 @@ def add_bounds(geodf, geo_buff, time_buff, time_offset):
 
 
     # Prepare geo bounds
-    buffers = geodf['geometry'].to_crs('+proj=cea').buffer(geo_buff, cap_style = 3).to_crs(geodf.crs)
+    buffers = geodf['geometry'].to_crs('+proj=cea').buffer(geo_buff*1000, cap_style = 3).to_crs(geodf.crs)
     geodf = geodf.join(buffers.bounds)
     
     # Prepare time bounds
