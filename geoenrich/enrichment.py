@@ -551,14 +551,10 @@ def retrieve_data(dataset_ref, occ_id):
             unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
 
             dimdict, var = get_metadata(ds, cat[v]['varname'])
-
             params = [dimdict[n]['standard_name'] for n in var['params']]
-            ordered_indices_cols = [var_ind[p] for p in params]
-            ordered_indices = [{'min': int(row.iloc[d['min']]),
-                                'max': int(row.iloc[d['max']])}
-                                for d in ordered_indices_cols]
 
-            data = multidimensional_slice(ds, var['name'], ordered_indices)
+
+            data = fetch_data(row, v, var_ind, ds, dimdict, var)
             coordinates = []
             for p in params:
                 i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
@@ -568,6 +564,34 @@ def retrieve_data(dataset_ref, occ_id):
             results[v] = {'coords': coordinates, 'values': data, 'unit': unit}
 
     return(results)
+
+
+
+def fetch_data(row, var_id, var_indices, ds, dimdict, var):
+
+    """
+    Fetch data for a variable row.
+
+    
+    Args:
+        row (pandas.Series): one row of an enrichment file.
+    Returns:
+        numpy.masked_array: raw data.
+    """
+
+    if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
+        return(None)
+
+    else:
+        params = [dimdict[n]['standard_name'] for n in var['params']]
+        ordered_indices_cols = [var_ind[p] for p in params]
+        ordered_indices = [{'min': int(row.iloc[d['min']]),
+                            'max': int(row.iloc[d['max']])}
+                            for d in ordered_indices_cols]
+
+        data = multidimensional_slice(ds, var['name'], ordered_indices)
+        return(data)
+
 
 
 def read_ids(dataset_ref):
@@ -585,3 +609,51 @@ def read_ids(dataset_ref):
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
 
     return(list(df.index))
+
+
+def produce_stats(dataset_ref):
+
+    """
+    Produce a document named *dataset_ref*_stats.csv with summary stats of all enriched data.
+
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+
+    Returns:
+        None
+    """
+
+    filepath = biodiv_path + dataset_ref + '.csv'
+    df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
+    output = df[['taxonKey', 'geometry', 'eventDate']]
+    cat = get_var_catalog()
+    ind = parse_columns(df)
+
+    for v in ind:
+
+        var_ind = ind[v]
+        ds = nc.Dataset(sat_path + v + '.nc')
+        dimdict, var = = get_metadata(ds, cat[v]['varname'])
+
+        res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var), result_type = 'expand')
+
+        ds.close()
+        output = output.merge(res, how = 'left', left_index = True, right_index = True)
+
+
+    output.to_csv(biodiv_path + dataset_ref + '_stats.csv')
+
+
+
+def compute_stats(row, var_id, var_indices, ds, dimdict, var)
+
+    data = fetch_data(row, var_id, var_indices, ds, dimdict, var)
+
+    av, std = np.ma.average(data), np.ma.std(data)
+    minv, maxv = np.ma.min(data), np.ma.max(data)
+
+    names = [var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max']
+
+    ret = pd.Series([av, std, minv, maxv], index = names)
+
+    return(ret)
