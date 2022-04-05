@@ -188,6 +188,7 @@ def add_bounds(geodf, geo_buff, time_buff, time_offset):
     buff = np.timedelta64(time_buff, 'h')
     offset = np.timedelta64(time_offset, 'D')
     geodf['mint'] = pd.to_datetime(geodf['eventDate'] - offset - buff)
+    geodf['bestt'] = pd.to_datetime(geodf['eventDate'] - offset)
     geodf['maxt'] = pd.to_datetime(geodf['eventDate'] - offset + buff)
     geodf.rename(columns={'geometry':'point'}, inplace=True)
 
@@ -209,7 +210,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
         local_ds (netCDF4.Dataset): Local dataset.
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
-        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
     Returns:
         pandas.Series: Coordinates of the data of interest in the netCDF file.
@@ -232,8 +233,9 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
 
     for p in params:
         colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
+                         var['var_id'] + '_' + dimdict[p]['standard_name'] + '_best',
                          var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
-        coords.extend([ind[p]['min'], ind[p]['max']])
+        coords.extend([ind[p]['min'], ind[p]['best'], ind[p]['max']])
 
     return(pd.Series(coords, index = colnames))
 
@@ -248,7 +250,7 @@ def calculate_indices(dimdict, row, var, depth_request):
     Args:
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         row (pandas.Series): GeoDataFrame row to enrich.
-        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
     Returns:
         dict: Dictionary of indices for each dimension (keys are standard dimension names).
@@ -256,22 +258,24 @@ def calculate_indices(dimdict, row, var, depth_request):
 
     ind = {}
 
-    # latitude lower and upper index
+    # latitude lower, best and upper index
     # make sure the slice contains at least one element
 
-    lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['miny'] ) )
+    lat0 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['miny'] ) )
+    lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['point'].y ) )
     lat2 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['maxy'] ) )
-    ind['latitude'] = {'min': min(lat1, lat2), 'max': max(lat1, lat2)}
-    if lat1 == lat2:
+    ind['latitude'] = {'min': min(lat0, lat2), 'max': max(lat0, lat2), 'best': lat1}
+    if lat0 == lat2:
         ind['latitude']['max'] = ind['latitude']['max'] + 1
 
-    # longitude lower and upper index
+    # longitude lower, best and upper index
     # make sure the slice contains at least one element
 
-    lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['minx'] ) )
+    lon0 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['minx'] ) )
+    lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['point'].x ) )
     lon2 = np.argmin( np.abs( dimdict['longitude']['vals']  - row['maxx'] ) )  
-    ind['longitude'] = {'min': min(lon1, lon2), 'max': max(lon1, lon2)}
-    if lon1 == lon2:
+    ind['longitude'] = {'min': min(lon0, lon2), 'max': max(lon0, lon2), 'best': lon1}
+    if lon0 == lon2:
         ind['longitude']['max'] = ind['longitude']['max'] + 1
 
 
@@ -281,10 +285,11 @@ def calculate_indices(dimdict, row, var, depth_request):
     # make sure the slice contains at least one element
 
     if 'time' in params:
-        t1 = np.argmin( np.abs( dimdict['time']['vals'] - row['mint'] ) )
+        t0 = np.argmin( np.abs( dimdict['time']['vals'] - row['mint'] ) )
+        t1 = np.argmin( np.abs( dimdict['time']['vals'] - row['bestt'] ) )
         t2 = np.argmin( np.abs( dimdict['time']['vals'] - row['maxt'] ) ) 
-        ind['time'] = {'min': min(t1, t2), 'max': max(t1, t2)}
-        if t1 == t2:
+        ind['time'] = {'min': min(t0, t2), 'max': max(t0, t2), 'best': t1}
+        if t0 == t2:
             ind['time']['max'] = ind['time']['max'] + 1
 
     # if depth is a dimension, either select surface layer or return everything
@@ -292,9 +297,9 @@ def calculate_indices(dimdict, row, var, depth_request):
     if ('depth' in dimdict) and (dimdict['depth']['name'] in params):
         if depth_request == 'surface':
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
-            ind['depth'] = {'min': d1, 'max': d1+1}
+            ind['depth'] = {'min': d1, 'max': d1+1, 'best': d1}
         else:
-            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals'])}
+            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']), 'best': None}
 
     
     return(ind)
@@ -309,7 +314,7 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         remote_ds (netCDF4.Dataset): Remote dataset.
         local_ds (netCDF4.Dataset): Local dataset.
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
-        var (dict): variable dictionary as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
     Returns:
@@ -369,7 +374,6 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
 
     else:
         data = multidimensional_slice(remote_ds, var['name'], ordered_indices)
-        # print('DL: ' + str(ordered_indices[0]['max'] - ordered_indices[0]['min']))
         insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices)
         insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices)
 
@@ -415,7 +419,7 @@ def create_enrichment_file(gdf, dataset_ref):
     Create database file that will be used to save enrichment data.
     
     Args:  
-        gdf (geopandas.GeoDataFrame): data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`)
+        gdf (geopandas.GeoDataFrame): Data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`)
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
     Returns:
         None
@@ -492,7 +496,7 @@ def parse_columns(df):
     Return column indices sorted by variable and dimension.
 
     Args:
-        df (pandas.DataFrame): enrichment file as a DataFrame, as returned by geoenrich.enrichment.load_enrichment_file.
+        df (pandas.DataFrame): Enrichment file as a DataFrame, as returned by geoenrich.enrichment.load_enrichment_file.
     Returns:
         dict: Dictionary of column indices, with variable as a primary key, dimension as a secondary key, and min/max as tertiary key.
     """
@@ -551,14 +555,10 @@ def retrieve_data(dataset_ref, occ_id):
             unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
 
             dimdict, var = get_metadata(ds, cat[v]['varname'])
-
             params = [dimdict[n]['standard_name'] for n in var['params']]
-            ordered_indices_cols = [var_ind[p] for p in params]
-            ordered_indices = [{'min': int(row.iloc[d['min']]),
-                                'max': int(row.iloc[d['max']])}
-                                for d in ordered_indices_cols]
 
-            data = multidimensional_slice(ds, var['name'], ordered_indices)
+
+            data = fetch_data(row, v, var_ind, ds, dimdict, var)
             coordinates = []
             for p in params:
                 i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
@@ -568,6 +568,39 @@ def retrieve_data(dataset_ref, occ_id):
             results[v] = {'coords': coordinates, 'values': data, 'unit': unit}
 
     return(results)
+
+
+
+def fetch_data(row, var_id, var_indices, ds, dimdict, var):
+
+    """
+    Fetch data for a variable row.
+
+    
+    Args:
+        row (pandas.Series): One row of an enrichment file.
+        var_id (str): ID of the variable to download.
+        var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
+        ds (netCDF4.Dataset): Local dataset.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+    Returns:
+        numpy.masked_array: Raw data.
+    """
+
+    if -1 in [row.iloc[d['min']] for d in var_indices.values()]:
+        return(None)
+
+    else:
+        params = [dimdict[n]['standard_name'] for n in var['params']]
+        ordered_indices_cols = [var_indices[p] for p in params]
+        ordered_indices = [{'min': int(row.iloc[d['min']]),
+                            'max': int(row.iloc[d['max']])}
+                            for d in ordered_indices_cols]
+
+        data = multidimensional_slice(ds, var['name'], ordered_indices)
+        return(data)
+
 
 
 def read_ids(dataset_ref):
@@ -585,3 +618,79 @@ def read_ids(dataset_ref):
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
 
     return(list(df.index))
+
+
+
+
+def produce_stats(dataset_ref):
+
+    """
+    Produce a document named *dataset_ref*_stats.csv with summary stats of all enriched data.
+
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+
+    Returns:
+        None
+    """
+
+    filepath = biodiv_path + dataset_ref + '.csv'
+    df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
+    output = df[['taxonKey', 'geometry', 'eventDate']]
+    cat = get_var_catalog()
+    ind = parse_columns(df)
+
+    for v in ind:
+
+        var_ind = ind[v]
+        ds = nc.Dataset(sat_path + v + '.nc')
+        dimdict, var = get_metadata(ds, cat[v]['varname'])
+
+        print('Computing stats for ' + v + '...')
+        res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var), result_type = 'expand')
+
+        ds.close()
+        output = output.merge(res, how = 'left', left_index = True, right_index = True)
+
+
+    output.to_csv(biodiv_path + dataset_ref + '_stats.csv')
+    print('FIle saved at ' + biodiv_path + dataset_ref + '_stats.csv')
+
+
+
+def compute_stats(row, var_id, var_indices, ds, dimdict, var):
+
+    """
+    Compute and return stats for the given row.
+
+    
+    Args:
+        row (pandas.Series): One row of an enrichment file.
+        var_id (str): ID of the variable to download.
+        var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
+        ds (netCDF4.Dataset): Local dataset.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+    Returns:
+        pandas.Series: Statistics for the given row.
+    """
+
+    data = fetch_data(row, var_id, var_indices, ds, dimdict, var)
+
+    if data is not None:
+
+        params = [dimdict[n]['standard_name'] for n in var['params']]
+        ordered_indices_cols = [var_indices[p] for p in params]
+        best_ind = [int(row.iloc[d['best']]) - int(row.iloc[d['min']]) for d in ordered_indices_cols]
+
+        best, av, std = data.item(tuple(best_ind)), np.ma.average(data), np.ma.std(data)
+        minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
+
+
+        names = [var_id + '_best', var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
+
+        ret = pd.Series([best, av, std, minv, maxv, count], index = names)
+
+        return(ret)
+    else:
+        return(None)
