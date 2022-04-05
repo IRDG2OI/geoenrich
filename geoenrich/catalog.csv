@@ -11,6 +11,9 @@ salinity3d,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://n
 current3d_u,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,ugo
 current3d_v,Copernicus,015_012,0.25°,50 levels,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,vgo
 mixed_layer_thickness,Copernicus,015_012,0.25°,surface,7d,1993-01-01 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,mlotst
+oxygen,Copernicus,001_029,0.25°,75 levels,1d,1993-01-01 - 2020-12-31,https://my.cmems-du.eu/thredds/dodsC/cmems_mod_glo_bgc_my_0.25_P1D-m,o2
+oxygen2,Copernicus,001_028,0.25°,50 levels,1d,2019-05-04 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/global-analysis-forecast-bio-001-028-daily,o2
+ph,Copernicus,001_028,0.25°,50 levels,1d,2019-05-04 - ongoing,https://nrt.cmems-du.eu/thredds/dodsC/global-analysis-forecast-bio-001-028-daily,ph
 chlorophyll,Copernicus,009_082,4km,surface,1d,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-chl_interpolated_4km_daily-rep,CHL
 primary_production,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pp_4km_monthly-rep,PP
 diatoms,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DIATO
