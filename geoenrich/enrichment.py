@@ -323,7 +323,8 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
-    check = multidimensional_slice(bool_ds, var['name'], ordered_indices).data
+    lats = dimdict['latitude']['vals']
+    check = multidimensional_slice(bool_ds, var['name'], ordered_indices, lats).data
     totalsize = np.prod([i['max'] - i['min'] for i in ind.values()])
 
     if 'time' in ind:
@@ -373,9 +374,10 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
     # Otherwise download everything
 
     else:
-        data = multidimensional_slice(remote_ds, var['name'], ordered_indices)
-        insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices)
-        insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices)
+        lats = dimdict['latitude']['vals']
+        data = multidimensional_slice(remote_ds, var['name'], ordered_indices, lats)
+        insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices, lats)
+        insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices, lats)
 
         # Update time variable in case new points were added in the remote dataset
         if ('time' in ind) and (ind['time']['max'] > len(dimdict['time']['vals'])):
@@ -598,7 +600,8 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
                             'max': int(row.iloc[d['max']])}
                             for d in ordered_indices_cols]
 
-        data = multidimensional_slice(ds, var['name'], ordered_indices)
+        lats = dimdict['latitude']['vals']
+        data = multidimensional_slice(ds, var['name'], ordered_indices, lats)
         return(data)
 
 

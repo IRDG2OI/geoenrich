@@ -173,7 +173,7 @@ def create_nc(var):
 
 
 
-def multidimensional_slice(nc_dataset, varname, ind):
+def multidimensional_slice(nc_dataset, varname, ind, lats):
 
     """
     Return a slice from a dataset (can be local or remote).
@@ -182,6 +182,7 @@ def multidimensional_slice(nc_dataset, varname, ind):
         nc_dataset (netCDF4.Dataset): Dataset to query.
         varname (str): Variable name in the dataset.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
+        lats (list): Latitude values.
     Returns:
         numpy.masked_array: Requested data.
     """
@@ -208,7 +209,7 @@ def multidimensional_slice(nc_dataset, varname, ind):
 
 
 
-def insert_multidimensional_slice(nc_dataset, varname, data, ind):
+def insert_multidimensional_slice(nc_dataset, varname, data, ind, lats):
 
     """
     Insert a slice into a local dataset.
@@ -218,6 +219,7 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind):
         varname (str): Variable name in the dataset.
         data (numpy.array): Data to insert.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
+        lats (list): Latitude values.
     Returns:
         None
     """
