@@ -1,1 +1,2 @@
-include geoenrich/catalog.csv
+include data/catalog.csv
+include data/AcDigitifera.zip

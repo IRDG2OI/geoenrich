@@ -1,5 +1,7 @@
 import os
+from copy import deepcopy
 
+import numpy as np
 import pandas as pd
 import netCDF4 as nc
 
@@ -146,6 +148,7 @@ def create_nc(var):
     dimdict, var = get_metadata(remote_ds, varname)
 
     local_ds = nc.Dataset(path, mode = 'w')
+    local_ds.set_fill_off()
     bool_ds = nc.Dataset(pathd, mode = 'w')
 
     for name, dimension in remote_ds.dimensions.items():
@@ -160,10 +163,9 @@ def create_nc(var):
             local_ds.variables[name][:] = variable[:]
 
 
-    local_ds.createVariable(varname, remote_ds.variables[varname].dtype,
-                              remote_ds.variables[varname].dimensions, zlib = True)
-    local_ds[varname].setncatts({k: remote_ds.variables[varname].getncattr(k) \
-                            for k in remote_ds.variables[varname].ncattrs()})
+    variable = remote_ds.variables[varname]
+    local_ds.createVariable(varname, variable.dtype, variable.dimensions, zlib = True)
+    local_ds.variables[name].setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
 
     bool_ds.createVariable(varname, 'B', remote_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
 
@@ -173,7 +175,7 @@ def create_nc(var):
 
 
 
-def multidimensional_slice(nc_dataset, varname, ind, lats):
+def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
 
     """
     Return a slice from a dataset (can be local or remote).
@@ -182,34 +184,53 @@ def multidimensional_slice(nc_dataset, varname, ind, lats):
         nc_dataset (netCDF4.Dataset): Dataset to query.
         varname (str): Variable name in the dataset.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
-        lats (list): Latitude values.
+        lons (list): Longitude values.
+        lon_pos (int): Position of longitude in the dataset's dimensions.
     Returns:
-        numpy.masked_array: Requested data.
+        numpy.ma.MaskedArray: Requested data.
     """
 
-    data = None
+    #try:
 
-    try:
+    lonmin, lonmax = lons[ind[lon_pos]['min']], lons[ind[lon_pos]['max']]
+
+    if lonmax - lonmin > 180:
+
+        # Longitude singularity
+
+        ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
+        ind_part1[lon_pos]['min'] = ind[lon_pos]['max']
+        ind_part1[lon_pos]['max'] = len(lons) - 1
+        ind_part2[lon_pos]['min'] = 0
+        ind_part2[lon_pos]['max'] = ind[lon_pos]['min']
+
+        part1 = multidimensional_slice(nc_dataset, varname, ind_part1, lons, lon_pos)
+        part2 = multidimensional_slice(nc_dataset, varname, ind_part2, lons, lon_pos)
+
+        data = np.ma.concatenate((part1, part2), axis = lon_pos)
+        return(data)
+
+    else:
 
         if len(ind) == 2:
-            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max']]
+            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1]
         elif len(ind) == 3:
-            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max'],
-                                                 ind[2]['min']:ind[2]['max']]
+            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
+                                                 ind[2]['min']:ind[2]['max']+1]
         elif len(ind) == 4:
-            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max'],
-                                                 ind[2]['min']:ind[2]['max'], ind[3]['min']:ind[3]['max']]
+            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
+                                                 ind[2]['min']:ind[2]['max']+1, ind[3]['min']:ind[3]['max']+1]
         else:
             print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
         return(data)
 
-    except:
-        print(varname, ind)
+    #except:
+    #    print('Corrupt netCDF file', ind)
 
 
 
-def insert_multidimensional_slice(nc_dataset, varname, data, ind, lats):
+def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos):
 
     """
     Insert a slice into a local dataset.
@@ -219,23 +240,42 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lats):
         varname (str): Variable name in the dataset.
         data (numpy.array): Data to insert.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
-        lats (list): Latitude values.
+        lons (list): Longitude values.
+        lon_pos (int): Position of longitude in the dataset's dimensions.
     Returns:
         None
     """
+    lonmin, lonmax = lons[ind[lon_pos]['min']], lons[ind[lon_pos]['max']]
 
-    if len(ind) == 2:
-        nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max']] \
-        = data
-    elif len(ind) == 3:
-        nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max'],
-                                      ind[2]['min']:ind[2]['max']]                              \
-        = data
-    elif len(ind) == 4:
-        data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max'], ind[1]['min']:ind[1]['max'],
-                                             ind[2]['min']:ind[2]['max'], ind[3]['min']:ind[3]['max']] \
-        = data
+    if lonmax - lonmin > 180:
+
+        # Longitude singularity
+        width1 = len(lons) - ind[lon_pos]['max']
+
+        ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
+        ind_part1[lon_pos]['min'] = ind[lon_pos]['max']
+        ind_part1[lon_pos]['max'] = len(lons) - 1
+        ind_part2[lon_pos]['min'] = 0
+        ind_part2[lon_pos]['max'] = ind[lon_pos]['min']
+
+        part1, part2 = np.split(data, [width1], axis = lon_pos)
+
+        insert_multidimensional_slice(nc_dataset, varname, part1, ind_part1, lons, lon_pos)
+        insert_multidimensional_slice(nc_dataset, varname, part2, ind_part2, lons, lon_pos)
+
     else:
-        print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
+        if len(ind) == 2:
+            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1] \
+            = data
+        elif len(ind) == 3:
+            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
+                                          ind[2]['min']:ind[2]['max']+1]                              \
+            = data
+        elif len(ind) == 4:
+            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
+                                          ind[2]['min']:ind[2]['max']+1, ind[3]['min']:ind[3]['max']+1] \
+            = data
+        else:
+            print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
 

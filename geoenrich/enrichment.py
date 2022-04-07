@@ -17,14 +17,13 @@ from copy import deepcopy
 from tqdm import tqdm
 
 import geoenrich
-from geoenrich.satellite import *
+#from geoenrich.satellite import *
+from satellite import *
 
 try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py and fill in the blanks')
-    print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
 
 tqdm.pandas()
@@ -119,7 +118,9 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     # Get netcdf metadata
 
+    #remote_ds = nc.Dataset('/media/Data/Data/backup/bathymetry.nc')
     remote_ds = nc.Dataset(url)
+
     dimdict, var = get_metadata(remote_ds, varname)
     var['var_id'] = var_id
 
@@ -222,7 +223,6 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
     ind = calculate_indices(dimdict, row, var, depth_request)
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
-
     
     download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind)
 
@@ -238,7 +238,6 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
         coords.extend([ind[p]['min'], ind[p]['best'], ind[p]['max']])
 
     return(pd.Series(coords, index = colnames))
-
 
 
 
@@ -265,8 +264,6 @@ def calculate_indices(dimdict, row, var, depth_request):
     lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['point'].y ) )
     lat2 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['maxy'] ) )
     ind['latitude'] = {'min': min(lat0, lat2), 'max': max(lat0, lat2), 'best': lat1}
-    if lat0 == lat2:
-        ind['latitude']['max'] = ind['latitude']['max'] + 1
 
     # longitude lower, best and upper index
     # make sure the slice contains at least one element
@@ -275,9 +272,6 @@ def calculate_indices(dimdict, row, var, depth_request):
     lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['point'].x ) )
     lon2 = np.argmin( np.abs( dimdict['longitude']['vals']  - row['maxx'] ) )  
     ind['longitude'] = {'min': min(lon0, lon2), 'max': max(lon0, lon2), 'best': lon1}
-    if lon0 == lon2:
-        ind['longitude']['max'] = ind['longitude']['max'] + 1
-
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
 
@@ -289,15 +283,13 @@ def calculate_indices(dimdict, row, var, depth_request):
         t1 = np.argmin( np.abs( dimdict['time']['vals'] - row['bestt'] ) )
         t2 = np.argmin( np.abs( dimdict['time']['vals'] - row['maxt'] ) ) 
         ind['time'] = {'min': min(t0, t2), 'max': max(t0, t2), 'best': t1}
-        if t0 == t2:
-            ind['time']['max'] = ind['time']['max'] + 1
 
     # if depth is a dimension, either select surface layer or return everything
 
     if ('depth' in dimdict) and (dimdict['depth']['name'] in params):
         if depth_request == 'surface':
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
-            ind['depth'] = {'min': d1, 'max': d1+1, 'best': d1}
+            ind['depth'] = {'min': d1, 'max': d1, 'best': d1}
         else:
             ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']), 'best': None}
 
@@ -323,13 +315,14 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
-    lats = dimdict['latitude']['vals']
-    check = multidimensional_slice(bool_ds, var['name'], ordered_indices, lats).data
-    totalsize = np.prod([i['max'] - i['min'] for i in ind.values()])
+    lons = dimdict['longitude']['vals']
+    lon_pos = var['params'].index(dimdict['longitude']['name'])
+    check = multidimensional_slice(bool_ds, var['name'], ordered_indices, lons, lon_pos).data
+    totalsize = np.prod([i['max']+1 - i['min'] for i in ind.values()])
 
     if 'time' in ind:
 
-        lentime = ind['time']['max'] - ind['time']['min']
+        lentime = ind['time']['max']+1 - ind['time']['min']
         flatcheck = check.reshape((lentime, -1)).sum(axis = 1)
         checklist = (flatcheck == (totalsize / lentime))
 
@@ -360,24 +353,25 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
                 started = False
                 new_ind = deepcopy(ind)
                 new_ind['time']['min'] = ind['time']['min'] + start
-                new_ind['time']['max'] = ind['time']['min'] + i
+                new_ind['time']['max'] = ind['time']['min'] + i - 1
                 download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
                 
 
         if(started):
             new_ind = deepcopy(ind)
             new_ind['time']['min'] = ind['time']['min'] + start
-            new_ind['time']['max'] = ind['time']['min'] + lentime
+            new_ind['time']['max'] = ind['time']['min'] + lentime - 1
             download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
             
 
     # Otherwise download everything
 
     else:
-        lats = dimdict['latitude']['vals']
-        data = multidimensional_slice(remote_ds, var['name'], ordered_indices, lats)
-        insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices, lats)
-        insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices, lats)
+        lons = dimdict['longitude']['vals']
+        lon_pos = var['params'].index(dimdict['longitude']['name'])
+        data = multidimensional_slice(remote_ds, var['name'], ordered_indices, lons, lon_pos)
+        insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices, lons, lon_pos)
+        insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices, lons, lon_pos)
 
         # Update time variable in case new points were added in the remote dataset
         if ('time' in ind) and (ind['time']['max'] > len(dimdict['time']['vals'])):
@@ -532,7 +526,7 @@ def retrieve_data(dataset_ref, occ_id):
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`
     Returns:
-        dict: A dictionary of all available variables with corresponding data (numpy.masked_array), unit (str), and coordinates (ordered list of dimension names and values).
+        dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
 
     filepath = biodiv_path + dataset_ref + '.csv'
@@ -564,6 +558,10 @@ def retrieve_data(dataset_ref, occ_id):
             coordinates = []
             for p in params:
                 i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
+
+                ######################################
+                # Check for longitude singularity
+                ##########################################
                 coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2]])
 
             ds.close()
@@ -587,7 +585,7 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
     Returns:
-        numpy.masked_array: Raw data.
+        numpy.ma.MaskedArray: Raw data.
     """
 
     if -1 in [row.iloc[d['min']] for d in var_indices.values()]:
@@ -600,8 +598,9 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
                             'max': int(row.iloc[d['max']])}
                             for d in ordered_indices_cols]
 
-        lats = dimdict['latitude']['vals']
-        data = multidimensional_slice(ds, var['name'], ordered_indices, lats)
+        lons = dimdict['longitude']['vals']
+        lon_pos = var['params'].index(dimdict['longitude']['name'])
+        data = multidimensional_slice(ds, var['name'], ordered_indices, lons, lon_pos)
         return(data)
 
 

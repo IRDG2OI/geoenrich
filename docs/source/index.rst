@@ -1,4 +1,4 @@
-geoenrich 0.1 documentation
+geoenrich 0.2 documentation
 ===========================
 
 This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays to be used in any way.
