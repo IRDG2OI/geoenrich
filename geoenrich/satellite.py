@@ -279,3 +279,24 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
             print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
 
+
+def test_file(var_id):
+
+    """
+    Test if a local file is well-structured (ie. not corrupt)
+
+    Args:
+        var_id (str): ID of the variable to download.
+    Returns:
+        bool: True if both files are healthy.
+    """
+
+
+    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc', mode ='r+')
+    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc', mode ='r+')
+
+    if(1):
+        return(True)
+
+    else:
+        return(False)

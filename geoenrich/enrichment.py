@@ -3,6 +3,7 @@ The core module of geoenrich
 """
 
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -131,6 +132,13 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
         create_nc(get_var_catalog()[var_id])
 
+    # Backup local netCDF files
+
+    shutil.copy2(sat_path + var['var_id'] + '.nc', sat_path + var['var_id'] + '.nc~')
+    shutil.copy2(sat_path + var['var_id'] + '_downloaded.nc', sat_path + var['var_id'] + '_downloaded.nc~')
+
+    # Load files
+
     local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc', mode ='r+')
     bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc', mode ='r+')
 
@@ -152,15 +160,34 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
     local_ds.close()
     bool_ds.close()
     remote_ds.close()
-    
-    if 'time' in dimdict:
-        missing = pd.DataFrame(-1, columns = res.columns, index = geodf_na)
-        print('Enrichment over')
-        return(pd.concat([res, missing]))
+
+    if test_files(var['var_id']):
+
+        # Remove backup
+        os.remove(sat_path + var['var_id'] + '.nc~')
+        os.remove(sat_path + var['var_id'] + '_downloaded.nc~')
+
+
+        if 'time' in dimdict:
+            missing = pd.DataFrame(-1, columns = res.columns, index = geodf_na)
+            print('Enrichment over')
+            return(pd.concat([res, missing]))
+
+        else:
+            print('Enrichment over')
+            return(res)
 
     else:
-        print('Enrichment over')
-        return(res)
+
+        # Restore backup
+        os.remove(sat_path + var['var_id'] + '.nc')
+        os.remove(sat_path + var['var_id'] + '_downloaded.nc')
+
+        os.rename(sat_path + var['var_id'] + '.nc~', sat_path + var['var_id'] + '.nc')
+        os.rename(sat_path + var['var_id'] + '_downloaded.nc~', sat_path + var['var_id'] + '_downloaded.nc')
+
+        print('Writing failed. NetCDF files were restored to the state they were before this enrichment session.')
+        return(None)
 
 
 def add_bounds(geodf, geo_buff, time_buff, time_offset):
