@@ -19,7 +19,7 @@ Assuming you have Python3 and pip installed.
 
 First some packages need to be installed::
 
-	pip install matplotlib appdirs geojson_rewind geomet requests_cache
+	pip install matplotlib appdirs geojson_rewind geomet requests_cache wheels
 
 	pip install git+https://github.com/rvanasa/pygbif.git
 
