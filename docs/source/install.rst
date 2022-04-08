@@ -31,6 +31,12 @@ Installation of geoenrich is then done in the classic way::
 	pip install geoenrich
 
 
+If you want to use the tutorial notebook you also have to install jupyter notebook::
+
+	pip install notebook
+
+
+
 4. Configuration
 ----------------
 

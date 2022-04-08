@@ -1,2 +1,3 @@
 include data/catalog.csv
 include data/AcDigitifera.zip
+include Geoenrich%20tutorial.ipynb
