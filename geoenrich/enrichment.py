@@ -42,7 +42,7 @@ pd.options.mode.chained_assignment = None
 
 
 
-def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = 0, depth_request = 'surface', slice = None, time_offset = 0):
+def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request = 'surface', slice = None):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -54,10 +54,9 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = 0, depth_request = '
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         var_id (str): ID of the variable to download.
         geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (int): Time buffer for which to download data around occurrence time (hours).
+        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
-        time_offset (int): Download environmental data *time_offset* days before occurrence time.
     Returns:
         None
     """
@@ -76,7 +75,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = 0, depth_request = '
     if slice is not None:
         to_enrich = to_enrich.iloc[slice[0]:slice[1]]
 
-    indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], geo_buff, time_buff, depth_request, time_offset)
+    indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], geo_buff, time_buff, depth_request)
 
     # If variable is already present, update it
     if any(var['var_id'] in col for col in original.columns):
@@ -93,7 +92,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = 0, depth_request = '
 
 
 
-def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, time_offset):
+def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request):
     
     """
     Download data for the requested occurrences and buffer into local netcdf file
@@ -105,16 +104,15 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         var_id (str): ID of the variable to download.
         url (str): Dataset url (including credentials if needed).
         geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (int): Time buffer for which to download data around occurrence time (hours).
+        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
-        time_offset (int): Download environmental data *time_offset* days before occurrence time.
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
     """
     # Calculate cube bounds
 
-    geodf = add_bounds(geodf, geo_buff, time_buff, time_offset)
+    geodf = add_bounds(geodf, geo_buff, time_buff)
 
 
     # Get netcdf metadata
@@ -134,13 +132,14 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     # Backup local netCDF files
 
-    shutil.copy2(sat_path + var['var_id'] + '.nc', sat_path + var['var_id'] + '.nc~')
-    shutil.copy2(sat_path + var['var_id'] + '_downloaded.nc', sat_path + var['var_id'] + '_downloaded.nc~')
+    timestamp = datetime.now().strftime('%d-%H-%M')
+    shutil.copy2(sat_path + var['var_id'] + '.nc', sat_path + var['var_id'] + '.nc.' + timestamp)
+    shutil.copy2(sat_path + var['var_id'] + '_downloaded.nc', sat_path + var['var_id'] + '_downloaded.nc.' + timestamp)
 
     # Load files
 
-    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc', mode ='r+')
-    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc', mode ='r+')
+    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc.' + timestamp, mode ='r+')
+    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, mode ='r+')
 
     # Remove out of timeframe datapoints
 
@@ -161,66 +160,71 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
     bool_ds.close()
     remote_ds.close()
 
-    if test_files(var['var_id']):
 
-        # Remove backup
-        os.remove(sat_path + var['var_id'] + '.nc~')
-        os.remove(sat_path + var['var_id'] + '_downloaded.nc~')
+    # Remove backup
 
+    os.remove(sat_path + var['var_id'] + '.nc')
+    os.remove(sat_path + var['var_id'] + '_downloaded.nc')
 
-        if 'time' in dimdict:
-            missing = pd.DataFrame(-1, columns = res.columns, index = geodf_na)
-            print('Enrichment over')
-            return(pd.concat([res, missing]))
+    os.rename(sat_path + var['var_id'] + '.nc.' + timestamp, sat_path + var['var_id'] + '.nc')
+    os.rename(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, sat_path + var['var_id'] + '_downloaded.nc')
 
-        else:
-            print('Enrichment over')
-            return(res)
+    if 'time' in dimdict:
+        missing = pd.DataFrame(-1, columns = res.columns, index = geodf_na)
+        print('Enrichment over')
+        return(pd.concat([res, missing]))
 
     else:
-
-        # Restore backup
-        os.remove(sat_path + var['var_id'] + '.nc')
-        os.remove(sat_path + var['var_id'] + '_downloaded.nc')
-
-        os.rename(sat_path + var['var_id'] + '.nc~', sat_path + var['var_id'] + '.nc')
-        os.rename(sat_path + var['var_id'] + '_downloaded.nc~', sat_path + var['var_id'] + '_downloaded.nc')
-
-        print('Writing failed. NetCDF files were restored to the state they were before this enrichment session.')
-        return(None)
+        print('Enrichment over')
+        return(res)
 
 
-def add_bounds(geodf, geo_buff, time_buff, time_offset):
+
+def add_bounds(geodf1, geo_buff, time_buff):
 
     """
     Calculate geo buffer and time buffer.
     Add columns for cube limits: 'minx', 'maxx', 'miny', 'maxy', 'mint', 'maxt'.
 
     Args:
-        geodf (geopandas.GeoDataFrame): Data to calculate buffers for.
+        geodf1 (geopandas.GeoDataFrame): Data to calculate buffers for.
         geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (int): Time buffer for which to download data around occurrence time (hours).
-        time_offset (int): Download environmental data *time_offset* days before occurrence time.
+        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
     Returns:
         geopandas.GeoDataFrame: Updated GeoDataFrame with geographical and time boundaries.
     """
 
-
-
     # Prepare geo bounds
-    buffers = geodf['geometry'].to_crs('+proj=cea').buffer(geo_buff*1000, cap_style = 3).to_crs(geodf.crs)
-    geodf = geodf.join(buffers.bounds)
     
+
+    earth_radius = 6371
+    lat_buf = 180 * geo_buff / (np.pi * earth_radius)
+    geodf = geodf1.loc[abs(geodf1['geometry'].y) + lat_buf < 90]
+
+    if len(geodf1) != len(geodf):
+        print('Warning: {} occurrences were dropped because a pole is inside the buffer (too much data to download)'.format(len(geodf1) - len(geodf)))
+
+    # Calculate pseudo square in degrees that contains the square buffers in kilometers
+    latitudes = geodf['geometry'].y
+    min_radius = np.sin(2 * np.pi * (90 - abs(latitudes) - lat_buf) / 360)
+    lon_buf = 180*geo_buff / (np.pi * earth_radius * min_radius)
+
+    geodf['minx'] = (geodf['geometry'].x - lon_buf + 180) % 360 - 180
+    geodf['maxx'] = (geodf['geometry'].x + lon_buf + 180) % 360 - 180
+    geodf['miny'] = (geodf['geometry'].y - lat_buf)
+    geodf['maxy'] = (geodf['geometry'].y + lat_buf)
+
+
     # Prepare time bounds
 
-    buff = np.timedelta64(time_buff, 'h')
-    offset = np.timedelta64(time_offset, 'D')
-    geodf['mint'] = pd.to_datetime(geodf['eventDate'] - offset - buff)
-    geodf['bestt'] = pd.to_datetime(geodf['eventDate'] - offset)
-    geodf['maxt'] = pd.to_datetime(geodf['eventDate'] - offset + buff)
-    geodf.rename(columns={'geometry':'point'}, inplace=True)
+    buff1 = np.timedelta64(time_buff[0], 'D')
+    buff2 = np.timedelta64(time_buff[1], 'D')
 
-    return(gpd.GeoDataFrame(geodf, geometry = buffers))
+    geodf['mint'] = pd.to_datetime(geodf['eventDate'] + buff1)
+    geodf['bestt'] = pd.to_datetime(geodf['eventDate'])
+    geodf['maxt'] = pd.to_datetime(geodf['eventDate'] + buff2)
+
+    return(geodf)
 
 
 ############################# Element-wise enrichment #################################
@@ -288,7 +292,7 @@ def calculate_indices(dimdict, row, var, depth_request):
     # make sure the slice contains at least one element
 
     lat0 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['miny'] ) )
-    lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['point'].y ) )
+    lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['geometry'].y ) )
     lat2 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['maxy'] ) )
     ind['latitude'] = {'min': min(lat0, lat2), 'max': max(lat0, lat2), 'best': lat1}
 
@@ -296,9 +300,9 @@ def calculate_indices(dimdict, row, var, depth_request):
     # make sure the slice contains at least one element
 
     lon0 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['minx'] ) )
-    lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['point'].x ) )
+    lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['geometry'].x ) )
     lon2 = np.argmin( np.abs( dimdict['longitude']['vals']  - row['maxx'] ) )  
-    ind['longitude'] = {'min': min(lon0, lon2), 'max': max(lon0, lon2), 'best': lon1}
+    ind['longitude'] = {'min': lon0, 'max': lon2, 'best': lon1}
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
 
@@ -586,10 +590,14 @@ def retrieve_data(dataset_ref, occ_id):
             for p in params:
                 i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
 
-                ######################################
-                # Check for longitude singularity
-                ##########################################
-                coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2]])
+                if (p == 'longitude' and i1 > i2):
+                    part1 = ds.variables[dimdict[p]['name']][i1:]
+                    part2 = ds.variables[dimdict[p]['name']][:i2 + 1]
+                    coordinates.append([p, part1 + part2])
+                else:
+                    coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1]])
+
+
 
             ds.close()
             results[v] = {'coords': coordinates, 'values': data, 'unit': unit}

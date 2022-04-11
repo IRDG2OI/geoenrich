@@ -190,43 +190,39 @@ def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
         numpy.ma.MaskedArray: Requested data.
     """
 
-    #try:
+    try:
 
-    lonmin, lonmax = lons[ind[lon_pos]['min']], lons[ind[lon_pos]['max']]
+        if ind[lon_pos]['min'] > ind[lon_pos]['max']:
 
-    if lonmax - lonmin > 180:
+            # Longitude singularity
 
-        # Longitude singularity
+            ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
+            ind_part1[lon_pos]['max'] = len(lons) - 1
+            ind_part2[lon_pos]['min'] = 0
 
-        ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
-        ind_part1[lon_pos]['min'] = ind[lon_pos]['max']
-        ind_part1[lon_pos]['max'] = len(lons) - 1
-        ind_part2[lon_pos]['min'] = 0
-        ind_part2[lon_pos]['max'] = ind[lon_pos]['min']
+            part1 = multidimensional_slice(nc_dataset, varname, ind_part1, lons, lon_pos)
+            part2 = multidimensional_slice(nc_dataset, varname, ind_part2, lons, lon_pos)
 
-        part1 = multidimensional_slice(nc_dataset, varname, ind_part1, lons, lon_pos)
-        part2 = multidimensional_slice(nc_dataset, varname, ind_part2, lons, lon_pos)
+            data = np.ma.concatenate((part1, part2), axis = lon_pos)
+            return(data)
 
-        data = np.ma.concatenate((part1, part2), axis = lon_pos)
-        return(data)
-
-    else:
-
-        if len(ind) == 2:
-            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1]
-        elif len(ind) == 3:
-            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
-                                                 ind[2]['min']:ind[2]['max']+1]
-        elif len(ind) == 4:
-            data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
-                                                 ind[2]['min']:ind[2]['max']+1, ind[3]['min']:ind[3]['max']+1]
         else:
-            print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
-        return(data)
+            if len(ind) == 2:
+                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1]
+            elif len(ind) == 3:
+                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
+                                                     ind[2]['min']:ind[2]['max']+1]
+            elif len(ind) == 4:
+                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
+                                                     ind[2]['min']:ind[2]['max']+1, ind[3]['min']:ind[3]['max']+1]
+            else:
+                print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
-    #except:
-    #    print('Corrupt netCDF file', ind)
+            return(data)
+
+    except:
+        print('Corrupt netCDF file', ind)
 
 
 
@@ -245,18 +241,14 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
     Returns:
         None
     """
-    lonmin, lonmax = lons[ind[lon_pos]['min']], lons[ind[lon_pos]['max']]
-
-    if lonmax - lonmin > 180:
+    if ind[lon_pos]['min'] > ind[lon_pos]['max']:
 
         # Longitude singularity
-        width1 = len(lons) - ind[lon_pos]['max']
+        width1 = len(lons) - ind[lon_pos]['min']
 
         ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
-        ind_part1[lon_pos]['min'] = ind[lon_pos]['max']
         ind_part1[lon_pos]['max'] = len(lons) - 1
         ind_part2[lon_pos]['min'] = 0
-        ind_part2[lon_pos]['max'] = ind[lon_pos]['min']
 
         part1, part2 = np.split(data, [width1], axis = lon_pos)
 
@@ -278,25 +270,3 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
         else:
             print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
-
-
-def test_file(var_id):
-
-    """
-    Test if a local file is well-structured (ie. not corrupt)
-
-    Args:
-        var_id (str): ID of the variable to download.
-    Returns:
-        bool: True if both files are healthy.
-    """
-
-
-    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc', mode ='r+')
-    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc', mode ='r+')
-
-    if(1):
-        return(True)
-
-    else:
-        return(False)
