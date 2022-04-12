@@ -16,13 +16,15 @@ All environmental variables used for enrichment must have latitude and longitude
 
 Documentation on [Read the Docs](https://geoenrich.readthedocs.io).
 
+![Illustration of an occurrence dataset enriched with bathymetry data](data/readme_illus_1.png?raw=true "Illustration of an occurrence dataset enriched with bathymetry data")
+
 ## Installation
 
 Installation instructions [in the documentation](https://geoenrich.readthedocs.io/en/latest/install.html).
 
 ## Using the plugin
 
-A Jupyter Notebook tutorial is available at the [root of the repository](Geoenrich%20tutorial.ipynb).
+A Jupyter Notebook tutorial is available at the [root of the repository](https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb).
 
 ## Issues and further developments
 
