@@ -16,7 +16,7 @@ All environmental variables used for enrichment must have latitude and longitude
 
 Documentation on [Read the Docs](https://geoenrich.readthedocs.io).
 
-![Illustration of an occurrence dataset enriched with bathymetry data](data/readme_illus_1.png?raw=true "Illustration of an occurrence dataset enriched with bathymetry data")
+![Illustration of an occurrence dataset enriched with bathymetry data](https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true "Illustration of an occurrence dataset enriched with bathymetry data")
 
 ## Installation
 
