@@ -270,3 +270,40 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
         else:
             print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
+
+
+def ellipsoid_mask(data, coords, center, geo_buff):
+
+    """
+    Calculate ellipsoid mask for the given point and data array.
+
+    Args:
+        data (numpy.array): data array as output by :func:`geoenrich.enrichment.fetch_data`.
+        coords (list): Coordinates of the given data, as output by :func:`geoenrich.enrichment.fetch_data`.
+        center (point): Occurrence point.
+        geo_buff (int): Radius of the area of interest.
+    Returns:
+        numpy.array: Mask.
+    """
+
+    lat_dim = [c[0] for c in coords].index('latitude')
+    lon_dim = [c[0] for c in coords].index('longitude')
+    lats = coords[lat_dim][1]
+    longs = coords[lon_dim][1]
+
+    earth_radius = 6371
+    y_radius = 180 * geo_buff / (np.pi * earth_radius)
+    proj_earth_radius = np.sin(np.pi * (90 - abs(center.y)) / 180)
+    
+    x_radius = 180 * geo_buff / (np.pi * earth_radius * proj_earth_radius)
+
+
+    Y, X = np.ogrid[:len(lats), :len(longs)]
+
+    long_diff = min(360 - abs(X - center.x), abs(X - center.x))
+    distance = np.sqrt(long_diff**2/radius_x**2 + (Y-center.y)**2/radius_y**2)
+
+    mask2d = distance > 1
+    mask = np.broadcast_to(mask2d, data.shape)
+
+    return(mask)

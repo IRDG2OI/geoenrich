@@ -206,8 +206,8 @@ def add_bounds(geodf1, geo_buff, time_buff):
 
     # Calculate pseudo square in degrees that contains the square buffers in kilometers
     latitudes = geodf['geometry'].y
-    min_radius = np.sin(2 * np.pi * (90 - abs(latitudes) - lat_buf) / 360)
-    lon_buf = 180*geo_buff / (np.pi * earth_radius * min_radius)
+    min_radius = np.sin(np.pi * (90 - abs(latitudes) - lat_buf) / 180)
+    lon_buf = 180 * geo_buff / (np.pi * earth_radius * min_radius)
 
     geodf['minx'] = (geodf['geometry'].x - lon_buf + 180) % 360 - 180
     geodf['maxx'] = (geodf['geometry'].x + lon_buf + 180) % 360 - 180
@@ -548,7 +548,7 @@ def parse_columns(df):
 
 
 
-def retrieve_data(dataset_ref, occ_id):
+def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
 
     """
     Retrieve all available data for a specific occurrence.
@@ -556,6 +556,8 @@ def retrieve_data(dataset_ref, occ_id):
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`
+        shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
+        geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
     Returns:
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
@@ -582,25 +584,16 @@ def retrieve_data(dataset_ref, occ_id):
             unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
 
             dimdict, var = get_metadata(ds, cat[v]['varname'])
-            params = [dimdict[n]['standard_name'] for n in var['params']]
 
-
-            data = fetch_data(row, v, var_ind, ds, dimdict, var)
-            coordinates = []
-            for p in params:
-                i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
-
-                if (p == 'longitude' and i1 > i2):
-                    part1 = ds.variables[dimdict[p]['name']][i1:]
-                    part2 = ds.variables[dimdict[p]['name']][:i2 + 1]
-                    coordinates.append([p, part1 + part2])
-                else:
-                    coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1]])
-
-
-
+            data, coords = fetch_data(row, v, var_ind, ds, dimdict, var)
             ds.close()
+
+        if shape == 'buffer' and geo_buffer is not None:
+            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+            results[v] = {'coords': coordinates, 'values': data.masked_where(mask), 'unit': unit}
+        else:
             results[v] = {'coords': coordinates, 'values': data, 'unit': unit}
+
 
     return(results)
 
@@ -609,8 +602,7 @@ def retrieve_data(dataset_ref, occ_id):
 def fetch_data(row, var_id, var_indices, ds, dimdict, var):
 
     """
-    Fetch data for a variable row.
-
+    Fetch data locally for a specific occurrence and variable.
     
     Args:
         row (pandas.Series): One row of an enrichment file.
@@ -636,7 +628,19 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
         lons = dimdict['longitude']['vals']
         lon_pos = var['params'].index(dimdict['longitude']['name'])
         data = multidimensional_slice(ds, var['name'], ordered_indices, lons, lon_pos)
-        return(data)
+
+        coordinates = []
+        for p in params:
+            i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
+
+            if (p == 'longitude' and i1 > i2):
+                part1 = ds.variables[dimdict[p]['name']][i1:]
+                part2 = ds.variables[dimdict[p]['name']][:i2 + 1]
+                coordinates.append([p, part1 + part2])
+            else:
+                coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1]])
+
+        return(data, coordinates)
 
 
 
@@ -659,13 +663,14 @@ def read_ids(dataset_ref):
 
 
 
-def produce_stats(dataset_ref):
+def produce_stats(dataset_ref, geo_buff):
 
     """
     Produce a document named *dataset_ref*_stats.csv with summary stats of all enriched data.
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
 
     Returns:
         None
@@ -684,18 +689,18 @@ def produce_stats(dataset_ref):
         dimdict, var = get_metadata(ds, cat[v]['varname'])
 
         print('Computing stats for ' + v + '...')
-        res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var), result_type = 'expand')
+        res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var, geo_buff), result_type = 'expand')
 
         ds.close()
         output = output.merge(res, how = 'left', left_index = True, right_index = True)
 
 
     output.to_csv(biodiv_path + dataset_ref + '_stats.csv')
-    print('FIle saved at ' + biodiv_path + dataset_ref + '_stats.csv')
+    print('File saved at ' + biodiv_path + dataset_ref + '_stats.csv')
 
 
 
-def compute_stats(row, var_id, var_indices, ds, dimdict, var):
+def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff):
 
     """
     Compute and return stats for the given row.
@@ -712,7 +717,7 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var):
         pandas.Series: Statistics for the given row.
     """
 
-    data = fetch_data(row, var_id, var_indices, ds, dimdict, var)
+    data, coords = fetch_data(row, var_id, var_indices, ds, dimdict, var)
 
     if data is not None:
 
@@ -720,7 +725,19 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var):
         ordered_indices_cols = [var_indices[p] for p in params]
         best_ind = [int(row.iloc[d['best']]) - int(row.iloc[d['min']]) for d in ordered_indices_cols]
 
-        best, av, std = data.item(tuple(best_ind)), np.ma.average(data), np.ma.std(data)
+        if 'time' in params:
+            time_ind = params.index('time')
+            if best_ind[time_ind] < 0 or best_ind[time_ind] >= data.shape[params.index('time')]:
+                best = np.nan
+            else:
+                best = data.item(tuple(best_ind))
+        else:
+            best = data.item(tuple(best_ind))
+
+        mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+        data = data.masked_where(mask)
+
+        av, std = np.ma.average(data), np.ma.std(data)
         minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
 
 
@@ -729,5 +746,6 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var):
         ret = pd.Series([best, av, std, minv, maxv, count], index = names)
 
         return(ret)
+
     else:
         return(None)
