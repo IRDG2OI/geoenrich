@@ -1,4 +1,4 @@
-# **geoenrich**
+# **geoenrich 0.2**
 
 [![Read the Docs](https://img.shields.io/readthedocs/geoenrich)](https://geoenrich.readthedocs.io/en/latest/)
 [![License](https://img.shields.io/github/license/morand-g/geoenrich?color=green)](https://github.com/morand-g/geoenrich/blob/main/LICENSE)
@@ -24,7 +24,7 @@ Installation instructions [in the documentation](https://geoenrich.readthedocs.i
 
 ## Using the plugin
 
-A Jupyter Notebook tutorial is available at the [root of the repository](https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb).
+A Jupyter Notebook tutorial is available at the [root of the repository](https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb).
 
 ## Issues and further developments
 

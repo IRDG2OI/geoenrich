@@ -18,8 +18,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 import geoenrich
-#from geoenrich.satellite import *
-from satellite import *
+from geoenrich.satellite import *
 
 try:
     from geoenrich.credentials import *
