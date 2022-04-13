@@ -1,7 +1,7 @@
 geoenrich 0.2 documentation
 ===========================
 
-|Read the Docs| |License| |PyPI| |Python versions| |Last commit|
+|Read the Docs| |License| |PyPI| |Python versions| |Last commit| |DOI|
 
 
 This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays to be used in any way.
@@ -74,3 +74,6 @@ Indices and tables
 
 .. |Last commit| image:: https://img.shields.io/github/last-commit/morand-g/geoenrich
    :target: https://github.com/morand-g/geoenrich/
+
+.. |DOI| .. image:: https://zenodo.org/badge/474973185.svg
+   :target: https://zenodo.org/badge/latestdoi/474973185
