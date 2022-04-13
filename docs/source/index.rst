@@ -14,7 +14,7 @@ Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`
 
 Jupyter notebook tutorial in the `Github repository <https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb>`_
 
-.. image:: https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png
+.. image:: https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true
    :alt: Illustration of an occurrence dataset enriched with bathymetry data
 
 Installation
