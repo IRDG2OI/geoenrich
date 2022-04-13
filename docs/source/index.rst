@@ -9,7 +9,7 @@ All environmental variables used for enrichment must have latitude and longitude
 
 Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`_
 
-Jupyter notebook tutorial at the `root of the Github repository <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_
+Jupyter notebook tutorial in the `Github repository <https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb>`_
 
 Installation
 ============

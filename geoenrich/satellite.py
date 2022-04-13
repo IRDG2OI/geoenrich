@@ -165,7 +165,7 @@ def create_nc(var):
 
     variable = remote_ds.variables[varname]
     local_ds.createVariable(varname, variable.dtype, variable.dimensions, zlib = True)
-    local_ds.variables[name].setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
+    local_ds.variables[varname].setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
 
     bool_ds.createVariable(varname, 'B', remote_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
 
@@ -300,8 +300,8 @@ def ellipsoid_mask(data, coords, center, geo_buff):
 
     Y, X = np.ogrid[:len(lats), :len(longs)]
 
-    long_diff = min(360 - abs(X - center.x), abs(X - center.x))
-    distance = np.sqrt(long_diff**2/radius_x**2 + (Y-center.y)**2/radius_y**2)
+    long_diff = np.minimum(360 - abs(longs[X]-center.x), abs(longs[X]-center.x))
+    distance = np.sqrt(long_diff**2/x_radius**2 + (lats[Y]-center.y)**2/y_radius**2)
 
     mask2d = distance > 1
     mask = np.broadcast_to(mask2d, data.shape)

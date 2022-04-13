@@ -195,7 +195,6 @@ def add_bounds(geodf1, geo_buff, time_buff):
 
     # Prepare geo bounds
     
-
     earth_radius = 6371
     lat_buf = 180 * geo_buff / (np.pi * earth_radius)
     geodf = geodf1.loc[abs(geodf1['geometry'].y) + lat_buf < 90]
@@ -563,6 +562,8 @@ def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
+    df['geometry'] = df['geometry'].apply(wkt.loads)
+
     row = df.loc[occ_id]
     cat = get_var_catalog()
     
@@ -587,11 +588,11 @@ def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
             data, coords = fetch_data(row, v, var_ind, ds, dimdict, var)
             ds.close()
 
-        if shape == 'buffer' and geo_buffer is not None:
+        if shape == 'buffer' and geo_buff is not None:
             mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            results[v] = {'coords': coordinates, 'values': data.masked_where(mask), 'unit': unit}
+            results[v] = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
         else:
-            results[v] = {'coords': coordinates, 'values': data, 'unit': unit}
+            results[v] = {'coords': coords, 'values': data, 'unit': unit}
 
 
     return(results)
@@ -630,7 +631,7 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
 
         coordinates = []
         for p in params:
-            i1, i2 = int(row.iloc[var_ind[p]['min']]), int(row.iloc[var_ind[p]['max']])
+            i1, i2 = int(row.iloc[var_indices[p]['min']]), int(row.iloc[var_indices[p]['max']])
 
             if (p == 'longitude' and i1 > i2):
                 part1 = ds.variables[dimdict[p]['name']][i1:]
@@ -677,6 +678,7 @@ def produce_stats(dataset_ref, geo_buff):
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
+    df['geometry'] = df['geometry'].apply(wkt.loads)
     output = df[['taxonKey', 'geometry', 'eventDate']]
     cat = get_var_catalog()
     ind = parse_columns(df)
@@ -734,7 +736,7 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff):
             best = data.item(tuple(best_ind))
 
         mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-        data = data.masked_where(mask)
+        data = np.ma.masked_where(mask, data)
 
         av, std = np.ma.average(data), np.ma.std(data)
         minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
