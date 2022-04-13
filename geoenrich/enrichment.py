@@ -444,7 +444,7 @@ def create_enrichment_file(gdf, dataset_ref, id_prefix = ''):
     Create database file that will be used to save enrichment data.
     
     Args:  
-        gdf (geopandas.GeoDataFrame): Data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`).
+        gdf (geopandas.GeoDataFrame): Data to enrich (output of :func:`geoenrich.Biodiv.open_dwca` or :func:`geoenrich.Biodiv.import_csv`).
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         id_prefix (str): Optional, if you want to add a prefix to occurrence ids.
     Returns:
@@ -667,7 +667,7 @@ def read_ids(dataset_ref):
 def produce_stats(dataset_ref, geo_buff):
 
     """
-    Produce a document named *dataset_ref*_stats.csv with summary stats of all enriched data.
+    Produce a document named *dataset\_ref*\_stats.csv with summary stats of all enriched data.
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
