@@ -4,7 +4,7 @@ import os
 # Paths
 
 ########################################################
-root_path = '.' # <---- Enter your chosen root path here
+root_path = './' # <---- Enter your chosen root path here
 ########################################################
 
 biodiv_path = root_path + 'biodiv/'

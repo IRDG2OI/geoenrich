@@ -31,6 +31,12 @@ Installation of geoenrich is then done in the classic way::
 	pip install geoenrich
 
 
+If you want to use the tutorial notebook you also have to install jupyter notebook::
+
+	pip install notebook
+
+
+
 4. Configuration
 ----------------
 
@@ -60,7 +66,7 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 5. Usage
 --------
 
-All done, you can now follow the `jupyter notebook tutorial <https://github.com/morand-g/geoenrich/blob/main/Geoenrich%20tutorial.ipynb>`_.
+All done, you can now follow the `jupyter notebook tutorial <https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb>`_.
 
 
 6. Precautions

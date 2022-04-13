@@ -186,3 +186,61 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     
     return(geodf)
 
+
+
+
+def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
+                     crs="EPSG:4326", *args, **kwargs):
+
+
+    """
+    Load data from a custom csv file. Additional arguments are passed down to *pandas.read_csv*.
+    Remove rows with a missing event date or missing coordinates.
+    Return a geodataframe with all occurences if fewer than max_number.
+    Otherwise, return a random sample of max_number occurrences.
+    
+    Args:
+        path (str): Path to the DarwinCoreArchive (.zip) to open.
+        id_col (int or str): Name or index of the column containing individual occurence ids.
+        date_col (int or str): Name or index of the column containing occurrence dates.
+        lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
+        lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
+        depth_col (int or str): Name or index of the column containing occurrence depths.
+        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax)
+        crs (str): Crs of the provided coordinates.
+    Returns:
+        GeoDataFrame: occurrences data (only relevant columns are included)
+    """
+
+    # Load file
+
+    columns = [id_col, date_col, lat_col, lon_col, depth_col]
+    rawdf = pd.read_csv(path, usecols = columns, *args, **kwargs)
+    idf = rawdf.dropna(subset = [lat_col, lon_col])
+
+    # Remove rows with missing coordinate
+    if len(rawdf) != len(idf):
+        print('Dropped {} rows with missing coordinates'.format(len(rawdf) - len(idf)))
+    
+    # Convert Lat/Long to GEOS POINT
+    if depth_col is None:
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
+    else:
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col], crs=crs)
+
+    # Remove rows with no event date
+    idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format,
+                                    dayfirst = True, infer_datetime_format = True)
+    df = idf.dropna(subset = ['eventDate'])
+
+    if len(idf) != len(df):
+        print('Dropped {} rows with missing or badly formated dates'.format(len(idf) - len(df)))
+
+    # Convert to GeoDataFrame & standardize Date
+    df['id'] = df[id_col]
+    geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
+
+    print('{} occurrences were loaded.'.format(len(geodf)))
+    
+    return(geodf)
+
