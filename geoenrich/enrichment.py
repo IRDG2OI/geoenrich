@@ -438,14 +438,15 @@ def load_enrichment_file(dataset_ref):
 
 
 
-def create_enrichment_file(gdf, dataset_ref):
+def create_enrichment_file(gdf, dataset_ref, id_prefix = ''):
 
     """
     Create database file that will be used to save enrichment data.
     
     Args:  
-        gdf (geopandas.GeoDataFrame): Data to enrich (output of :ref:`geoenrich.Biodiv.open_dwca`)
+        gdf (geopandas.GeoDataFrame): Data to enrich (output of :func:`geoenrich.Biodiv.open_dwca` or :func:`geoenrich.Biodiv.import_csv`).
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        id_prefix (str): Optional, if you want to add a prefix to occurrence ids.
     Returns:
         None
     """
@@ -455,10 +456,10 @@ def create_enrichment_file(gdf, dataset_ref):
     if(os.path.exists(filepath)):
         print('Abort. File already exists at ' + filepath)
     else:
-        to_save = gdf[['id', 'taxonKey', 'eventDate', 'geometry']]
-        to_save.set_index(pd.Index('gbif_' + to_save['id'].astype(str), name='id'), inplace = True)
+        to_save = gdf[['id', 'eventDate', 'geometry']]
+        to_save.set_index(pd.Index(id_prefix + to_save['id'].astype(str), name='id'), inplace = True)
         to_save.drop(['id'], axis='columns', inplace = True)
-        to_save = to_save.reindex(columns=['taxonKey', 'geometry', 'eventDate'])
+        to_save = to_save.reindex(columns=['geometry', 'eventDate'])
         to_save.to_csv(filepath)
         print('File saved at ' + filepath)
 
@@ -477,7 +478,7 @@ def reset_enrichment_file(dataset_ref):
 
     filepath = biodiv_path + dataset_ref + '.csv'
     df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
-    to_save = df[['taxonKey', 'eventDate', 'geometry']]
+    to_save = df[['eventDate', 'geometry']]
     to_save.to_csv(filepath)
     print('Enrichment file for dataset ' + dataset_ref + ' was reset.')
 
@@ -666,7 +667,7 @@ def read_ids(dataset_ref):
 def produce_stats(dataset_ref, geo_buff):
 
     """
-    Produce a document named *dataset_ref*_stats.csv with summary stats of all enriched data.
+    Produce a document named *dataset\_ref*\_stats.csv with summary stats of all enriched data.
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
