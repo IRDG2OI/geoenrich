@@ -215,7 +215,7 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
     # Load file
 
     columns = [id_col, date_col, lat_col, lon_col, depth_col]
-    rawdf = pd.read_csv(path, usecols = columns, index_col = id_col, *args, **kwargs)
+    rawdf = pd.read_csv(path, usecols = columns, *args, **kwargs)
     idf = rawdf.dropna(subset = [lat_col, lon_col])
 
     # Remove rows with missing coordinate
@@ -229,16 +229,18 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
         idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col], crs=crs)
 
     # Remove rows with no event date
-    idf[eventDate] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format,
-                                    day_first = True, infer_datetime_format = True)
-    df = idf.dropa(subset = ['eventDate'])
+    idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format,
+                                    dayfirst = True, infer_datetime_format = True)
+    df = idf.dropna(subset = ['eventDate'])
 
     if len(idf) != len(df):
         print('Dropped {} rows with missing or badly formated dates'.format(len(idf) - len(df)))
 
     # Convert to GeoDataFrame & standardize Date
-    geodf = gpd.GeoDataFrame(df[['geometry', 'eventDate']])
+    df['id'] = df[id_col]
+    geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
     return(geodf)
+

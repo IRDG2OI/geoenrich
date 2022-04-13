@@ -24,7 +24,7 @@ Installation instructions [in the documentation](https://geoenrich.readthedocs.i
 
 ## Using the plugin
 
-A Jupyter Notebook tutorial is available at the [root of the repository](https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb).
+A Jupyter Notebook tutorial is available [here](https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb).
 
 ## Issues and further developments
 
