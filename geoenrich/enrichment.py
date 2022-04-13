@@ -456,8 +456,8 @@ def create_enrichment_file(gdf, dataset_ref, id_prefix = ''):
     if(os.path.exists(filepath)):
         print('Abort. File already exists at ' + filepath)
     else:
-        to_save = gdf[['id' 'eventDate', 'geometry']]
-        to_save.set_index(pd.Index(prefix + to_save['id'].astype(str), name='id'), inplace = True)
+        to_save = gdf[['id', 'eventDate', 'geometry']]
+        to_save.set_index(pd.Index(id_prefix + to_save['id'].astype(str), name='id'), inplace = True)
         to_save.drop(['id'], axis='columns', inplace = True)
         to_save = to_save.reindex(columns=['geometry', 'eventDate'])
         to_save.to_csv(filepath)
