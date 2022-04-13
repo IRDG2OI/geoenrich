@@ -75,5 +75,5 @@ Indices and tables
 .. |Last commit| image:: https://img.shields.io/github/last-commit/morand-g/geoenrich
    :target: https://github.com/morand-g/geoenrich/
 
-.. |DOI| .. image:: https://zenodo.org/badge/474973185.svg
+.. |DOI| image:: https://zenodo.org/badge/474973185.svg
    :target: https://zenodo.org/badge/latestdoi/474973185
