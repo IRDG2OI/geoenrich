@@ -320,7 +320,7 @@ def calculate_indices(dimdict, row, var, depth_request):
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1}
         else:
-            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']), 'best': None}
+            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals'] - 1), 'best': None}
 
     
     return(ind)
