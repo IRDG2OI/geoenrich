@@ -28,3 +28,4 @@ picophytoplankton,Copernicus,009_082,4km,surface,1m,1997-09-04 - ongoing,https:/
 chlorophyll3d,Copernicus,015_010,0.25°,36 levels,7d,1998-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,chl
 backscattering3d,Copernicus,015_010,0.25°,36 levels,7d,1998-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,bbp
 organic-carbon3d,Copernicus,015_010,0.25°,36 levels,7d,1998-01-01 - ongoing,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,poc
+eke,,,,,,,calculated,eke

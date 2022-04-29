@@ -74,7 +74,14 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
     if slice is not None:
         to_enrich = to_enrich.iloc[slice[0]:slice[1]]
 
-    indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], geo_buff, time_buff, depth_request)
+    # Calculate cube bounds
+
+    geodf = add_bounds(geodf, geo_buff, time_buff)
+
+    if var['url'] == 'calculated':
+        indices = enrich_compute(to_enrich, var['var_id'], geo_buff, time_buff)
+    else:
+        indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], geo_buff, time_buff, depth_request)
 
     # If variable is already present, update it
     if any(var['var_id'] in col for col in original.columns):
@@ -91,10 +98,68 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
 
 
 
-def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request):
+def enrich_compute(geodf, var_id):
+
+    """
+    Compute a calculated variable for the requested occurrences and buffer and save into local netcdf file.
+    Calculate and return indices of the data of interest in the ncdf file.
+
+    Args:
+        geodf (geopandas.GeoDataFrame): Data to be enriched.
+        var_id (str): ID of the variable to download.
+    Returns:
+        pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
+
+    """
+
+
+    ########### Get netcdf metadata
+    ###############################
+
+    # Check if local netcdf files already exist
+
+    if  not(os.path.exists(sat_path + var['var_id'] + '.nc')) or \
+        not(os.path.exists(sat_path + var['var_id'] + '_downloaded.nc')):
+
+        create_nc_calculated(get_var_catalog(), var_id)
+
+    # Backup local netCDF files
+
+    timestamp = datetime.now().strftime('%d-%H-%M')
+    shutil.copy2(sat_path + var['var_id'] + '.nc', sat_path + var['var_id'] + '.nc.' + timestamp)
+    shutil.copy2(sat_path + var['var_id'] + '_downloaded.nc', sat_path + var['var_id'] + '_downloaded.nc.' + timestamp)
+
+    # Load files
+
+    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc.' + timestamp, mode ='r+')
+    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, mode ='r+')
+
+    ######################## Remove out of timeframe datapoints
+    #############################################
+
+    # Compute
+
+    calculate_variable(var_id, local_ds, bool_ds)
+
+    local_ds.close()
+    bool_ds.close()
+
+    # Remove backup
+
+    os.remove(sat_path + var['var_id'] + '.nc')
+    os.remove(sat_path + var['var_id'] + '_downloaded.nc')
+
+    os.rename(sat_path + var['var_id'] + '.nc.' + timestamp, sat_path + var['var_id'] + '.nc')
+    os.rename(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, sat_path + var['var_id'] + '_downloaded.nc')
+
+    ######### Merge missing rows & return result)
+
+
+
+def enrich_download(geodf, varname, var_id, url, depth_request):
     
     """
-    Download data for the requested occurrences and buffer into local netcdf file
+    Download data for the requested occurrences and buffer into local netcdf file.
     Calculate and return indices of the data of interest in the ncdf file.
 
     Args:
@@ -102,21 +167,14 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         varname(str): Variable name in the dataset.
         var_id (str): ID of the variable to download.
         url (str): Dataset url (including credentials if needed).
-        geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
     """
-    # Calculate cube bounds
-
-    geodf = add_bounds(geodf, geo_buff, time_buff)
-
 
     # Get netcdf metadata
 
-    #remote_ds = nc.Dataset('/media/Data/Data/backup/bathymetry.nc')
     remote_ds = nc.Dataset(url)
 
     dimdict, var = get_metadata(remote_ds, varname)
@@ -225,6 +283,36 @@ def add_bounds(geodf1, geo_buff, time_buff):
     return(geodf)
 
 
+
+def enrich_areas(df, var_id, outfile, depth_request = 'surface', slice = None):
+
+    var = get_var_catalog()[var_id]
+
+    if slice is None:
+        to_enrich = df
+    else:
+        to_enrich = df.iloc[slice[0]:slice[1]]
+
+    if var['url'] == 'calculated':
+        indices = enrich_compute(to_enrich, var['var_id'])
+    else:
+        indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], depth_request)
+
+    var_ind = parse_columns(indices)
+
+    ds = nc.Dataset(sat_path + var_id + '.nc')
+    dimdict, var = get_metadata(ds, var['varname'])
+
+    res = indices.progress_apply(compute_stats, axis=1, args = (var_id, var_ind[var_id], ds, dimdict, var), result_type = 'expand')
+    ds.close()
+
+    output = df.merge(res, how = 'left', left_index = True, right_index = True)
+
+
+    output.to_csv(outfile)
+    print('File saved at ' + outfile)
+
+
 ############################# Element-wise enrichment #################################
 
 
@@ -261,10 +349,16 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
     coords = []
 
     for p in params:
-        colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
-                         var['var_id'] + '_' + dimdict[p]['standard_name'] + '_best',
-                         var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
-        coords.extend([ind[p]['min'], ind[p]['best'], ind[p]['max']])
+
+        if 'best' in ind[p]:
+            colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
+                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_best',
+                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
+            coords.extend([ind[p]['min'], ind[p]['best'], ind[p]['max']])
+        else:
+            colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
+                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
+            coords.extend([ind[p]['min'], ind[p]['max']])
 
     return(pd.Series(coords, index = colnames))
 
@@ -290,37 +384,47 @@ def calculate_indices(dimdict, row, var, depth_request):
     # make sure the slice contains at least one element
 
     lat0 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['miny'] ) )
-    lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['geometry'].y ) )
     lat2 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['maxy'] ) )
-    ind['latitude'] = {'min': min(lat0, lat2), 'max': max(lat0, lat2), 'best': lat1}
+    ind['latitude'] = {'min': min(lat0, lat2), 'max': max(lat0, lat2), 'step': 1}
 
     # longitude lower, best and upper index
     # make sure the slice contains at least one element
 
     lon0 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['minx'] ) )
-    lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['geometry'].x ) )
     lon2 = np.argmin( np.abs( dimdict['longitude']['vals']  - row['maxx'] ) )  
-    ind['longitude'] = {'min': lon0, 'max': lon2, 'best': lon1}
+    ind['longitude'] = {'min': lon0, 'max': lon2, 'step': 1}
+
+    # Add best match indices if centered on an occurrence
+    if 'geometry' in row:
+        lat1 = np.argmin( np.abs( dimdict['latitude']['vals'] - row['geometry'].y ) )
+        lon1 = np.argmin( np.abs( dimdict['longitude']['vals'] - row['geometry'].x ) )
+        ind['latitude']['best'] = lat1
+        ind['longitude']['best'] = lon1
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
 
     # if time in dimensions, get lower, upper, and best fit indices
     # make sure the slice contains at least one element
 
-    if 'time' in params:
+    if ('time' in dimdict) and (dimdict['time']['name'] in params):
+
+
         t0 = np.argmin( np.abs( dimdict['time']['vals'] - row['mint'] ) )
-        t1 = np.argmin( np.abs( dimdict['time']['vals'] - row['bestt'] ) )
         t2 = np.argmin( np.abs( dimdict['time']['vals'] - row['maxt'] ) ) 
-        ind['time'] = {'min': min(t0, t2), 'max': max(t0, t2), 'best': t1}
+        ind['time'] = {'min': min(t0, t2), 'max': max(t0, t2), 'step': 1}
+
+        if 'bestt' in row:
+            t1 = np.argmin( np.abs( dimdict['time']['vals'] - row['bestt'] ) )
+            ind['time']['best'] = t1
 
     # if depth is a dimension, either select surface layer or return everything
 
     if ('depth' in dimdict) and (dimdict['depth']['name'] in params):
         if depth_request == 'surface':
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
-            ind['depth'] = {'min': d1, 'max': d1, 'best': d1}
+            ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
         else:
-            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals'] - 1), 'best': None}
+            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals'] - 1), 'best': None, 'step': 1}
 
     
     return(ind)
@@ -347,11 +451,11 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
     lons = dimdict['longitude']['vals']
     lon_pos = var['params'].index(dimdict['longitude']['name'])
     check = multidimensional_slice(bool_ds, var['name'], ordered_indices, lons, lon_pos).data
-    totalsize = np.prod([i['max']+1 - i['min'] for i in ind.values()])
+    totalsize = np.prod([(ind[p]['max']+1 - ind[p]['min']) // ind[p]['step'] for p in params])
 
     if 'time' in ind:
 
-        lentime = ind['time']['max']+1 - ind['time']['min']
+        lentime = (ind['time']['max']+1 - ind['time']['min']) // ind['time']['step']
         flatcheck = check.reshape((lentime, -1)).sum(axis = 1)
         checklist = (flatcheck == (totalsize / lentime))
 
@@ -381,15 +485,15 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
             elif started and is_present:
                 started = False
                 new_ind = deepcopy(ind)
-                new_ind['time']['min'] = ind['time']['min'] + start
-                new_ind['time']['max'] = ind['time']['min'] + i - 1
+                new_ind['time']['min'] = ind['time']['min'] + start * ind['time']['step']
+                new_ind['time']['max'] = ind['time']['min'] + (i - 1) * ind['time']['step']
                 download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
                 
 
         if(started):
             new_ind = deepcopy(ind)
-            new_ind['time']['min'] = ind['time']['min'] + start
-            new_ind['time']['max'] = ind['time']['min'] + lentime - 1
+            new_ind['time']['min'] = ind['time']['min'] + start * ind['time']['step']
+            new_ind['time']['max'] = ind['time']['min'] + (lentime - 1) * ind['time']['step']
             download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
             
 
@@ -401,14 +505,6 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         data = multidimensional_slice(remote_ds, var['name'], ordered_indices, lons, lon_pos)
         insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices, lons, lon_pos)
         insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices, lons, lon_pos)
-
-        # Update time variable in case new points were added in the remote dataset
-        if ('time' in ind) and (ind['time']['max'] > len(dimdict['time']['vals'])):
-            timename = dimdict['time']['name']
-            local_ds.variables[timename][ind['time']['min']:ind['time']['max']] = \
-                    remote_ds.variables[timename][ind['time']['min']:ind['time']['max']]
-
-
 
 
 ##########################################################################
@@ -623,7 +719,8 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
         params = [dimdict[n]['standard_name'] for n in var['params']]
         ordered_indices_cols = [var_indices[p] for p in params]
         ordered_indices = [{'min': int(row.iloc[d['min']]),
-                            'max': int(row.iloc[d['max']])}
+                            'max': int(row.iloc[d['max']]),
+                            'step': 1}
                             for d in ordered_indices_cols]
 
         lons = dimdict['longitude']['vals']
@@ -633,13 +730,14 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
         coordinates = []
         for p in params:
             i1, i2 = int(row.iloc[var_indices[p]['min']]), int(row.iloc[var_indices[p]['max']])
-
+            step = 1
             if (p == 'longitude' and i1 > i2):
-                part1 = ds.variables[dimdict[p]['name']][i1:]
-                part2 = ds.variables[dimdict[p]['name']][:i2 + 1]
+                step = 1
+                part1 = ds.variables[dimdict[p]['name']][i1::step]
+                part2 = ds.variables[dimdict[p]['name']][len(lons)//step:i2 + 1:step]
                 coordinates.append([p, part1 + part2])
             else:
-                coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1]])
+                coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1:step]])
 
         return(data, coordinates)
 
@@ -702,7 +800,7 @@ def produce_stats(dataset_ref, geo_buff):
 
 
 
-def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff):
+def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff = None):
 
     """
     Compute and return stats for the given row.
@@ -725,27 +823,41 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff):
 
         params = [dimdict[n]['standard_name'] for n in var['params']]
         ordered_indices_cols = [var_indices[p] for p in params]
-        best_ind = [int(row.iloc[d['best']]) - int(row.iloc[d['min']]) for d in ordered_indices_cols]
 
-        if 'time' in params:
-            time_ind = params.index('time')
-            if best_ind[time_ind] < 0 or best_ind[time_ind] >= data.shape[params.index('time')]:
-                best = np.nan
+        if geo_buff is not None:
+
+            # If data was calulated around an occurrence
+
+            best_ind = [int(row.iloc[d['best']]) - int(row.iloc[d['min']]) for d in ordered_indices_cols]
+
+            if 'time' in params:
+                time_ind = params.index('time')
+                if best_ind[time_ind] < 0 or best_ind[time_ind] >= data.shape[params.index('time')]:
+                    best = np.nan
+                else:
+                    best = data.item(tuple(best_ind))
             else:
                 best = data.item(tuple(best_ind))
+
+            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+            data = np.ma.masked_where(mask, data)
+
+            av, std = np.ma.average(data), np.ma.std(data)
+            minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
+
+
+            names = [var_id + '_best', var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
+
+            ret = pd.Series([best, av, std, minv, maxv, count], index = names)
+
         else:
-            best = data.item(tuple(best_ind))
 
-        mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-        data = np.ma.masked_where(mask, data)
+            # If there is no occurrence
 
-        av, std = np.ma.average(data), np.ma.std(data)
-        minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
-
-
-        names = [var_id + '_best', var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
-
-        ret = pd.Series([best, av, std, minv, maxv, count], index = names)
+            av, std = np.ma.average(data), np.ma.std(data)
+            minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
+            names = [var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
+            ret = pd.Series([av, std, minv, maxv, count], index = names)
 
         return(ret)
 

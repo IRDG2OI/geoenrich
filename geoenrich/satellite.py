@@ -6,7 +6,7 @@ import pandas as pd
 import netCDF4 as nc
 
 from datetime import datetime
-from cftime import num2pydate
+from cftime import num2date, num2pydate
 
 import geoenrich
 
@@ -39,11 +39,13 @@ def get_metadata(ds, varname):
         # Format time dimension
         # Need to convert netcdf datetime to python datetime
 
-        if 'standard_name' in ds.variables[name].__dict__ \
-            and ds.variables[name].__dict__['standard_name'] == 'time':
+        if name == 'time' or getattr(ds.variables[name], 'standard_name', 'Unknown') == 'time':
 
-
-            times = num2pydate(ds.variables[name][:], ds.variables[name].__dict__['units'])
+            cal = None
+            if 'months since' in ds.variables[name].__dict__['units']:
+                times = num2date(ds.variables[name][:], ds.variables[name].__dict__['units'], '360_day')
+            else:
+                times = num2pydate(ds.variables[name][:], ds.variables[name].__dict__['units'])
             times = pd.Series([datetime(*d.timetuple()[:-3]) for d in times])
             item = {'name': name, 'standard_name': 'time', 'vals': times, 'unit': None}
             dimdict[name] = item
@@ -51,13 +53,12 @@ def get_metadata(ds, varname):
 
         # Format lon & lat dimensions
 
-        elif 'standard_name' in ds.variables[name].__dict__ \
-            and ds.variables[name].__dict__['standard_name'] in ('longitude', 'latitude', 'depth'):
+        elif getattr(ds.variables[name], 'standard_name', 'Unknown') in ('longitude', 'latitude', 'depth'):
 
             item = {'name': name,
                     'standard_name': ds.variables[name].__dict__['standard_name'],
                     'vals': ds.variables[name][:],
-                    'unit': ds.variables[name].__dict__['units']}
+                    'unit': getattr(ds.variables[name], 'units', 'Unknown')}
             dimdict[name] = item
             dimdict[ds.variables[name].standard_name] = item
 
@@ -66,7 +67,7 @@ def get_metadata(ds, varname):
         elif name == varname:
             
             var = {'name':name,
-                    'unit': ds.variables[name].__dict__['units'],
+                    'unit': getattr(ds.variables[name], 'units', 'Unknown'),
                     'params': [v.name for v in ds.variables[name].get_dims()],
                     'add_offset': getattr(ds.variables[name], 'add_offset', 0),
                     'scale_factor': getattr(ds.variables[name], 'scale_factor', 1)}
@@ -82,7 +83,7 @@ def get_metadata(ds, varname):
             item = {'name': name,
                     'standard_name': 'latitude',
                     'vals': ds.variables[name][:],
-                    'unit': ds.variables[name].__dict__['units']}
+                    'unit': getattr(ds.variables[name], 'units', 'Unknown')}
             dimdict[name] = item
             dimdict['latitude'] = item
 
@@ -91,7 +92,7 @@ def get_metadata(ds, varname):
             item = {'name': name,
                     'standard_name': 'longitude',
                     'vals': ds.variables[name][:],
-                    'unit': ds.variables[name].__dict__['units']}
+                    'unit': getattr(ds.variables[name], 'units', 'Unknown')}
             dimdict[name] = item
             dimdict['longitude'] = item
 
@@ -175,6 +176,62 @@ def create_nc(var):
 
 
 
+def create_nc_calculated(var_catalog, var_id):
+
+    """
+    Create empty netcdf file for requested variable for subsequent local storage.
+    Same dimensions as the online dataset.
+
+    Args:
+        var_catalog (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
+        var_id (str): ID of the variable to calculate.
+    Returns:
+        None
+    """
+
+    calculated =    { 'eke':{   'like':         'surface-current-u',
+                                'unit':         'm2/s2',
+                                'long_name':    'Eddy kinetic energy'}
+                    }
+
+    var = calculated[var_id]
+
+    path = sat_path + var_id + '.nc'
+    pathd = sat_path + var_id + '_downloaded.nc'
+
+    like_ds = nc.Dataset(sat_path + var['like'] + '.nc')
+    varname = var_catalog[var['like']]['varname']
+    dimdict, var = get_metadata(like_ds, varname)
+
+    local_ds = nc.Dataset(path, mode = 'w')
+    local_ds.set_fill_off()
+    bool_ds = nc.Dataset(pathd, mode = 'w')
+
+    for name, dimension in like_ds.dimensions.items():
+        local_ds.createDimension(name, len(dimension) if not dimension.isunlimited() else None)
+        bool_ds.createDimension(name, len(dimension) if not dimension.isunlimited() else None)
+
+
+    for name, variable in like_ds.variables.items():
+        if (name in dimdict) and (dimdict[name]['standard_name'] in ['time', 'latitude', 'longitude', 'depth']):
+            local_ds.createVariable(name, variable.datatype, variable.dimensions, zlib= True)
+            local_ds.variables[name].setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
+            local_ds.variables[name][:] = variable[:]
+
+
+    like_variable = like_ds.variables[varname]
+    local_ds.createVariable(var_id, like_variable.dtype, like_variable.dimensions, zlib = True)
+    local_ds.variables[var_id].setncatts({'units': var['unit'], 'long_name': var['long_name']})
+
+    bool_ds.createVariable(var_id, 'B', like_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
+
+    local_ds.close()
+    bool_ds.close()
+    like_ds.close()
+
+
+
+
 def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
 
     """
@@ -198,7 +255,7 @@ def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
 
             ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
             ind_part1[lon_pos]['max'] = len(lons) - 1
-            ind_part2[lon_pos]['min'] = 0
+            ind_part2[lon_pos]['min'] = len(lons) % ord_steps[lon_pos]
 
             part1 = multidimensional_slice(nc_dataset, varname, ind_part1, lons, lon_pos)
             part2 = multidimensional_slice(nc_dataset, varname, ind_part2, lons, lon_pos)
@@ -209,13 +266,17 @@ def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
         else:
 
             if len(ind) == 2:
-                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1]
+                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1:ind[0]['step'],
+                                                     ind[1]['min']:ind[1]['max']+1:ind[1]['step']]
             elif len(ind) == 3:
-                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
-                                                     ind[2]['min']:ind[2]['max']+1]
+                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1:ind[0]['step'],
+                                                     ind[1]['min']:ind[1]['max']+1:ind[1]['step'],
+                                                     ind[2]['min']:ind[2]['max']+1:ind[2]['step']]
             elif len(ind) == 4:
-                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
-                                                     ind[2]['min']:ind[2]['max']+1, ind[3]['min']:ind[3]['max']+1]
+                data = nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1:ind[0]['step'],
+                                                     ind[1]['min']:ind[1]['max']+1:ind[1]['step'],
+                                                     ind[2]['min']:ind[2]['max']+1:ind[2]['step'],
+                                                     ind[3]['min']:ind[3]['max']+1:ind[3]['step']]
             else:
                 print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 
@@ -235,7 +296,7 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
         nc_dataset (netCDF4.Dataset): Dataset to query.
         varname (str): Variable name in the dataset.
         data (numpy.array): Data to insert.
-        ind (dict): Dictionary with ordered slicing indices for all dimensions.
+        ind (dict list): List with ordered slicing indices for all dimensions.
         lons (list): Longitude values.
         lon_pos (int): Position of longitude in the dataset's dimensions.
     Returns:
@@ -248,7 +309,7 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
 
         ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
         ind_part1[lon_pos]['max'] = len(lons) - 1
-        ind_part2[lon_pos]['min'] = 0
+        ind_part2[lon_pos]['min'] = len(lons) % ind[lon_pos]['step']
 
         part1, part2 = np.split(data, [width1], axis = lon_pos)
 
@@ -257,16 +318,17 @@ def insert_multidimensional_slice(nc_dataset, varname, data, ind, lons, lon_pos)
 
     else:
         if len(ind) == 2:
-            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1] \
-            = data
+            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1:ind[0]['step'],
+                                          ind[1]['min']:ind[1]['max']+1:ind[1]['step']]   = data
         elif len(ind) == 3:
-            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
-                                          ind[2]['min']:ind[2]['max']+1]                              \
-            = data
+            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1:ind[0]['step'],
+                                          ind[1]['min']:ind[1]['max']+1:ind[1]['step'],
+                                          ind[2]['min']:ind[2]['max']+1:ind[2]['step']]   = data
         elif len(ind) == 4:
-            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1, ind[1]['min']:ind[1]['max']+1,
-                                          ind[2]['min']:ind[2]['max']+1, ind[3]['min']:ind[3]['max']+1] \
-            = data
+            nc_dataset.variables[varname][ind[0]['min']:ind[0]['max']+1:ind[0]['step'],
+                                          ind[1]['min']:ind[1]['max']+1:ind[1]['step'],
+                                          ind[2]['min']:ind[2]['max']+1:ind[2]['step'],
+                                          ind[3]['min']:ind[3]['max']+1:ind[3]['step']]   = data
         else:
             print('Unsupported number of dimensions (only lat, lon, time and depth are supported')
 

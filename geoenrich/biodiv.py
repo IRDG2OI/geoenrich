@@ -12,6 +12,8 @@ from pygbif import occurrences as occ
 
 import geoenrich
 
+from geoenrich.enrichment import parse_columns
+
 try:
     from geoenrich.credentials import *
 except:
@@ -189,7 +191,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
 
 
-def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
+def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
                      crs="EPSG:4326", *args, **kwargs):
 
 
@@ -200,13 +202,13 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
     Otherwise, return a random sample of max_number occurrences.
     
     Args:
-        path (str): Path to the DarwinCoreArchive (.zip) to open.
+        path (str): Path to the csv file to open.
         id_col (int or str): Name or index of the column containing individual occurence ids.
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
         depth_col (int or str): Name or index of the column containing occurrence depths.
-        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax)
+        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
         GeoDataFrame: occurrences data (only relevant columns are included)
@@ -215,7 +217,7 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
     # Load file
 
     columns = [id_col, date_col, lat_col, lon_col, depth_col]
-    rawdf = pd.read_csv(path, usecols = columns, *args, **kwargs)
+    rawdf = pd.read_csv(path, usecols = columns, index_col = id_col, *args, **kwargs)
     idf = rawdf.dropna(subset = [lat_col, lon_col])
 
     # Remove rows with missing coordinate
@@ -244,3 +246,40 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
     
     return(geodf)
 
+
+def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", *args, **kwargs):
+
+
+    """
+    Load data to download a variable for specific areas.
+    Bounds must be provided for all available dimensions.
+    Bound columns must be named *{dim}_min* and *{dim}_max*, with {dim} in latitude, longitude, depth, date
+    Additional arguments are passed down to *pandas.read_csv*.
+
+    Args:
+        path (str): Path to the csv file to open.
+        id_col (int or str): Name or index of the column containing individual occurence ids.
+        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
+        crs (str): Crs of the provided coordinates.
+
+    Returns:
+        GeoDataFrame: occurrences data (only relevant columns are included)
+    """
+
+    rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],
+                infer_datetime_format = True, *args, **kwargs)
+
+    idf = pd.DataFrame()
+
+    if 'date_min' in rawdf.columns:
+        idf['mint'] = pd.to_datetime(rawdf['date_min'], errors = 'coerce', format = date_format,
+                                        dayfirst = True, infer_datetime_format = True)
+        idf['maxt'] = pd.to_datetime(rawdf['date_max'], errors = 'coerce', format = date_format,
+                                        dayfirst = True, infer_datetime_format = True)
+
+    idf['minx'], idf['maxx'] = rawdf['longitude_min'], rawdf['longitude_max']
+    idf['miny'], idf['maxy'] = rawdf['latitude_min'], rawdf['latitude_max']
+
+    df = idf.dropna()
+    
+    return(df)
