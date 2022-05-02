@@ -255,7 +255,7 @@ def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
 
             ind_part1, ind_part2 = deepcopy(ind), deepcopy(ind)
             ind_part1[lon_pos]['max'] = len(lons) - 1
-            ind_part2[lon_pos]['min'] = len(lons) % ord_steps[lon_pos]
+            ind_part2[lon_pos]['min'] = len(lons) % ind[lon_pos]['step']
 
             part1 = multidimensional_slice(nc_dataset, varname, ind_part1, lons, lon_pos)
             part2 = multidimensional_slice(nc_dataset, varname, ind_part2, lons, lon_pos)
@@ -283,7 +283,7 @@ def multidimensional_slice(nc_dataset, varname, ind, lons, lon_pos):
             return(data)
 
     except:
-        print('Corrupt netCDF file', ind)
+        print('Read error in netCDF file. If local file, try restoring a backup', ind)
 
 
 

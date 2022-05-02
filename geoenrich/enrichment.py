@@ -41,7 +41,7 @@ pd.options.mode.chained_assignment = None
 
 
 
-def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request = 'surface', slice = None):
+def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request = 'surface', slice = None, downsample = {}):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -56,6 +56,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
         time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         None
     """
@@ -76,12 +77,12 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
 
     # Calculate cube bounds
 
-    geodf = add_bounds(geodf, geo_buff, time_buff)
+    to_enrich = add_bounds(to_enrich, geo_buff, time_buff)
 
     if var['url'] == 'calculated':
-        indices = enrich_compute(to_enrich, var['var_id'], geo_buff, time_buff)
+        indices = enrich_compute(to_enrich, var['var_id'], downsample)
     else:
-        indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], geo_buff, time_buff, depth_request)
+        indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], depth_request, downsample)
 
     # If variable is already present, update it
     if any(var['var_id'] in col for col in original.columns):
@@ -98,7 +99,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
 
 
 
-def enrich_compute(geodf, var_id):
+def enrich_compute(geodf, var_id, downsample):
 
     """
     Compute a calculated variable for the requested occurrences and buffer and save into local netcdf file.
@@ -107,6 +108,7 @@ def enrich_compute(geodf, var_id):
     Args:
         geodf (geopandas.GeoDataFrame): Data to be enriched.
         var_id (str): ID of the variable to download.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
@@ -138,6 +140,7 @@ def enrich_compute(geodf, var_id):
     #############################################
 
     # Compute
+    # Use downsample argument
 
     calculate_variable(var_id, local_ds, bool_ds)
 
@@ -156,7 +159,7 @@ def enrich_compute(geodf, var_id):
 
 
 
-def enrich_download(geodf, varname, var_id, url, depth_request):
+def enrich_download(geodf, varname, var_id, url, depth_request, downsample):
     
     """
     Download data for the requested occurrences and buffer into local netcdf file.
@@ -168,6 +171,7 @@ def enrich_download(geodf, varname, var_id, url, depth_request):
         var_id (str): ID of the variable to download.
         url (str): Dataset url (including credentials if needed).
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
@@ -210,7 +214,7 @@ def enrich_download(geodf, varname, var_id, url, depth_request):
 
     # Apply query to each row sequentially
 
-    res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request), 
+    res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample), 
                             result_type = 'expand')
 
     local_ds.close()
@@ -284,7 +288,23 @@ def add_bounds(geodf1, geo_buff, time_buff):
 
 
 
-def enrich_areas(df, var_id, outfile, depth_request = 'surface', slice = None):
+def enrich_areas(df, var_id, outfile, depth_request = 'surface', slice = None, downsample = {}):
+
+    """
+    Download data for arbitrary areas specified in df.
+    The downsample argument can be used to skip part of the data in the case of large areas.
+
+    Args:
+        df (pandas.DataFrame)
+        var_id (str): ID of the variable to download.
+        outfile (str): path where the output file will be written.
+        depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
+        slice (int tuple): Slice of the enrichment file to use for enrichment.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+    
+    Returns:
+        None
+    """
 
     var = get_var_catalog()[var_id]
 
@@ -294,16 +314,16 @@ def enrich_areas(df, var_id, outfile, depth_request = 'surface', slice = None):
         to_enrich = df.iloc[slice[0]:slice[1]]
 
     if var['url'] == 'calculated':
-        indices = enrich_compute(to_enrich, var['var_id'])
+        indices = enrich_compute(to_enrich, var['var_id'], downsample)
     else:
-        indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], depth_request)
+        indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], depth_request, downsample)
 
     var_ind = parse_columns(indices)
 
     ds = nc.Dataset(sat_path + var_id + '.nc')
     dimdict, var = get_metadata(ds, var['varname'])
 
-    res = indices.progress_apply(compute_stats, axis=1, args = (var_id, var_ind[var_id], ds, dimdict, var), result_type = 'expand')
+    res = indices.progress_apply(compute_stats, axis=1, args = (var_id, var_ind[var_id], ds, dimdict, var, downsample), result_type = 'expand')
     ds.close()
 
     output = df.merge(res, how = 'left', left_index = True, right_index = True)
@@ -316,7 +336,7 @@ def enrich_areas(df, var_id, outfile, depth_request = 'surface', slice = None):
 ############################# Element-wise enrichment #################################
 
 
-def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
+def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample):
 
     """
     Query geospatial data for the given GeoDataFrame row.
@@ -330,6 +350,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         pandas.Series: Coordinates of the data of interest in the netCDF file.
 
@@ -337,7 +358,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
 
     # Find indices for region of interest
 
-    ind = calculate_indices(dimdict, row, var, depth_request)
+    ind = calculate_indices(dimdict, row, var, depth_request, downsample)
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
     
@@ -364,7 +385,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request):
 
 
 
-def calculate_indices(dimdict, row, var, depth_request):
+def calculate_indices(dimdict, row, var, depth_request, downsample):
 
     """
     Calculate indices of interest for the given bounds, according to variable dimensions.
@@ -374,6 +395,7 @@ def calculate_indices(dimdict, row, var, depth_request):
         row (pandas.Series): GeoDataFrame row to enrich.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         dict: Dictionary of indices for each dimension (keys are standard dimension names).
     """
@@ -426,7 +448,9 @@ def calculate_indices(dimdict, row, var, depth_request):
         else:
             ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals'] - 1), 'best': None, 'step': 1}
 
-    
+    for dim in downsample:
+        ind[dim]['step'] = downsample[dim] + 1
+
     return(ind)
 
 
@@ -451,11 +475,11 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
     lons = dimdict['longitude']['vals']
     lon_pos = var['params'].index(dimdict['longitude']['name'])
     check = multidimensional_slice(bool_ds, var['name'], ordered_indices, lons, lon_pos).data
-    totalsize = np.prod([(ind[p]['max']+1 - ind[p]['min']) // ind[p]['step'] for p in params])
+    totalsize = np.prod([1 + (ind[p]['max'] - ind[p]['min']) // ind[p]['step'] for p in params])
 
     if 'time' in ind:
 
-        lentime = (ind['time']['max']+1 - ind['time']['min']) // ind['time']['step']
+        lentime = 1 + (ind['time']['max'] - ind['time']['min']) // ind['time']['step']
         flatcheck = check.reshape((lentime, -1)).sum(axis = 1)
         checklist = (flatcheck == (totalsize / lentime))
 
@@ -643,7 +667,7 @@ def parse_columns(df):
 
 
 
-def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
+def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None, downsample = {}):
 
     """
     Retrieve all available data for a specific occurrence.
@@ -653,6 +677,8 @@ def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
         geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+
     Returns:
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
@@ -682,7 +708,7 @@ def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
 
             dimdict, var = get_metadata(ds, cat[v]['varname'])
 
-            data, coords = fetch_data(row, v, var_ind, ds, dimdict, var)
+            data, coords = fetch_data(row, v, var_ind, ds, dimdict, var, downsample)
             ds.close()
 
         if shape == 'buffer' and geo_buff is not None:
@@ -696,7 +722,7 @@ def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None):
 
 
 
-def fetch_data(row, var_id, var_indices, ds, dimdict, var):
+def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
 
     """
     Fetch data locally for a specific occurrence and variable.
@@ -708,38 +734,44 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var):
         ds (netCDF4.Dataset): Local dataset.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+
     Returns:
         numpy.ma.MaskedArray: Raw data.
     """
 
-    if -1 in [row.iloc[d['min']] for d in var_indices.values()]:
-        return(None)
 
-    else:
-        params = [dimdict[n]['standard_name'] for n in var['params']]
-        ordered_indices_cols = [var_indices[p] for p in params]
-        ordered_indices = [{'min': int(row.iloc[d['min']]),
-                            'max': int(row.iloc[d['max']]),
-                            'step': 1}
-                            for d in ordered_indices_cols]
+    params = [dimdict[n]['standard_name'] for n in var['params']]
+    ordered_indices_cols = [var_indices[p] for p in params]
+    ordered_indices = [{'min': int(row.iloc[d['min']]),
+                        'max': int(row.iloc[d['max']]),
+                        'step': 1}
+                        for d in ordered_indices_cols]
 
-        lons = dimdict['longitude']['vals']
-        lon_pos = var['params'].index(dimdict['longitude']['name'])
-        data = multidimensional_slice(ds, var['name'], ordered_indices, lons, lon_pos)
+    for i in range(len(params)):
+        p = params[i]
+        if p in downsample:
+            ordered_indices[i]['step'] = downsample[p] + 1
 
-        coordinates = []
-        for p in params:
-            i1, i2 = int(row.iloc[var_indices[p]['min']]), int(row.iloc[var_indices[p]['max']])
+    lons = dimdict['longitude']['vals']
+    lon_pos = var['params'].index(dimdict['longitude']['name'])
+    data = multidimensional_slice(ds, var['name'], ordered_indices, lons, lon_pos)
+
+    coordinates = []
+    for p in params:
+        i1, i2 = int(row.iloc[var_indices[p]['min']]), int(row.iloc[var_indices[p]['max']])
+        if p in downsample:
+            step = downsample[p] + 1
+        else:
             step = 1
-            if (p == 'longitude' and i1 > i2):
-                step = 1
-                part1 = ds.variables[dimdict[p]['name']][i1::step]
-                part2 = ds.variables[dimdict[p]['name']][len(lons)//step:i2 + 1:step]
-                coordinates.append([p, part1 + part2])
-            else:
-                coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1:step]])
+        if (p == 'longitude' and i1 > i2):
+            part1 = ds.variables[dimdict[p]['name']][i1::step]
+            part2 = ds.variables[dimdict[p]['name']][len(lons)%step:i2 + 1:step]
+            coordinates.append([p, np.ma.concatenate((part1, part2))])
+        else:
+            coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1:step]])
 
-        return(data, coordinates)
+    return(data, coordinates)
 
 
 
@@ -762,14 +794,17 @@ def read_ids(dataset_ref):
 
 
 
-def produce_stats(dataset_ref, geo_buff):
+def produce_stats(dataset_ref, geo_buff, var_list = None, downsample = {}):
 
     """
     Produce a document named *dataset\_ref*\_stats.csv with summary stats of all enriched data.
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
+        geo_buffer (int): The buffer you used to enrich your dataset (or a smaller one).
+        var_list (var): A sublist of enriched variable to compute statistics for. If None, use all available variables.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+
 
     Returns:
         None
@@ -784,15 +819,17 @@ def produce_stats(dataset_ref, geo_buff):
 
     for v in ind:
 
-        var_ind = ind[v]
-        ds = nc.Dataset(sat_path + v + '.nc')
-        dimdict, var = get_metadata(ds, cat[v]['varname'])
+        if var_list is None or v in var_list:
+            var_ind = ind[v]
+            ds = nc.Dataset(sat_path + v + '.nc')
+            dimdict, var = get_metadata(ds, cat[v]['varname'])
 
-        print('Computing stats for ' + v + '...')
-        res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var, geo_buff), result_type = 'expand')
+            print('Computing stats for ' + v + '...')
+            res = df.progress_apply(compute_stats, axis=1, args = (v, var_ind, ds, dimdict, var, downsample, geo_buff), result_type = 'expand')
+            ds.close()
 
-        ds.close()
-        output = output.merge(res, how = 'left', left_index = True, right_index = True)
+            if res is not None:
+                output = output.merge(res, how = 'left', left_index = True, right_index = True)
 
 
     output.to_csv(biodiv_path + dataset_ref + '_stats.csv')
@@ -800,7 +837,7 @@ def produce_stats(dataset_ref, geo_buff):
 
 
 
-def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff = None):
+def compute_stats(row, var_id, var_indices, ds, dimdict, var, downsample, geo_buff = None):
 
     """
     Compute and return stats for the given row.
@@ -813,53 +850,46 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var, geo_buff = None):
         ds (netCDF4.Dataset): Local dataset.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+    
     Returns:
         pandas.Series: Statistics for the given row.
     """
 
-    data, coords = fetch_data(row, var_id, var_indices, ds, dimdict, var)
+    min_columns = [row.iloc[d['min']] for d in var_indices.values()]
 
-    if data is not None:
+    if -1 in min_columns or any([np.isnan(c) for c in min_columns]):
+        # Missing data
+        names = [var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
+        return(pd.Series(index=names, dtype = float))
 
-        params = [dimdict[n]['standard_name'] for n in var['params']]
-        ordered_indices_cols = [var_indices[p] for p in params]
+    data, coords = fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample)
 
-        if geo_buff is not None:
+    params = [dimdict[n]['standard_name'] for n in var['params']]
+    ordered_indices_cols = [var_indices[p] for p in params]
 
-            # If data was calulated around an occurrence
+    if geo_buff is not None:
 
-            best_ind = [int(row.iloc[d['best']]) - int(row.iloc[d['min']]) for d in ordered_indices_cols]
+        # If data was calulated around an occurrence
 
-            if 'time' in params:
-                time_ind = params.index('time')
-                if best_ind[time_ind] < 0 or best_ind[time_ind] >= data.shape[params.index('time')]:
-                    best = np.nan
-                else:
-                    best = data.item(tuple(best_ind))
-            else:
-                best = data.item(tuple(best_ind))
+        mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+        data = np.ma.masked_where(mask, data)
 
-            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            data = np.ma.masked_where(mask, data)
+        av, std = np.ma.average(data), np.ma.std(data)
+        minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
 
-            av, std = np.ma.average(data), np.ma.std(data)
-            minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
+        names = [var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
 
-
-            names = [var_id + '_best', var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
-
-            ret = pd.Series([best, av, std, minv, maxv, count], index = names)
-
-        else:
-
-            # If there is no occurrence
-
-            av, std = np.ma.average(data), np.ma.std(data)
-            minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
-            names = [var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
-            ret = pd.Series([av, std, minv, maxv, count], index = names)
-
-        return(ret)
+        ret = pd.Series([av, std, minv, maxv, count], index = names)
 
     else:
-        return(None)
+
+        # If there is no occurrence
+
+        av, std = np.ma.average(data), np.ma.std(data)
+        minv, maxv, count = np.ma.min(data), np.ma.max(data), np.ma.count(data)
+        names = [var_id + '_av', var_id + '_std', var_id + '_min', var_id + '_max', var_id + '_count']
+        ret = pd.Series([av, std, minv, maxv, count], index = names)
+
+    return(ret)
+
