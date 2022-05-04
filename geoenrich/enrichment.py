@@ -779,14 +779,18 @@ def parse_columns(df):
 
 
 
-def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None, downsample = {}):
+def retrieve_data(occ_id, dataset_ref = None, path = None, id_col = 0, shape = 'rectangle', geo_buff = None, downsample = {}):
 
     """
-    Retrieve all available data for a specific occurrence.
+    Retrieve all available data for a specific occurrence or area.
+    Use dataset_ref if enriching occurrences, and path if enriching arbitrary areas.
+    geo_buff and downsample must be identical to the values you used for enrichment.
     
     Args:
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`
+        path (str): Path to the areas file that was enriched.
+        id_col (str or int): Index or name of the ID column.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
         geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
@@ -795,9 +799,12 @@ def retrieve_data(dataset_ref, occ_id, shape = 'rectangle', geo_buff = None, dow
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
-    df['geometry'] = df['geometry'].apply(wkt.loads)
+    if dataset_ref is not None:
+        path = biodiv_path + dataset_ref + '.csv'
+    else:
+        shape = 'rectangle'
+
+    df = pd.read_csv(path, index_col = id_col)
 
     row = df.loc[occ_id]
     cat = get_var_catalog()
@@ -887,19 +894,24 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
 
 
 
-def read_ids(dataset_ref):
+def read_ids(dataset_ref = None, path = None, id_col = 0):
 
     """
     Return a list of all ids of the given dataset.
+    Use dataset_ref if enriching occurrences, and path if enriching arbitrary areas.
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        path (str): Path to the areas file that was enriched.
+        id_col (str or int): Index or name of the ID column.
     Returns:
         list: List of all present ids.
     """
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
+    if dataset_ref is not None:
+        path = biodiv_path + dataset_ref + '.csv'
+
+    df = pd.read_csv(filepath, index_col = id_col)
 
     return(list(df.index))
 
