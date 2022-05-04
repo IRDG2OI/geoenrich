@@ -8,7 +8,9 @@ The Biodiv module contains functions that handle the geo-referenced data to be e
 
 .. autofunction:: geoenrich.biodiv.get_taxon_key
 
-.. autofunction:: geoenrich.biodiv.import_csv
+.. autofunction:: geoenrich.biodiv.import_occurrences_csv
+
+.. autofunction:: geoenrich.biodiv.load_areas_file
 
 .. autofunction:: geoenrich.biodiv.open_dwca
 

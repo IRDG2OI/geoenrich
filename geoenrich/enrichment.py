@@ -85,14 +85,22 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
         indices = enrich_download(to_enrich, var['varname'], var['var_id'], var['url'], depth_request, downsample)
 
     # If variable is already present, update it
-    if any(var['var_id'] in col for col in original.columns):
+    if any(var_id + '_' in col for col in original.columns) and len(indices):
         original.update(indices)
+        updated = original
+
+    # If indices is empty
+    elif not(len(indices)):
         updated = original
 
     # Else add new columns
     else:
         updated = original.merge(indices, how = 'left', left_index = True, right_index = True)
 
+    # Fill unenriched rows with -1
+    new_columns = [var_id in name for name in updated.columns]
+    missing_index = updated.loc[:,new_columns].isna().all(axis=1)
+    updated.loc[missing_index,new_columns] = -1
 
     # Save file
     updated.to_csv(biodiv_path + dataset_ref + '.csv')
@@ -102,7 +110,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
 def enrich_compute(geodf, var_id, downsample):
 
     """
-    Compute a calculated variable for the requested occurrences and buffer and save into local netcdf file.
+    Compute a calculated variable for the provided bounds and save into local netcdf file.
     Calculate and return indices of the data of interest in the ncdf file.
 
     Args:
@@ -113,10 +121,6 @@ def enrich_compute(geodf, var_id, downsample):
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
     """
-
-
-    ########### Get netcdf metadata
-    ###############################
 
     # Check if local netcdf files already exist
 
@@ -136,16 +140,38 @@ def enrich_compute(geodf, var_id, downsample):
     local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc.' + timestamp, mode ='r+')
     bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, mode ='r+')
 
-    ######################## Remove out of timeframe datapoints
-    #############################################
+    dimdict, var = get_metadata(local_ds, var['var_id'])
 
-    # Compute
-    # Use downsample argument
+    # Remove out of timeframe datapoints
 
-    calculate_variable(var_id, local_ds, bool_ds)
+    if 'time' in dimdict:
+        t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
+        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
+    else:
+        geodf2 = geodf
+
+    # Open needed datasets (read-only)
+
+    base_datasets = {}
+    base_bool_datasets = {}
+    for name in var['derived_from']:
+        base_datasets[name] = nc.Dataset(sat_path + name + '.nc')
+        base_bool_datasets[name] = nc.Dataset(sat_path + name + '_downloaded.nc')
+
+
+    # Apply query to each row sequentially
+
+    res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets, base_bool_datasets,
+                                                             dimdict, var, downsample), 
+                                result_type = 'expand')
 
     local_ds.close()
     bool_ds.close()
+
+    for name in var['derived_from']:
+        base_datasets[name].close()
+        base_bool_datasets[name].close()
 
     # Remove backup
 
@@ -155,7 +181,7 @@ def enrich_compute(geodf, var_id, downsample):
     os.rename(sat_path + var['var_id'] + '.nc.' + timestamp, sat_path + var['var_id'] + '.nc')
     os.rename(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, sat_path + var['var_id'] + '_downloaded.nc')
 
-    ######### Merge missing rows & return result)
+    return(res)
 
 
 
@@ -207,7 +233,6 @@ def enrich_download(geodf, varname, var_id, url, depth_request, downsample):
     if 'time' in dimdict:
         t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
         geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
-        geodf_na = geodf[(geodf['mint'] < t1) | (geodf['maxt'] > t2)].index
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
@@ -230,14 +255,8 @@ def enrich_download(geodf, varname, var_id, url, depth_request, downsample):
     os.rename(sat_path + var['var_id'] + '.nc.' + timestamp, sat_path + var['var_id'] + '.nc')
     os.rename(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, sat_path + var['var_id'] + '_downloaded.nc')
 
-    if 'time' in dimdict:
-        missing = pd.DataFrame(-1, columns = res.columns, index = geodf_na)
-        print('Enrichment over')
-        return(pd.concat([res, missing]))
-
-    else:
-        print('Enrichment over')
-        return(res)
+    print('Enrichment over')
+    return(res)
 
 
 
@@ -385,6 +404,73 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
 
 
 
+
+def row_compute(row, local_ds, bool_ds, base_datasets, base_bool_datasets, dimdict, var, downsample):
+
+    """
+    Calculate variable for the given row.
+    Save netCDF data to disk and return their coordinates.
+
+    Args:
+        row (pandas.Series): GeoDataFrame row to enrich.
+        local_ds (netCDF4.Dataset): Local dataset.
+        bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
+        base_datasets (netCDF4.Dataset dict): Required datasets for the computation.
+        base_bool_datasets (netCDF4.Dataset dict): Associated bool datasets for the required datasets.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
+        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+    Returns:
+        pandas.Series: Coordinates of the data of interest in the netCDF file.
+
+    """
+
+    ind = calculate_indices(dimdict, row, var, depth_request, downsample)
+    params = [dimdict[n]['standard_name'] for n in var['params']]
+    ordered_indices = [ind[p] for p in params]
+    lons = dimdict['longitude']['vals']
+    lon_pos = var['params'].index(dimdict['longitude']['name'])
+    totalsize = np.prod([1 + (ind[p]['max'] - ind[p]['min']) // ind[p]['step'] for p in params])
+
+    base_data = {}
+
+    # Check that required variables were already downloaded.
+
+    for name in var['derived_from']:
+        check = multidimensional_slice(base_bool_datasets[name], var['name'], ordered_indices, lons, lon_pos).data
+        if check.sum() != totalsize:
+            raise LookupError('Data was not fully download for required variable ' + name)
+
+        base_data[name] = multidimensional_slice(base_datasets[name], var['name'], ordered_indices, lons, lon_pos)
+
+    # Calculate and save variable
+
+    result = compute_variable(var['name'], base_data)
+
+    insert_multidimensional_slice(local_ds, var['name'], result, ordered_indices, lons, lon_pos)
+    insert_multidimensional_slice(bool_ds, var['name'], np.ones(result.shape), ordered_indices, lons, lon_pos)
+
+    # Return coordinates of the saved subset for data retrieval
+
+    colnames = []
+    coords = []
+
+    for p in params:
+
+        if 'best' in ind[p]:
+            colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
+                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_best',
+                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
+            coords.extend([ind[p]['min'], ind[p]['best'], ind[p]['max']])
+        else:
+            colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
+                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
+            coords.extend([ind[p]['min'], ind[p]['max']])
+
+    return(pd.Series(coords, index = colnames))
+
+
+
 def calculate_indices(dimdict, row, var, depth_request, downsample):
 
     """
@@ -452,6 +538,7 @@ def calculate_indices(dimdict, row, var, depth_request, downsample):
         ind[dim]['step'] = downsample[dim] + 1
 
     return(ind)
+
 
 
 def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
@@ -529,6 +616,31 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         data = multidimensional_slice(remote_ds, var['name'], ordered_indices, lons, lon_pos)
         insert_multidimensional_slice(local_ds, var['name'], data, ordered_indices, lons, lon_pos)
         insert_multidimensional_slice(bool_ds, var['name'], np.ones(data.shape), ordered_indices, lons, lon_pos)
+
+
+
+def compute_variable(var_id, base_data):
+
+    """
+    Calculate a composite variable.
+
+    Args:
+        var_id (str): ID of the variable to compute.
+        base_data (numpy.ma.MaskedArray dict): Required data for the computation.
+    Returns:
+        numpy.ma.MaskedArray: Output data.
+    """
+
+    if var_id == 'eke':
+
+        result = base_data['geos-current-u']**2 + base_data['geos-current-v']**2
+
+    else:
+
+        raise NotImplementedError('Calculation of this variable is not implemented')
+        
+    return(result)
+
 
 
 ##########################################################################

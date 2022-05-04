@@ -70,7 +70,8 @@ def get_metadata(ds, varname):
                     'unit': getattr(ds.variables[name], 'units', 'Unknown'),
                     'params': [v.name for v in ds.variables[name].get_dims()],
                     'add_offset': getattr(ds.variables[name], 'add_offset', 0),
-                    'scale_factor': getattr(ds.variables[name], 'scale_factor', 1)}
+                    'scale_factor': getattr(ds.variables[name], 'scale_factor', 1),
+                    'derived_from': getattr(ds.variables[name], 'derived_from', [])}
 
             if 'standard_name' in ds.variables[name].__dict__:
                 var['standard_name'] = ds.variables[name].__dict__['standard_name']
@@ -189,9 +190,9 @@ def create_nc_calculated(var_catalog, var_id):
         None
     """
 
-    calculated =    { 'eke':{   'like':         'surface-current-u',
+    calculated =    { 'eke':{   'long_name':    'Eddy kinetic energy',
                                 'unit':         'm2/s2',
-                                'long_name':    'Eddy kinetic energy'}
+                                'derived_from': ['geos-current-u', 'geos-current-v']}
                     }
 
     var = calculated[var_id]
@@ -199,8 +200,8 @@ def create_nc_calculated(var_catalog, var_id):
     path = sat_path + var_id + '.nc'
     pathd = sat_path + var_id + '_downloaded.nc'
 
-    like_ds = nc.Dataset(sat_path + var['like'] + '.nc')
-    varname = var_catalog[var['like']]['varname']
+    like_ds = nc.Dataset(sat_path + var['derived_from'][0] + '.nc')
+    varname = var_catalog[var['derived_from'][0]]['varname']
     dimdict, var = get_metadata(like_ds, varname)
 
     local_ds = nc.Dataset(path, mode = 'w')
@@ -222,6 +223,7 @@ def create_nc_calculated(var_catalog, var_id):
     like_variable = like_ds.variables[varname]
     local_ds.createVariable(var_id, like_variable.dtype, like_variable.dimensions, zlib = True)
     local_ds.variables[var_id].setncatts({'units': var['unit'], 'long_name': var['long_name']})
+    local_ds.variables[var_id].setncatts({'derived_from': var['derived_from']})
 
     bool_ds.createVariable(var_id, 'B', like_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
 
