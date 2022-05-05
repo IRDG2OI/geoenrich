@@ -195,14 +195,14 @@ def create_nc_calculated(var_catalog, var_id):
                                 'derived_from': ['geos-current-u', 'geos-current-v']}
                     }
 
-    var = calculated[var_id]
+    var_meta = calculated[var_id]
 
     path = sat_path + var_id + '.nc'
     pathd = sat_path + var_id + '_downloaded.nc'
 
-    like_ds = nc.Dataset(sat_path + var['derived_from'][0] + '.nc')
-    varname = var_catalog[var['derived_from'][0]]['varname']
-    dimdict, var = get_metadata(like_ds, varname)
+    like_ds = nc.Dataset(sat_path + var_meta['derived_from'][0] + '.nc')
+    like_varname = var_catalog[var_meta['derived_from'][0]]['varname']
+    dimdict, var = get_metadata(like_ds, like_varname)
 
     local_ds = nc.Dataset(path, mode = 'w')
     local_ds.set_fill_off()
@@ -220,12 +220,12 @@ def create_nc_calculated(var_catalog, var_id):
             local_ds.variables[name][:] = variable[:]
 
 
-    like_variable = like_ds.variables[varname]
+    like_variable = like_ds.variables[like_varname]
     local_ds.createVariable(var_id, like_variable.dtype, like_variable.dimensions, zlib = True)
-    local_ds.variables[var_id].setncatts({'units': var['unit'], 'long_name': var['long_name']})
-    local_ds.variables[var_id].setncatts({'derived_from': var['derived_from']})
+    local_ds.variables[var_id].setncatts({'units': var_meta['unit'], 'long_name': var_meta['long_name']})
+    local_ds.variables[var_id].setncatts({'derived_from': var_meta['derived_from']})
 
-    bool_ds.createVariable(var_id, 'B', like_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
+    bool_ds.createVariable(var_id, 'B', like_variable.dimensions, zlib = True, fill_value = 0)
 
     local_ds.close()
     bool_ds.close()

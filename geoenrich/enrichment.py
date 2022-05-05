@@ -124,23 +124,23 @@ def enrich_compute(geodf, var_id, downsample):
 
     # Check if local netcdf files already exist
 
-    if  not(os.path.exists(sat_path + var['var_id'] + '.nc')) or \
-        not(os.path.exists(sat_path + var['var_id'] + '_downloaded.nc')):
+    if  not(os.path.exists(sat_path + var_id + '.nc')) or \
+        not(os.path.exists(sat_path + var_id + '_downloaded.nc')):
 
         create_nc_calculated(get_var_catalog(), var_id)
 
     # Backup local netCDF files
 
     timestamp = datetime.now().strftime('%d-%H-%M')
-    shutil.copy2(sat_path + var['var_id'] + '.nc', sat_path + var['var_id'] + '.nc.' + timestamp)
-    shutil.copy2(sat_path + var['var_id'] + '_downloaded.nc', sat_path + var['var_id'] + '_downloaded.nc.' + timestamp)
+    shutil.copy2(sat_path + var_id + '.nc', sat_path + var_id + '.nc.' + timestamp)
+    shutil.copy2(sat_path + var_id + '_downloaded.nc', sat_path + var_id + '_downloaded.nc.' + timestamp)
 
     # Load files
 
-    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc.' + timestamp, mode ='r+')
-    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, mode ='r+')
+    local_ds = nc.Dataset(sat_path + var_id + '.nc.' + timestamp, mode ='r+')
+    bool_ds = nc.Dataset(sat_path + var_id + '_downloaded.nc.' + timestamp, mode ='r+')
 
-    dimdict, var = get_metadata(local_ds, var['var_id'])
+    dimdict, var = get_metadata(local_ds, var_id)
 
     # Remove out of timeframe datapoints
 
@@ -425,7 +425,7 @@ def row_compute(row, local_ds, bool_ds, base_datasets, base_bool_datasets, dimdi
 
     """
 
-    ind = calculate_indices(dimdict, row, var, depth_request, downsample)
+    ind = calculate_indices(dimdict, row, var, 'surface', downsample)
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
     lons = dimdict['longitude']['vals']
