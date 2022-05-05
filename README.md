@@ -18,9 +18,9 @@ Documentation on [Read the Docs](https://geoenrich.readthedocs.io).
 
 This project is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.
 
-[![Europe](http://141.95.158.113/uploaded/img/2022/01/union_europeenne_FBtZcHO.png | height=25)](https://european-union.europa.eu/index_fr)
-[![Reunion](http://141.95.158.113/uploaded/img/2022/01/region_reunion.png | height=25)](https://regionreunion.com/)
-[![France](http://141.95.158.113/uploaded/img/2022/01/republique_francaise.png | height=25)](https://www.gouvernement.fr/)
+[![Europe](http://141.95.158.113/uploaded/img/2022/01/union_europeenne_FBtZcHO.png | height=25px)](https://european-union.europa.eu/index_fr)
+[![Reunion](http://141.95.158.113/uploaded/img/2022/01/region_reunion.png | height=25px)](https://regionreunion.com/)
+[![France](http://141.95.158.113/uploaded/img/2022/01/republique_francaise.png | height=25px)](https://www.gouvernement.fr/)
 
 ![Illustration of an occurrence dataset enriched with bathymetry data](https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true "Illustration of an occurrence dataset enriched with bathymetry data")
 
