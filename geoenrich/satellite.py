@@ -177,14 +177,13 @@ def create_nc(var):
 
 
 
-def create_nc_calculated(var_catalog, var_id):
+def create_nc_calculated(var_id):
 
     """
     Create empty netcdf file for requested variable for subsequent local storage.
     Same dimensions as the online dataset.
 
     Args:
-        var_catalog (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
         var_id (str): ID of the variable to calculate.
     Returns:
         None
@@ -200,6 +199,7 @@ def create_nc_calculated(var_catalog, var_id):
     path = sat_path + var_id + '.nc'
     pathd = sat_path + var_id + '_downloaded.nc'
 
+    var_catalog = get_var_catalog()
     like_ds = nc.Dataset(sat_path + var_meta['derived_from'][0] + '.nc')
     like_varname = var_catalog[var_meta['derived_from'][0]]['varname']
     dimdict, var = get_metadata(like_ds, like_varname)

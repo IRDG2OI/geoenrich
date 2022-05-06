@@ -98,8 +98,8 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
         updated = original.merge(indices, how = 'left', left_index = True, right_index = True)
 
     # Fill unenriched rows with -1
-    new_columns = [var_id in name for name in updated.columns]
-    missing_index = updated.loc[:,new_columns].isna().all(axis=1)
+    new_columns = [var_id + '_'  in name for name in updated.columns]
+    missing_index = updated.loc[:,new_columns].isnull().all(axis=1)
     updated.loc[missing_index,new_columns] = -1
 
     # Save file
@@ -127,7 +127,7 @@ def enrich_compute(geodf, var_id, downsample):
     if  not(os.path.exists(sat_path + var_id + '.nc')) or \
         not(os.path.exists(sat_path + var_id + '_downloaded.nc')):
 
-        create_nc_calculated(get_var_catalog(), var_id)
+        create_nc_calculated(var_id)
 
     # Backup local netCDF files
 
@@ -154,32 +154,34 @@ def enrich_compute(geodf, var_id, downsample):
     # Open needed datasets (read-only)
 
     base_datasets = {}
-    base_bool_datasets = {}
-    for name in var['derived_from']:
-        base_datasets[name] = nc.Dataset(sat_path + name + '.nc')
-        base_bool_datasets[name] = nc.Dataset(sat_path + name + '_downloaded.nc')
+    cat = get_var_catalog()
 
+    for sec_var_id in var['derived_from']:
+        base_datasets[sec_var_id] = {}
+        base_datasets[sec_var_id]['ds'] = nc.Dataset(sat_path + sec_var_id + '.nc')
+        base_datasets[sec_var_id]['bool_ds'] = nc.Dataset(sat_path + sec_var_id + '_downloaded.nc')
+        base_datasets[sec_var_id]['varname'] = cat[sec_var_id]['varname']
 
     # Apply query to each row sequentially
 
-    res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets, base_bool_datasets,
+    res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets,
                                                              dimdict, var, downsample), 
                                 result_type = 'expand')
 
     local_ds.close()
     bool_ds.close()
 
-    for name in var['derived_from']:
-        base_datasets[name].close()
-        base_bool_datasets[name].close()
+    for key in base_datasets:
+        base_datasets[key]['ds'].close()
+        base_datasets[key]['bool_ds'].close()
 
     # Remove backup
 
-    os.remove(sat_path + var['var_id'] + '.nc')
-    os.remove(sat_path + var['var_id'] + '_downloaded.nc')
+    os.remove(sat_path + var_id + '.nc')
+    os.remove(sat_path + var_id + '_downloaded.nc')
 
-    os.rename(sat_path + var['var_id'] + '.nc.' + timestamp, sat_path + var['var_id'] + '.nc')
-    os.rename(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, sat_path + var['var_id'] + '_downloaded.nc')
+    os.rename(sat_path + var_id + '.nc.' + timestamp, sat_path + var_id + '.nc')
+    os.rename(sat_path + var_id + '_downloaded.nc.' + timestamp, sat_path + var_id + '_downloaded.nc')
 
     return(res)
 
@@ -405,7 +407,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
 
 
 
-def row_compute(row, local_ds, bool_ds, base_datasets, base_bool_datasets, dimdict, var, downsample):
+def row_compute(row, local_ds, bool_ds, base_datasets, dimdict, var, downsample):
 
     """
     Calculate variable for the given row.
@@ -416,7 +418,6 @@ def row_compute(row, local_ds, bool_ds, base_datasets, base_bool_datasets, dimdi
         local_ds (netCDF4.Dataset): Local dataset.
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
         base_datasets (netCDF4.Dataset dict): Required datasets for the computation.
-        base_bool_datasets (netCDF4.Dataset dict): Associated bool datasets for the required datasets.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
@@ -432,16 +433,24 @@ def row_compute(row, local_ds, bool_ds, base_datasets, base_bool_datasets, dimdi
     lon_pos = var['params'].index(dimdict['longitude']['name'])
     totalsize = np.prod([1 + (ind[p]['max'] - ind[p]['min']) // ind[p]['step'] for p in params])
 
+    if ind['longitude']['min'] > ind['longitude']['max']:
+        # Handle longitude singularity
+        totalsize = totalsize / (1 + (ind['longitude']['max'] - ind['longitude']['min']) // ind['longitude']['step'])
+        act_len = (len(lons) - ind['longitude']['min']) // ind['longitude']['step'] + \
+                  (ind['longitude']['max'] - len(lons) % ind['longitude']['step'] + 1) // ind['longitude']['step']
+        totalsize = totalsize * act_len
+
     base_data = {}
 
     # Check that required variables were already downloaded.
 
-    for name in var['derived_from']:
-        check = multidimensional_slice(base_bool_datasets[name], var['name'], ordered_indices, lons, lon_pos).data
+    for key in base_datasets:
+        name = base_datasets[key]['varname']
+        check = multidimensional_slice(base_datasets[key]['bool_ds'], name, ordered_indices, lons, lon_pos).data
         if check.sum() != totalsize:
-            raise LookupError('Data was not fully download for required variable ' + name)
+            raise LookupError('Data was not fully downloaded for required variable ' + key)
 
-        base_data[name] = multidimensional_slice(base_datasets[name], var['name'], ordered_indices, lons, lon_pos)
+        base_data[key] = multidimensional_slice(base_datasets[key]['ds'], name, ordered_indices, lons, lon_pos)
 
     # Calculate and save variable
 
@@ -458,13 +467,13 @@ def row_compute(row, local_ds, bool_ds, base_datasets, base_bool_datasets, dimdi
     for p in params:
 
         if 'best' in ind[p]:
-            colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
-                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_best',
-                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
+            colnames.extend([var['name'] + '_' + dimdict[p]['standard_name'] + '_min',
+                             var['name'] + '_' + dimdict[p]['standard_name'] + '_best',
+                             var['name'] + '_' + dimdict[p]['standard_name'] + '_max'])
             coords.extend([ind[p]['min'], ind[p]['best'], ind[p]['max']])
         else:
-            colnames.extend([var['var_id'] + '_' + dimdict[p]['standard_name'] + '_min',
-                             var['var_id'] + '_' + dimdict[p]['standard_name'] + '_max'])
+            colnames.extend([var['name'] + '_' + dimdict[p]['standard_name'] + '_min',
+                             var['name'] + '_' + dimdict[p]['standard_name'] + '_max'])
             coords.extend([ind[p]['min'], ind[p]['max']])
 
     return(pd.Series(coords, index = colnames))
@@ -563,6 +572,14 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
     lon_pos = var['params'].index(dimdict['longitude']['name'])
     check = multidimensional_slice(bool_ds, var['name'], ordered_indices, lons, lon_pos).data
     totalsize = np.prod([1 + (ind[p]['max'] - ind[p]['min']) // ind[p]['step'] for p in params])
+
+    if ind['longitude']['min'] > ind['longitude']['max']:
+        # Handle longitude singularity
+        totalsize = totalsize / (1 + (ind['longitude']['max'] - ind['longitude']['min']) // ind['longitude']['step'])
+        act_len = (len(lons) - ind['longitude']['min']) // ind['longitude']['step'] + \
+                  (ind['longitude']['max'] - len(lons) % ind['longitude']['step'] + 1) // ind['longitude']['step']
+        totalsize = totalsize * act_len
+        
 
     if 'time' in ind:
 
@@ -887,6 +904,13 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
             part1 = ds.variables[dimdict[p]['name']][i1::step]
             part2 = ds.variables[dimdict[p]['name']][len(lons)%step:i2 + 1:step]
             coordinates.append([p, np.ma.concatenate((part1, part2))])
+        elif p == 'time':
+            time_var = ds.variables[dimdict[p]['name']]
+            if 'months since' in time_var.__dict__['units']:
+                times = num2date(time_var[i1:i2+1:step], time_var.__dict__['units'], '360_day')
+            else:
+                times = num2pydate(time_var[i1:i2+1:step], time_var.__dict__['units'])
+            coordinates.append([p, times])
         else:
             coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1:step]])
 
@@ -894,7 +918,7 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
 
 
 
-def read_ids(dataset_ref = None, path = None, id_col = 0):
+def read_ids(dataset_ref = None, filepath = None, id_col = 0):
 
     """
     Return a list of all ids of the given dataset.
@@ -902,14 +926,14 @@ def read_ids(dataset_ref = None, path = None, id_col = 0):
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        path (str): Path to the areas file that was enriched.
+        filepath (str): Path to the areas file that was enriched.
         id_col (str or int): Index or name of the ID column.
     Returns:
         list: List of all present ids.
     """
 
     if dataset_ref is not None:
-        path = biodiv_path + dataset_ref + '.csv'
+        filepath = biodiv_path + dataset_ref + '.csv'
 
     df = pd.read_csv(filepath, index_col = id_col)
 
