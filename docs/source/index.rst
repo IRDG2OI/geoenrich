@@ -26,9 +26,13 @@ Installation
    :hidden:
 
    install
+   r-install
 
 :doc:`install`
-    How to install geoenrich.
+   Installation instructions for Python.
+
+:doc:`r-install`
+   Installation instructions for R.
 
 
 Modules

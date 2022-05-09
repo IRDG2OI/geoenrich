@@ -1041,3 +1041,63 @@ def compute_stats(row, var_id, var_indices, ds, dimdict, var, downsample, geo_bu
 
     return(ret)
 
+
+
+def get_derivative(occ_id, var_id, days = (0,0), dataset_ref = None, path = None, id_col = 0, shape = 'rectangle', geo_buff = None, downsample = {}):
+
+    """
+    Retrieve data for both specified days and return the derivative.
+    Use dataset_ref if enriching occurrences, and path if enriching arbitrary areas.
+    geo_buff and downsample must be identical to the values you used for enrichment.
+    
+    Args:
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
+        var_id (str): ID of the variable to derivate.
+        days (int tuple): Start and end days for derivative calculation, relatively to occurrence, eg. (-7, 0)
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        path (str): Path to the areas file that was enriched.
+        id_col (str or int): Index or name of the ID column.
+        shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
+        geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+
+    Returns:
+        dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
+    """
+
+    if dataset_ref is not None:
+        path = biodiv_path + dataset_ref + '.csv'
+    else:
+        shape = 'rectangle'
+
+    df = pd.read_csv(path, index_col = id_col)
+
+    row = df.loc[occ_id]
+    cat = get_var_catalog()
+    
+    var_ind = parse_columns(df)[var_id]
+
+    # Read indices into a dictionary
+
+    results = {}
+
+        if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
+            results[v] = {'coords': None, 'values': None}
+
+        else:
+            ds = nc.Dataset(sat_path + v + '.nc')
+            unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
+
+            dimdict, var = get_metadata(ds, cat[v]['varname'])
+
+            data, coords = fetch_data(row, v, var_ind, ds, dimdict, var, downsample)
+            ds.close()
+
+        if shape == 'buffer' and geo_buff is not None:
+            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+            results[v] = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
+        else:
+            results[v] = {'coords': coords, 'values': data, 'unit': unit}
+
+
+    return(results)
