@@ -5,6 +5,7 @@ The core module of geoenrich
 import os
 import shutil
 
+import json
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -41,7 +42,8 @@ pd.options.mode.chained_assignment = None
 
 
 
-def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request = 'surface', slice = None, downsample = {}):
+def enrich(dataset_ref, var_id, input_type = 'occurrences', geo_buff = 115, time_buff = (0,0), depth_request = 'surface', 
+    slice = None, downsample = {}):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -50,9 +52,10 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
     If the enrichment file is large, use slice argument to only enrich some rows.
     
     Args:
-        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey). Must be unique.
         var_id (str): ID of the variable to download.
-        geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        input_type (str): 'occurrences' or 'areas'.
+        geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
@@ -61,23 +64,29 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
         None
     """
 
-    # Load biodiv file
-    original = load_enrichment_file(dataset_ref)
+    if input_type == 'occurrences':
 
+        # Load biodiv file
+        original = load_enrichment_file(dataset_ref)
+        original = add_bounds(original, geo_buff, time_buff)
+
+        to_enrich = original[['geometry', 'eventDate']]
+
+    elif input_type == 'areas':
+
+        to_enrich = load_areas_file('~/Desktop/Globice/areas2.csv', id_col = 'id')
+
+    if slice is not None:
+        to_enrich = to_enrich.iloc[slice[0]:slice[1]]
 
     # Load variable information
     var = get_var_catalog()[var_id]
     
     
-    # Test enrichment on random rows
-    to_enrich = original[['geometry', 'eventDate']]
-
-    if slice is not None:
-        to_enrich = to_enrich.iloc[slice[0]:slice[1]]
 
     # Calculate cube bounds
-
-    to_enrich = add_bounds(to_enrich, geo_buff, time_buff)
+    if input_type == 'occurrence':
+        to_enrich = add_bounds(to_enrich, geo_buff, time_buff)
 
     if var['url'] == 'calculated':
         indices = enrich_compute(to_enrich, var['var_id'], downsample)
@@ -687,29 +696,45 @@ def load_enrichment_file(dataset_ref):
 
 
 
-def create_enrichment_file(gdf, dataset_ref, id_prefix = ''):
+def create_enrichment_file(gdf, dataset_ref):
 
     """
-    Create database file that will be used to save enrichment data.
+    Create database file that will be used to save enrichment metadata.
+    Dataframe index will be used as unique occurrences ids.
     
     Args:  
-        gdf (geopandas.GeoDataFrame): Data to enrich (output of :func:`geoenrich.Biodiv.open_dwca` or :func:`geoenrich.Biodiv.import_csv`).
-        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        id_prefix (str): Optional, if you want to add a prefix to occurrence ids.
+        gdf (geopandas.GeoDataFrame or pandas.DataFrame): Data to enrich (output of :func:`geoenrich.biodiv.open_dwca`
+            or :func:`geoenrich.biodiv.import_csv` or :func:`geoenrich.biodiv.load_areas_file`).
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey). Must be unique.
     Returns:
         None
     """
 
     filepath = biodiv_path + dataset_ref + '.csv'
+    filepath_json = biodiv_path + dataset_ref + '.json'
 
     if(os.path.exists(filepath)):
         print('Abort. File already exists at ' + filepath)
     else:
-        to_save = gdf[['id', 'eventDate', 'geometry']]
-        to_save.set_index(pd.Index(id_prefix + to_save['id'].astype(str), name='id'), inplace = True)
-        to_save.drop(['id'], axis='columns', inplace = True)
-        to_save = to_save.reindex(columns=['geometry', 'eventDate'])
+
+        config = {enrichments: {}}
+        
+        if 'geometry' in gdf.columns:
+            # Occurrences input type
+            config['input_type'] = 'occurrences'
+
+        else:
+            # Areas input type
+            config['input_type'] = 'areas'
+
+
         to_save.to_csv(filepath)
+
+        # Writing json config file 
+        json_object = json.dumps(config, indent = 4)
+        with open(filepath_json, "w") as outfile:
+            outfile.write(json_object)
+
         print('File saved at ' + filepath)
 
 
@@ -1081,23 +1106,23 @@ def get_derivative(occ_id, var_id, days = (0,0), dataset_ref = None, path = None
 
     results = {}
 
-        if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
-            results[v] = {'coords': None, 'values': None}
+    if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
+        results[v] = {'coords': None, 'values': None}
 
-        else:
-            ds = nc.Dataset(sat_path + v + '.nc')
-            unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
+    else:
+        ds = nc.Dataset(sat_path + v + '.nc')
+        unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
 
-            dimdict, var = get_metadata(ds, cat[v]['varname'])
+        dimdict, var = get_metadata(ds, cat[v]['varname'])
 
-            data, coords = fetch_data(row, v, var_ind, ds, dimdict, var, downsample)
-            ds.close()
+        data, coords = fetch_data(row, v, var_ind, ds, dimdict, var, downsample)
+        ds.close()
 
-        if shape == 'buffer' and geo_buff is not None:
-            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            results[v] = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
-        else:
-            results[v] = {'coords': coords, 'values': data, 'unit': unit}
+    if shape == 'buffer' and geo_buff is not None:
+        mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+        results[v] = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
+    else:
+        results[v] = {'coords': coords, 'values': data, 'unit': unit}
 
 
     return(results)

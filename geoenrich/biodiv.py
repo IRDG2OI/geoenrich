@@ -1,5 +1,7 @@
 """
-The module to load biodiversity data from GBIF or a local DarwinCore archive 
+The module to load input data for enrichment from GBIF or a local DarwinCore archive
+The package supports two types of input: occurrences or areas.
+For occurrences, they can be loaded straight from GBIF, from a local DarwinCore archive, or from a custom csv file.
 """
 
 import os
@@ -25,7 +27,7 @@ pd.options.mode.chained_assignment = None
 #caching(True) # gbif caching
 
 
-############################ GBIF / Darwin Core ###########################
+############################ GBIF requests and downloads ###########################
 
 
 def get_taxon_key(query):
@@ -98,7 +100,6 @@ def request_from_gbif(taxonKey, override = False):
 
 
 
-
 def download_requested(request_key):
 
     """
@@ -131,6 +132,7 @@ def download_requested(request_key):
         print('Requested data not available. Request status: ' + metadata['status'])
 
 
+############################ Loading input files ###########################
 
 
 def open_dwca(path = None, taxonKey = None, max_number = 10000):
@@ -157,9 +159,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
     dsA = DwCAReader(path)
 
-    columns = ['id', 'taxonKey', 'eventDate', 'basisOfRecord',
-               'decimalLatitude', 'decimalLongitude', 'depth',
-               'coordinatePrecision', 'coordinateUncertaintyInMeters', 'depthAccuracy']
+    columns = ['id', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'depth']
     rawdf = dsA.pd_read(dsA.descriptor.core.file_location, parse_dates=True, usecols = columns)
 
     # Pre-sample 2*max_number to reduce processing time.
@@ -182,7 +182,9 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
         print('Selected {} random occurrences from the dataset'.format(max_number))
 
     # Convert to GeoDataFrame & standardize Date
-    geodf = gpd.GeoDataFrame(df)
+    geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
+    geodf.set_index(pd.Index(geodf['id'].astype(str), name='id'), inplace = True)
+    geodf.drop(['id'], axis='columns', inplace = True)
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
@@ -241,10 +243,13 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
     # Convert to GeoDataFrame & standardize Date
     df['id'] = df[id_col]
     geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
+    geodf.set_index(pd.Index(geodf['id'].astype(str), name='id'), inplace = True)
+    geodf.drop(['id'], axis='columns', inplace = True)
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
     return(geodf)
+
 
 
 def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", *args, **kwargs):
@@ -281,5 +286,12 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
     idf['miny'], idf['maxy'] = rawdf['latitude_min'], rawdf['latitude_max']
 
     df = idf.dropna()
+    if len(idf) != len(df):
+        print('Dropped {} rows with missing or badly formated coordinates'.format(len(idf) - len(df)))
+
+    df.set_index(pd.Index(df[id_col].astype(str), name='id'), inplace = True)
+    df.drop([id_col], axis='columns', inplace = True)
     
+    print('{} areas were loaded.'.format(len(df)))
+
     return(df)
