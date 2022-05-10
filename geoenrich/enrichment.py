@@ -42,7 +42,7 @@ pd.options.mode.chained_assignment = None
 
 
 
-def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request = 'surface', 
+def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = 'surface', 
     slice = None, downsample = {}):
 
     """
@@ -55,7 +55,7 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey). Must be unique.
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
@@ -65,10 +65,11 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
 
     try:
         f = open(biodiv_path + dataset_ref + '-config.json')
+        enrichment_metadata = json.load(f)
+        f.close()
     except FileNotFoundError:
         print('Please create an enrichment file first (use geoenrich.enrichmet.create_enrichment_file)')
 
-    enrichment_metadata = json.loads(f)
     input_type = enrichment_metadata['input_type']
     enrichments = enrichment_metadata['enrichments']
 
@@ -76,29 +77,32 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
     new_enrichment = False
     if enrichment_id == -1:
         new_enrichment = True
+        enrichment_id = len(enrichments)
 
-    original = load_enrichment_file(dataset_ref)
+    original = load_enrichment_file(dataset_ref, input_type)
 
     if slice is None:
         to_enrich = original
     else:
-        to_enrich = to_enrich.iloc[slice[0]:slice[1]]
+        to_enrich = original.iloc[slice[0]:slice[1]]
 
     # Load variable information
     var_source = get_var_catalog()[var_id]
         
     # Calculate cube bounds
     if input_type == 'occurrence':
+        if geo_buff is None or time_buff is None:
+            raise BufferError('Please specify time_buff and geo_buff.')
         to_enrich = add_bounds(to_enrich, geo_buff, time_buff)
 
-    if var['url'] == 'calculated':
+    if var_source['url'] == 'calculated':
         indices = enrich_compute(to_enrich, var_id, downsample)
     else:
         indices = enrich_download(to_enrich, var_source['varname'], var_id, var_source['url'],
                                     depth_request, downsample)
 
     prefix = str(enrichment_id) + '_'
-    indices.add_prefix(prefix)
+    indices = indices.add_prefix(prefix)
 
     # If variable is already present, update it
 
@@ -120,6 +124,8 @@ def enrich(dataset_ref, var_id, geo_buff = 115, time_buff = (0,0), depth_request
     updated.loc[missing_index,new_columns] = -1
 
     # Save file
+    if new_enrichment:
+        save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_buff, depth_request, downsample)
     updated.to_csv(biodiv_path + dataset_ref + '.csv')
 
 
@@ -288,7 +294,7 @@ def add_bounds(geodf1, geo_buff, time_buff):
     Args:
         geodf1 (geopandas.GeoDataFrame): Data to calculate buffers for.
         geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
     Returns:
         geopandas.GeoDataFrame: Updated GeoDataFrame with geographical and time boundaries.
     """
@@ -638,7 +644,7 @@ def compute_variable(var_id, base_data):
 
 
 
-def load_enrichment_file(dataset_ref):
+def load_enrichment_file(dataset_ref, input_type):
 
     """
     Load enrichment file.
@@ -651,11 +657,13 @@ def load_enrichment_file(dataset_ref):
 
     filepath = biodiv_path + dataset_ref + '.csv'
 
-    df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
 
-    if 'geometry' in df.columns:
+    if input_type == 'occurrence':
+        df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 'id')
         df['geometry'] = df['geometry'].apply(wkt.loads)
         df = gpd.GeoDataFrame(df, crs = 'epsg:4326')
+    else:
+        df = pd.read_csv(filepath, parse_dates = ['mint', 'maxt'], infer_datetime_format = True, index_col = 'id')
 
     print('{} occurrences were loaded from enrichment file'.format(len(df)))
     return(df)
@@ -677,7 +685,7 @@ def create_enrichment_file(gdf, dataset_ref):
     """
 
     filepath = biodiv_path + dataset_ref + '.csv'
-    filepath_json = biodiv_path + dataset_ref + '.json'
+    filepath_json = biodiv_path + dataset_ref + '-config.json'
 
     if(os.path.exists(filepath)):
         print('Abort. File already exists at ' + filepath)
@@ -691,11 +699,11 @@ def create_enrichment_file(gdf, dataset_ref):
         
         if 'geometry' in gdf.columns:
             # Occurrences input type
-            config['input_type'] = 'occurrences'
+            config['input_type'] = 'occurrence'
 
         else:
             # Areas input type
-            config['input_type'] = 'areas'
+            config['input_type'] = 'area'
 
         config['enrichments'] = []
 
@@ -721,15 +729,16 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
     """
     try:
         f = open(biodiv_path + dataset_ref + '-config.json')
+        enrichment_metadata = json.load(f)
+        f.close()
     except FileNotFoundError:
         print('No enrichment file was found for this dataset')
 
-    enrichment_metadata = json.loads(f)
     enrichments = enrichment_metadata['enrichments']
+    input_type = enrichment_metadata['input_type']
     remaining_enrichments = []
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath)
+    df = load_enrichment_file(dataset_ref, input_type)
 
     to_drop = []
 
@@ -738,7 +747,7 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
             var_ids_to_remove == '_all_':
 
             prefix = str(enrichment['id']) + '_'
-            for col in df.columns():
+            for col in df.columns:
                 if col[:len(prefix)] == prefix:
                     to_drop.append(col)
         else:
@@ -751,7 +760,7 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
     enrichment_metadata['enrichments'] = remaining_enrichments
 
     with open(biodiv_path + dataset_ref + '-config.json', 'w') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(enrichment_metadata, f, ensure_ascii=False, indent=4)
 
     print('Enrichment file for dataset ' + dataset_ref + ' was reset.')
 
@@ -793,7 +802,6 @@ def enrichment_status(dataset_ref):
 def parse_columns(df):
 
     """
-    ############################# TO UPDATE ###################################
     Return column indices sorted by variable and dimension.
 
     Args:
@@ -830,7 +838,7 @@ def get_enrichment_id(enrichments, var_id, geo_buff, time_buff, depth_request, d
         enrichments (dict): Enrichments metadata as stored in the json config file.
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
@@ -844,7 +852,6 @@ def get_enrichment_id(enrichments, var_id, geo_buff, time_buff, depth_request, d
                             'time_buff':        time_buff,
                             'depth_request':    depth_request,
                             'downsample':       downsample}
-
 
     for enrichment in enrichments:
         if enrichment['parameters'] == current_parameters:
@@ -864,7 +871,7 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
         enrichment_id (int): Enrichment ID.
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
-        time_buff (float tuple): Time bounds for which to download data around occurrence day (days). For instance, time_buff = (-7, 0) will download data from 7 days before the occurrence to the occurrence date.
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
@@ -872,7 +879,7 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
     """
 
     with open(biodiv_path + dataset_ref + '-config.json') as f:
-        enrichment_metadata = json.loads(f)
+        enrichment_metadata = json.load(f)
 
     new_enrichment = {'id': enrichment_id,
                       'parameters':
@@ -887,7 +894,7 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
     enrichment_metadata['enrichments'].append(new_enrichment)
 
     with open(biodiv_path + dataset_ref + '-config.json', 'w') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(enrichment_metadata, f, ensure_ascii=False, indent=4)
 
 
 
@@ -913,7 +920,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
-        time_buff (float tuple): (Optional) Time_buff that was used for enrichment.
+        time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
@@ -922,17 +929,14 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     """
 
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, index_col = 'id')
-    row = df.loc[occ_id]
-
     with open(biodiv_path + dataset_ref + '-config.json') as f:
-        enrichment_metadata = json.loads(f)
+        enrichment_metadata = json.load(f)
 
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    
+    df = load_enrichment_file(dataset_ref, input_type)
+    row = df.loc[occ_id]
 
     # Identify relevant enrichment ids
 
@@ -960,26 +964,26 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
         en = relevant[0]
         var_ind = parse_columns(df)[en['id']]
         results = {}
-        source_var = get_var_catalog()[var_id]
+        var_source = get_var_catalog()[var_id]
 
         if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
-            results[v] = {'coords': None, 'values': None}
+            results = {'coords': None, 'values': None}
 
         else:
             ds = nc.Dataset(sat_path + var_id + '.nc')
-            unit = getattr(ds.variables[source_var['varname']], 'units', 'Unspecified')
+            unit = getattr(ds.variables[var_source['varname']], 'units', 'Unspecified')
 
-            dimdict, var = get_metadata(ds, source_var[var_id]['varname'])
+            dimdict, var = get_metadata(ds, var_source['varname'])
 
             data, coords = fetch_data(row, var_id, var_ind, ds, dimdict, var, downsample)
             ds.close()
 
-        if shape == 'buffer' and input_type == 'occurrences':
+        if shape == 'buffer' and input_type == 'occurrence':
             geo_buff = en['parameters']['geo_buff']
             mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            results[v] = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
+            results = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
         else:
-            results[v] = {'coords': coords, 'values': data, 'unit': unit}
+            results = {'coords': coords, 'values': data, 'unit': unit}
 
 
         return(results)
@@ -1077,7 +1081,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         var_id (str): ID of the variable to retrieve.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
-        time_buff (float tuple): (Optional) Time_buff that was used for enrichment.
+        time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         out_path (str): Path where you want to save the output stats file.
@@ -1086,16 +1090,13 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         None
     """
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, index_col = 'id')
-
     with open(biodiv_path + dataset_ref + '-config.json') as f:
-        enrichment_metadata = json.loads(f)
+        enrichment_metadata = json.load(f)
 
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-
+    df = load_enrichment_file(dataset_ref, input_type)
 
     # Identify relevant enrichment ids
 
@@ -1104,8 +1105,8 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         if en['parameters']['var_id'] == var_id:
             if  (geo_buff is None or en['parameters']['geo_buff'] == geo_buff)                  and \
                 (time_buff is None or en['parameters']['time_buff'] == time_buff)               and \
-                (depth_request is None or en['parameters']['depth_request'] == depth_request)   and \
-                (downsample is None or en['parameters']['downsample'] == downsample):
+                (depth_request == 'surface' or en['parameters']['depth_request'] == depth_request)   and \
+                (downsample == {} or en['parameters']['downsample'] == downsample):
 
                 relevant.append(en)
 
@@ -1124,19 +1125,19 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         var_ind = parse_columns(df)[en['id']]
         results = {}
 
-        source_var = get_var_catalog()[var_id]
+        var_source = get_var_catalog()[var_id]
         ds = nc.Dataset(sat_path + var_id + '.nc')
-        dimdict, var = get_metadata(ds, source_var['varname'])
+        dimdict, var = get_metadata(ds, var_source['varname'])
 
-        print('Computing stats for ' + v + '...')
+        print('Computing stats for ' + var_id + '...')
         res = df.progress_apply(compute_stats, axis=1, args = (en['parameters'], input_type, var_ind, ds, dimdict, var),
                                      result_type = 'expand')
         ds.close()
 
 
 
-    res.to_csv(out_path + dataset_ref + '_stats.csv')
-    print('File saved at ' + out_path + dataset_ref + '_stats.csv')
+        res.to_csv(out_path + dataset_ref + '_stats.csv')
+        print('File saved at ' + out_path + dataset_ref + '_stats.csv')
 
 
 
@@ -1149,7 +1150,7 @@ def compute_stats(row, en_params, input_type, var_indices, ds, dimdict, var):
     Args:
         row (pandas.Series): One row of an enrichment file.
         enrichments (dict): Enrichment parameters as stored in the json config file.
-        input_type (str): 'occurrences' or 'areas'.
+        input_type (str): 'occurrence' or 'area'.
         var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
         ds (netCDF4.Dataset): Local dataset.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
@@ -1220,7 +1221,7 @@ def get_derivative(occ_id, var_id, days = (0,0), dataset_ref = None, path = None
     else:
         shape = 'rectangle'
 
-    df = pd.read_csv(path, index_col = id_col)
+    df = load_enrichment_file(dataset_ref, input_type)
 
     row = df.loc[occ_id]
     cat = get_var_catalog()
