@@ -6,6 +6,7 @@ New functions:
 - Added calculated variables: EKE + derivatives
 - Added documentation and tutorial about using the package with R
 - Added possibility to export data as .npy (raw multidimensional array) or .png files.
+- Modified metadata structure to handle several enrichments with different buffers on the same dataset and variable.
 
 Bug fixes:
 

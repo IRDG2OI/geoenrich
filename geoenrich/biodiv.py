@@ -159,7 +159,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
     dsA = DwCAReader(path)
 
-    columns = ['id', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'depth']
+    columns = ['id', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'depth', 'basisOfRecord']
     rawdf = dsA.pd_read(dsA.descriptor.core.file_location, parse_dates=True, usecols = columns)
 
     # Pre-sample 2*max_number to reduce processing time.
@@ -273,7 +273,7 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],
                 infer_datetime_format = True, *args, **kwargs)
-
+    rawdf.index.rename('id', inplace=True)
     idf = pd.DataFrame()
 
     if 'date_min' in rawdf.columns:
@@ -288,9 +288,6 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
     df = idf.dropna()
     if len(idf) != len(df):
         print('Dropped {} rows with missing or badly formated coordinates'.format(len(idf) - len(df)))
-
-    df.set_index(pd.Index(df[id_col].astype(str), name='id'), inplace = True)
-    df.drop([id_col], axis='columns', inplace = True)
     
     print('{} areas were loaded.'.format(len(df)))
 
