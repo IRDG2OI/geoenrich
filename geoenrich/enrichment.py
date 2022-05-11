@@ -770,7 +770,6 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
 def enrichment_status(dataset_ref):
 
     """
-    ############################# TO UPDATE ###################################
     Return the number of occurrences of the given dataset that are already enriched, for each variable.
 
     Args:
@@ -779,9 +778,19 @@ def enrichment_status(dataset_ref):
         pandas.DataFrame: A table of variables and statuses of enrichment.
     """
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 0)
+    with open(biodiv_path + dataset_ref + '-config.json') as f:
+        enrichment_metadata = json.load(f)
+
+    enrichments = enrichment_metadata['enrichments']
+    input_type = enrichment_metadata['input_type']
+
+    df = load_enrichment_file(dataset_ref, input_type)
+
     col_indices = parse_columns(df)
+
+    params_dict = {en['id']:en['parameters'] for en in enrichments}
+    params_df = pd.DataFrame.from_dict(params_dict)
+
     res = pd.DataFrame(index = ['Enriched', 'Not enriched', 'Data not available'])
 
     for v in col_indices:
@@ -794,7 +803,8 @@ def enrichment_status(dataset_ref):
         counts = is_downloaded.value_counts()
         res = res.join(pd.Series(counts, name = v))
     
-    return(res.fillna(0).astype(int))
+
+    return(pd.concat([params_df, res.fillna(0).astype(int)]))
 
 
 
@@ -963,7 +973,6 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
 
         en = relevant[0]
         var_ind = parse_columns(df)[en['id']]
-        results = {}
         var_source = get_var_catalog()[var_id]
 
         if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
@@ -981,16 +990,16 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
         if shape == 'buffer' and input_type == 'occurrence':
             geo_buff = en['parameters']['geo_buff']
             mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            results = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
+            return({'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit})
         else:
-            results = {'coords': coords, 'values': data, 'unit': unit}
+            return({'coords': coords, 'values': data, 'unit': unit})
 
 
         return(results)
 
 
 
-def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
+def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices = None):
 
     """
     Fetch data locally for a specific occurrence and variable.
@@ -1003,18 +1012,22 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
-
-    Returns:
+        indices (dict): Coordinates of the netCDF subset. If None, they are read from row and var_indices arguments. 
         numpy.ma.MaskedArray: Raw data.
     """
 
 
     params = [dimdict[n]['standard_name'] for n in var['params']]
-    ordered_indices_cols = [var_indices[p] for p in params]
-    ordered_indices = [{'min': int(row.iloc[d['min']]),
-                        'max': int(row.iloc[d['max']]),
-                        'step': 1}
-                        for d in ordered_indices_cols]
+
+    if indices is None:
+        ordered_indices_cols = [var_indices[p] for p in params]
+        ordered_indices = [{'min': int(row.iloc[d['min']]),
+                            'max': int(row.iloc[d['max']]),
+                            'step': 1}
+                            for d in ordered_indices_cols]
+        indices = {params[i]:ordered_indices[i] for i in range(len(params))}
+    else:
+        ordered_indices = [indices[p] for p in params]
 
     for i in range(len(params)):
         p = params[i]
@@ -1027,7 +1040,7 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample):
 
     coordinates = []
     for p in params:
-        i1, i2 = int(row.iloc[var_indices[p]['min']]), int(row.iloc[var_indices[p]['max']])
+        i1, i2 = indices[p]['min'], indices[p]['max']
         if p in downsample:
             step = downsample[p] + 1
         else:
@@ -1192,63 +1205,74 @@ def compute_stats(row, en_params, input_type, var_indices, ds, dimdict, var):
 
 
 
-def get_derivative(occ_id, var_id, days = (0,0), dataset_ref = None, path = None, id_col = 0, shape = 'rectangle', geo_buff = None, downsample = {}):
+def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, depth_request = 'surface',
+                        downsample = {}, shape = 'rectangle'):
 
     """
 
-    ############################# TO UPDATE ###################################
     Retrieve data for both specified days and return the derivative.
-    Use dataset_ref if enriching occurrences, and path if enriching arbitrary areas.
     geo_buff and downsample must be identical to the values you used for enrichment.
     
     Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to derivate.
-        days (int tuple): Start and end days for derivative calculation, relatively to occurrence, eg. (-7, 0)
-        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        path (str): Path to the areas file that was enriched.
-        id_col (str or int): Index or name of the ID column.
+        days (int tuple): Start and end days for derivative calculation.
+                If enriching occurrences, provide bounds relatively to occurrence, eg. (-7, 0).
+                If enriching areas, provide bounds relatively to date_max, eg. (-7, 0).
+        geo_buff (int): (Optional) Geo_buff that was used for enrichment.
+        depth_request (str): (Optional) Depth request that was used for enrichment.
+        downsample (dict): (Optional) Downsample that was used for enrichment.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
-        geo_buffer (int): Ther buffer you used to enrich your dataset (or a smaller one).
-        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
 
     Returns:
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
 
-    if dataset_ref is not None:
-        path = biodiv_path + dataset_ref + '.csv'
-    else:
-        shape = 'rectangle'
+    with open(biodiv_path + dataset_ref + '-config.json') as f:
+        enrichment_metadata = json.load(f)
+    input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, input_type)
-
-    row = df.loc[occ_id]
-    cat = get_var_catalog()
+    row = load_enrichment_file(dataset_ref, input_type).loc[[occ_id]]
+    row1, row2 = deepcopy(row), deepcopy(row)
     
-    var_ind = parse_columns(df)[var_id]
+    
+    if input_type == 'occurrence':
+        row1['eventDate'] = pd.to_datetime(row1['eventDate'] + np.timedelta64(days[0], 'D'))
+        row2['eventDate'] = pd.to_datetime(row2['eventDate'] + np.timedelta64(days[1], 'D'))
+        row1 = add_bounds(row1, geo_buff, (0,0))
+        row2 = add_bounds(row2, geo_buff, (0,0))
+    else:
+        row1['mint'] = pd.to_datetime(row1['maxt'] + np.timedelta64(days[0], 'D'))
+        row1['maxt'] = pd.to_datetime(row1['maxt'] + np.timedelta64(days[0], 'D'))
+        row2['mint'] = pd.to_datetime(row2['maxt'] + np.timedelta64(days[1], 'D'))
+        row2['maxt'] = pd.to_datetime(row2['maxt'] + np.timedelta64(days[1], 'D'))
 
     # Read indices into a dictionary
 
-    results = {}
+    var_source = get_var_catalog()[var_id]
 
-    if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
-        results[v] = {'coords': None, 'values': None}
 
-    else:
-        ds = nc.Dataset(sat_path + v + '.nc')
-        unit = getattr(ds.variables[cat[v]['varname']], 'units', 'Unspecified')
+    ds = nc.Dataset(sat_path + var_id + '.nc')
+    unit = getattr(ds.variables[var_source['varname']], 'units', 'Unspecified')
+    dimdict, var = get_metadata(ds, var_source['varname'])
 
-        dimdict, var = get_metadata(ds, cat[v]['varname'])
+    ind1 = calculate_indices(dimdict, row1.iloc[0], var, depth_request, downsample)
+    ind2 = calculate_indices(dimdict, row2.iloc[0], var, depth_request, downsample)
 
-        data, coords = fetch_data(row, v, var_ind, ds, dimdict, var, downsample)
-        ds.close()
+    data1, coords1 = fetch_data(None, var_id, None, ds, dimdict, var, downsample, ind1)
+    data2, coords2 = fetch_data(None, var_id, None, ds, dimdict, var, downsample, ind2)
+    ds.close()
+
+    data = (data2 - data1) / (days[1] - days[0])
+
+    coords = []
+    for c in coords1:
+        if c[0] != 'time':
+            coords.append(c)
 
     if shape == 'buffer' and geo_buff is not None:
         mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-        results[v] = {'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit}
+        return({'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit + ' per day'})
     else:
-        results[v] = {'coords': coords, 'values': data, 'unit': unit}
-
-
-    return(results)
+        return({'coords': coords, 'values': data, 'unit': unit + ' per day'})
