@@ -31,9 +31,10 @@ Then the reticulate library is used to load the python package into R::
 
 Finally, all submodules can be imported::
 
-	biodiv <- import("geoenrich.biodiv")
+	dataloader <- import("geoenrich.dataloader")
 	satellite <- import("geoenrich.satellite")
 	enrichment <- import("geoenrich.enrichment")
+	exports <- import("geoenrich.exports")
 
 
 3. Configuration
