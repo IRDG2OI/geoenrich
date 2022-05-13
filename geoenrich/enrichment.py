@@ -79,7 +79,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         new_enrichment = True
         enrichment_id = len(enrichments)
 
-    original = load_enrichment_file(dataset_ref, input_type)
+    original = load_enrichment_file(dataset_ref)
 
     if slice is None:
         to_enrich = original
@@ -745,7 +745,7 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
     input_type = enrichment_metadata['input_type']
     remaining_enrichments = []
 
-    df = load_enrichment_file(dataset_ref, input_type)
+    df = load_enrichment_file(dataset_ref)
 
     to_drop = []
 
@@ -791,7 +791,7 @@ def enrichment_status(dataset_ref):
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, input_type)
+    df = load_enrichment_file(dataset_ref)
 
     col_indices = parse_columns(df)
 

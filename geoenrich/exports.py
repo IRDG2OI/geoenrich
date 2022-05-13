@@ -46,7 +46,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, input_type)
+    df = load_enrichment_file(dataset_ref)
     row = df.loc[occ_id]
 
     # Identify relevant enrichment ids
@@ -210,7 +210,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, input_type)
+    df = load_enrichment_file(dataset_ref)
 
     # Identify relevant enrichment ids
 
@@ -334,7 +334,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
         enrichment_metadata = json.load(f)
     input_type = enrichment_metadata['input_type']
 
-    row = load_enrichment_file(dataset_ref, input_type).loc[[occ_id]]
+    row = load_enrichment_file(dataset_ref).loc[[occ_id]]
     row1, row2 = deepcopy(row), deepcopy(row)
     
     
