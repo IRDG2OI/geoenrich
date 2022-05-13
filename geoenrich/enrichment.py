@@ -88,19 +88,13 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
     # Load variable information
     var_source = get_var_catalog()[var_id]
-        
-    # Calculate cube bounds
-    if input_type == 'occurrence':
-        if geo_buff is None or time_buff is None:
-            raise BufferError('Please specify time_buff and geo_buff.')
-        print(to_enrich)
-        to_enrich = add_bounds(to_enrich, geo_buff, time_buff)
+    
 
     if var_source['url'] == 'calculated':
-        indices = enrich_compute(to_enrich, var_id, downsample)
+        indices = enrich_compute(to_enrich, var_id, downsample, geo_buff, time_buff)
     else:
         indices = enrich_download(to_enrich, var_source['varname'], var_id, var_source['url'],
-                                    depth_request, downsample)
+                                    depth_request, downsample, geo_buff, time_buff)
 
     prefix = str(enrichment_id) + '_'
     indices = indices.add_prefix(prefix)
@@ -131,7 +125,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
 
 
-def enrich_compute(geodf, var_id, downsample):
+def enrich_compute(geodf, var_id, downsample, geo_buff, time_buff):
 
     """
     Compute a calculated variable for the provided bounds and save into local netcdf file.
@@ -141,6 +135,9 @@ def enrich_compute(geodf, var_id, downsample):
         geodf (geopandas.GeoDataFrame): Data to be enriched.
         var_id (str): ID of the variable to download.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+        geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
+
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
@@ -166,6 +163,13 @@ def enrich_compute(geodf, var_id, downsample):
 
     dimdict, var = get_metadata(local_ds, var_id)
 
+    # Add bounds if occurrences
+
+    if 'min' not in geodf.columns:
+        if geo_buff is None or (time_buff is None and 'time' in dimdict):
+            raise BufferError('Please specify time_buff and geo_buff.')
+        geodf = add_bounds(geodf, geo_buff, time_buff)
+
     # Remove out of timeframe datapoints
 
     if 'time' in dimdict:
@@ -174,6 +178,8 @@ def enrich_compute(geodf, var_id, downsample):
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
+
+
 
     # Open needed datasets (read-only)
 
@@ -211,7 +217,7 @@ def enrich_compute(geodf, var_id, downsample):
 
 
 
-def enrich_download(geodf, varname, var_id, url, depth_request, downsample):
+def enrich_download(geodf, varname, var_id, url, depth_request, downsample, geo_buff, time_buff):
     
     """
     Download data for the requested occurrences and buffer into local netcdf file.
@@ -224,6 +230,9 @@ def enrich_download(geodf, varname, var_id, url, depth_request, downsample):
         url (str): Dataset url (including credentials if needed).
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+        geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
+
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
 
@@ -235,6 +244,14 @@ def enrich_download(geodf, varname, var_id, url, depth_request, downsample):
 
     dimdict, var = get_metadata(remote_ds, varname)
     var['var_id'] = var_id
+
+    # Add bounds if occurrences
+
+    if 'min' not in geodf.columns:
+        if geo_buff is None or (time_buff is None and 'time' in dimdict):
+            raise BufferError('Please specify time_buff and geo_buff.')
+        geodf = add_bounds(geodf, geo_buff, time_buff)
+
 
     # Check if local netcdf files already exist
 
@@ -322,12 +339,14 @@ def add_bounds(geodf1, geo_buff, time_buff):
 
     # Prepare time bounds
 
-    buff1 = np.timedelta64(time_buff[0], 'D')
-    buff2 = np.timedelta64(time_buff[1], 'D')
+    if time_buff is not None and 'mint' not in geodf.columns:
 
-    geodf['mint'] = pd.to_datetime(geodf['eventDate'] + buff1)
-    geodf['bestt'] = pd.to_datetime(geodf['eventDate'])
-    geodf['maxt'] = pd.to_datetime(geodf['eventDate'] + buff2)
+        buff1 = np.timedelta64(time_buff[0], 'D')
+        buff2 = np.timedelta64(time_buff[1], 'D')
+
+        geodf['mint'] = pd.to_datetime(geodf['eventDate'] + buff1)
+        geodf['bestt'] = pd.to_datetime(geodf['eventDate'])
+        geodf['maxt'] = pd.to_datetime(geodf['eventDate'] + buff2)
 
     return(geodf)
 

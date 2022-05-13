@@ -430,16 +430,15 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         value_range = [im.min(), im.max()]
 
     im1 = np.interp(im, value_range,[0,1])
-
     # Transpose if needed
-    if lon_ax > lat_ax:
+    if lat_ax > lon_ax:
         im1 = np.transpose(im1)
 
     # Flip latitude (because image vertical axis is downwards)
     im1 = np.flipud(im1)
 
     # Map values to color scale
-    im2 = cm.coolwarm(im1)
+    im2 = cm.coolwarm_r(im1)
     im2[:,:,3] =  1 - im.mask.astype(int)
 
     # Resize
@@ -449,4 +448,4 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         else:
             im2 = cv2.resize(im2, target_size, interpolation = cv2.INTER_CUBIC)
 
-    cv2.imwrite(folderpath + occ_id + '_' + var_id + '.png', 255*im2)
+    cv2.imwrite(folderpath + str(occ_id) + '_' + var_id + '.png', 255*im2)

@@ -163,6 +163,8 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     columns = ['id', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'depth', 'basisOfRecord']
     rawdf = dsA.pd_read(dsA.descriptor.core.file_location, parse_dates=True, usecols = columns)
 
+    rawdf = rawdf.dropna(subset = ['decimalLatitude', 'decimalLongitude'])
+
     # Pre-sample 2*max_number to reduce processing time.
     if len(rawdf) > 2*max_number:
         rawdf = rawdf.sample(2*max_number)
