@@ -216,7 +216,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
-        GeoDataFrame: occurrences data (only relevant columns are included)
+        geopandas.GeoDataFrame: occurrences data (only relevant columns are included)
     """
 
     # Load file
@@ -271,7 +271,7 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
         crs (str): Crs of the provided coordinates.
 
     Returns:
-        GeoDataFrame: occurrences data (only relevant columns are included)
+        geopandas.GeoDataFrame: occurrences data (only relevant columns are included)
     """
 
     rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],

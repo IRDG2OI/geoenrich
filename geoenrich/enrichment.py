@@ -43,7 +43,7 @@ pd.options.mode.chained_assignment = None
 
 
 def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = 'surface', 
-    slice = None, downsample = {}):
+    downsample = {}, slice = None):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -57,8 +57,9 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
-        slice (int tuple): Slice of the enrichment file to use for enrichment.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+        slice (int tuple): Slice of the enrichment file to use for enrichment.
+
     Returns:
         None
     """
@@ -91,10 +92,10 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     
 
     if var_source['url'] == 'calculated':
-        indices = enrich_compute(to_enrich, var_id, downsample, geo_buff, time_buff)
+        indices = enrich_compute(to_enrich, var_id, geo_buff, time_buff, downsample)
     else:
         indices = enrich_download(to_enrich, var_source['varname'], var_id, var_source['url'],
-                                    depth_request, downsample, geo_buff, time_buff)
+                                    geo_buff, time_buff, depth_request, downsample)
 
     prefix = str(enrichment_id) + '_'
     indices = indices.add_prefix(prefix)
@@ -125,7 +126,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
 
 
-def enrich_compute(geodf, var_id, downsample, geo_buff, time_buff):
+def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     """
     Compute a calculated variable for the provided bounds and save into local netcdf file.
@@ -134,9 +135,9 @@ def enrich_compute(geodf, var_id, downsample, geo_buff, time_buff):
     Args:
         geodf (geopandas.GeoDataFrame): Data to be enriched.
         var_id (str): ID of the variable to download.
-        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
 
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
@@ -217,7 +218,7 @@ def enrich_compute(geodf, var_id, downsample, geo_buff, time_buff):
 
 
 
-def enrich_download(geodf, varname, var_id, url, depth_request, downsample, geo_buff, time_buff):
+def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, downsample):
     
     """
     Download data for the requested occurrences and buffer into local netcdf file.
@@ -228,10 +229,10 @@ def enrich_download(geodf, varname, var_id, url, depth_request, downsample, geo_
         varname(str): Variable name in the dataset.
         var_id (str): ID of the variable to download.
         url (str): Dataset url (including credentials if needed).
-        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
-        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
+        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
 
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
@@ -311,7 +312,7 @@ def add_bounds(geodf1, geo_buff, time_buff):
 
     Args:
         geodf1 (geopandas.GeoDataFrame): Data to calculate buffers for.
-        geo_buf (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
     Returns:
         geopandas.GeoDataFrame: Updated GeoDataFrame with geographical and time boundaries.
@@ -877,6 +878,7 @@ def get_enrichment_id(enrichments, var_id, geo_buff, time_buff, depth_request, d
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+    
     Returns:
         int: Enrichment ID.
     """

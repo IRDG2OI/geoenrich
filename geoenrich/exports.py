@@ -88,16 +88,12 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
             data, coords = fetch_data(row, var_id, var_ind, ds, dimdict, var, downsample)
             ds.close()
 
-        if shape == 'buffer' and input_type == 'occurrence':
-            geo_buff = en['parameters']['geo_buff']
-            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            return({'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit})
-        else:
-            return({'coords': coords, 'values': data, 'unit': unit})
-
-
-        return(results)
-
+            if shape == 'buffer' and input_type == 'occurrence':
+                geo_buff = en['parameters']['geo_buff']
+                mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+                return({'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit})
+            else:
+                return({'coords': coords, 'values': data, 'unit': unit})
 
 
 def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices = None):
@@ -114,7 +110,8 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         indices (dict): Coordinates of the netCDF subset. If None, they are read from row and var_indices arguments. 
-        numpy.ma.MaskedArray: Raw data.
+    Returns:
+        numpy.ma.MaskedArray, list: Raw data and coordinates along all dimensions.
     """
 
 
@@ -171,7 +168,6 @@ def read_ids(dataset_ref):
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        id_col (str or int): Index or name of the ID column.
     Returns:
         list: List of all present ids.
     """
@@ -263,7 +259,7 @@ def compute_stats(row, en_params, input_type, var_indices, ds, dimdict, var):
     
     Args:
         row (pandas.Series): One row of an enrichment file.
-        enrichments (dict): Enrichment parameters as stored in the json config file.
+        en_params (dict): Enrichment parameters as stored in the json config file.
         input_type (str): 'occurrence' or 'area'.
         var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
         ds (netCDF4.Dataset): Local dataset.
