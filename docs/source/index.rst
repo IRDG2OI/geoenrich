@@ -27,12 +27,16 @@ Installation
 
    install
    r-install
+   variables
 
 :doc:`install`
    Installation instructions for Python.
 
 :doc:`r-install`
    Installation instructions for R.
+
+:doc:`variables`
+   Available variables.
 
 
 Modules
@@ -54,7 +58,7 @@ Modules
 :doc:`enrichment`
    The enrichment module: download enrichment data, handle enrichment files.
 
-:dpc:`exports`
+:doc:`exports`
    The exports module: retrieve downloaded data, calculate statistics, export data to pictures. 
 
 :doc:`satellite`
