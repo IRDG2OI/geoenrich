@@ -10,17 +10,9 @@ Main functions
 
 .. autofunction:: geoenrich.enrichment.enrich
 
-.. autofunction:: geoenrich.enrichment.enrich_areas
-
 .. autofunction:: geoenrich.enrichment.enrichment_status
 
-.. autofunction:: geoenrich.enrichment.produce_stats
-
-.. autofunction:: geoenrich.enrichment.read_ids
-
 .. autofunction:: geoenrich.enrichment.reset_enrichment_file
-
-.. autofunction:: geoenrich.enrichment.retrieve_data
 
 
 Other functions (for internal use)
@@ -30,8 +22,6 @@ Other functions (for internal use)
 
 .. autofunction:: geoenrich.enrichment.calculate_indices
 
-.. autofunction:: geoenrich.enrichment.compute_stats
-
 .. autofunction:: geoenrich.enrichment.compute_variable
 
 .. autofunction:: geoenrich.enrichment.download_data
@@ -39,8 +29,6 @@ Other functions (for internal use)
 .. autofunction:: geoenrich.enrichment.enrich_compute
 
 .. autofunction:: geoenrich.enrichment.enrich_download
-
-.. autofunction:: geoenrich.enrichment.fetch_data
 
 .. autofunction:: geoenrich.enrichment.load_enrichment_file
 

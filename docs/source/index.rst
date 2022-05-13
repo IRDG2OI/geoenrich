@@ -43,15 +43,19 @@ Modules
    :caption: Modules
    :hidden:
 
+   dataloader
    enrichment
-   biodiv
+   exports
    satellite
 
-:doc:`biodiv`
-   The biodiv module: import DarwinCore archives, download data from GBIF.
+:doc:`dataloader`
+   The dataloader module: import DarwinCore archives, download data from GBIF.
 
 :doc:`enrichment`
-   The enrichment module: download enrichment data, retrieve downloaded data.
+   The enrichment module: download enrichment data, handle enrichment files.
+
+:dpc:`exports`
+   The exports module: retrieve downloaded data, calculate statistics, export data to pictures. 
 
 :doc:`satellite`
    The satellite module (internal use): netCDF file handling, data download, data retrieval.

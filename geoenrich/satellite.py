@@ -342,8 +342,8 @@ def ellipsoid_mask(data, coords, center, geo_buff):
     Calculate ellipsoid mask for the given point and data array.
 
     Args:
-        data (numpy.array): data array as output by :func:`geoenrich.enrichment.fetch_data`.
-        coords (list): Coordinates of the given data, as output by :func:`geoenrich.enrichment.fetch_data`.
+        data (numpy.array): Data array as output by :func:`geoenrich.exports.fetch_data`.
+        coords (list): Coordinates of the given data, as output by :func:`geoenrich.exports.fetch_data`.
         center (point): Occurrence point.
         geo_buff (int): Radius of the area of interest.
     Returns:

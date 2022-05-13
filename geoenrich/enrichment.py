@@ -645,7 +645,7 @@ def compute_variable(var_id, base_data):
 
 
 
-def load_enrichment_file(dataset_ref, input_type):
+def load_enrichment_file(dataset_ref):
 
     """
     Load enrichment file.
@@ -656,6 +656,11 @@ def load_enrichment_file(dataset_ref, input_type):
         geopandas.GeoDataFrame or pandas.DataFrame: Data to enrich (including previously added columns).
     """
 
+
+    with open(biodiv_path + dataset_ref + '-config.json') as f:
+        enrichment_metadata = json.load(f)
+    input_type = enrichment_metadata['input_type']
+
     filepath = biodiv_path + dataset_ref + '.csv'
 
 
@@ -663,10 +668,11 @@ def load_enrichment_file(dataset_ref, input_type):
         df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 'id')
         df['geometry'] = df['geometry'].apply(wkt.loads)
         df = gpd.GeoDataFrame(df, crs = 'epsg:4326')
+
     else:
         df = pd.read_csv(filepath, parse_dates = ['mint', 'maxt'], infer_datetime_format = True, index_col = 'id')
 
-    print('{} occurrences were loaded from enrichment file'.format(len(df)))
+    print('{} {}s were loaded from enrichment file'.format(len(df), input_type))
     return(df)
 
 
@@ -678,8 +684,8 @@ def create_enrichment_file(gdf, dataset_ref):
     Dataframe index will be used as unique occurrences ids.
     
     Args:  
-        gdf (geopandas.GeoDataFrame or pandas.DataFrame): Data to enrich (output of :func:`geoenrich.upstream.open_dwca`
-            or :func:`geoenrich.upstream.import_csv` or :func:`geoenrich.upstream.load_areas_file`).
+        gdf (geopandas.GeoDataFrame or pandas.DataFrame): Data to enrich (output of :func:`geoenrich.dataloader.open_dwca`
+            or :func:`geoenrich.dataloader.import_csv` or :func:`geoenrich.dataloader.load_areas_file`).
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey). Must be unique.
     Returns:
         None

@@ -25,7 +25,7 @@ copyright = '2022, Gaétan Morand (UMR Marbec). Project under GNU GPL v3 license
 author = 'Gaétan Morand (UMR Marbec)'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2'
+release = '0.3'
 
 
 # -- General configuration ---------------------------------------------------
