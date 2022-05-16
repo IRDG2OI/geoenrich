@@ -13,16 +13,16 @@ Assuming you have a version of R installed on your computer, as well as Python3 
 
 First some python packages need to be installed. This can be done directly in R::
 
-	system("pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel")
+	system("python3 -m pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel")
 
-	system("pip install git+https://github.com/rvanasa/pygbif.git")
+	system("python3 -m pip install git+https://github.com/rvanasa/pygbif.git")
 
 .. note::
 	pygbif needs to be installed from GitHub because the version on PyPI is not up to date. If you have an error message saying that you don't have git installed on your computer, you can either install it or download the whole repository from github in a browser.
 
 Installation of geoenrich is then done in the classic way::
 
-	system("pip install geoenrich")
+	system("python3 -m pip install geoenrich")
 
 Then the reticulate library is used to load the python package into R::
 
