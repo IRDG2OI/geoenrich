@@ -260,8 +260,7 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     """
     Load data to download a variable for specific areas.
-    Bounds must be provided for all available dimensions.
-    Bound columns must be named *{dim}_min* and *{dim}_max*, with {dim} in latitude, longitude, depth, date
+    Bound columns must be named *{dim}_min* and *{dim}_max*, with {dim} in latitude, longitude, date.
     Additional arguments are passed down to *pandas.read_csv*.
 
     Args:
@@ -271,7 +270,7 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
         crs (str): Crs of the provided coordinates.
 
     Returns:
-        geopandas.GeoDataFrame: occurrences data (only relevant columns are included)
+        geopandas.GeoDataFrame: areas bounds (only relevant columns are included)
     """
 
     rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],

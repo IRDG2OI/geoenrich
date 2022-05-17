@@ -28,7 +28,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     
     Args:        
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.exports.read_ids`.
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
@@ -158,24 +158,6 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
             coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1:step]])
 
     return(data, coordinates)
-
-
-
-def read_ids(dataset_ref):
-
-    """
-    Return a list of all ids of the given enrichment file.
-    
-    Args:
-        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-    Returns:
-        list: List of all present ids.
-    """
-
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, index_col = 'id')
-
-    return(list(df.index))
 
 
 
@@ -312,7 +294,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.exports.read_ids`.
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to derivate.
         days (int tuple): Start and end days for derivative calculation.
                 If enriching occurrences, provide bounds relatively to occurrence, eg. (-7, 0).
@@ -385,7 +367,7 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.exports.read_ids`.
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
         target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
         value_range (float list): Range of the variable. Necessary for consistency between all images.

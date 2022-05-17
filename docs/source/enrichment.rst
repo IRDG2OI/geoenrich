@@ -12,6 +12,8 @@ Main functions
 
 .. autofunction:: geoenrich.enrichment.enrichment_status
 
+.. autofunction:: geoenrich.enrichment.read_ids
+
 .. autofunction:: geoenrich.enrichment.reset_enrichment_file
 
 

@@ -115,9 +115,8 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         updated = original.merge(indices, how = 'left', left_index = True, right_index = True)
 
     # Fill unenriched rows with -1
-    new_columns = [name[:len(prefix)] == prefix for name in updated.columns]
-    missing_index = updated.loc[:,new_columns].isnull().all(axis=1)
-    updated.loc[missing_index,new_columns] = -1
+    missing_index = to_enrich.index.difference(indices.index)
+    updated.loc[missing_index,indices.columns] = -1
 
     # Save file
     if new_enrichment:
@@ -934,3 +933,20 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
     with open(biodiv_path + dataset_ref + '-config.json', 'w') as f:
         json.dump(enrichment_metadata, f, ensure_ascii=False, indent=4)
 
+
+
+def read_ids(dataset_ref):
+
+    """
+    Return a list of all ids of the given enrichment file.
+    
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+    Returns:
+        list: List of all present ids.
+    """
+
+    filepath = biodiv_path + dataset_ref + '.csv'
+    df = pd.read_csv(filepath, index_col = 'id')
+
+    return(list(df.index))

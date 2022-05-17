@@ -12,8 +12,6 @@ Main functions
 
 .. autofunction:: geoenrich.exports.produce_stats
 
-.. autofunction:: geoenrich.exports.read_ids
-
 .. autofunction:: geoenrich.exports.retrieve_data
 
 
