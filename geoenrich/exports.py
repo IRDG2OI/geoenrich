@@ -46,7 +46,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref)
+    df = load_enrichment_file(dataset_ref, mute = True)
     row = df.loc[occ_id]
 
     # Identify relevant enrichment ids

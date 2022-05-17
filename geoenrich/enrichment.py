@@ -165,7 +165,7 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     # Add bounds if occurrences
 
-    if 'min' not in geodf.columns:
+    if 'minx' not in geodf.columns:
         if geo_buff is None or (time_buff is None and 'time' in dimdict):
             raise BufferError('Please specify time_buff and geo_buff.')
         geodf = add_bounds(geodf, geo_buff, time_buff)
@@ -247,7 +247,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     # Add bounds if occurrences
 
-    if 'min' not in geodf.columns:
+    if 'minx' not in geodf.columns:
         if geo_buff is None or (time_buff is None and 'time' in dimdict):
             raise BufferError('Please specify time_buff and geo_buff.')
         geodf = add_bounds(geodf, geo_buff, time_buff)
@@ -664,13 +664,14 @@ def compute_variable(var_id, base_data):
 
 
 
-def load_enrichment_file(dataset_ref):
+def load_enrichment_file(dataset_ref, mute = False):
 
     """
     Load enrichment file.
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        mute (bool): Not printing load message if mute is True.
     Returns:
         geopandas.GeoDataFrame or pandas.DataFrame: Data to enrich (including previously added columns).
     """
@@ -691,7 +692,9 @@ def load_enrichment_file(dataset_ref):
     else:
         df = pd.read_csv(filepath, parse_dates = ['mint', 'maxt'], infer_datetime_format = True, index_col = 'id')
 
-    print('{} {}s were loaded from enrichment file'.format(len(df), input_type))
+    if not(mute):
+        print('{} {}s were loaded from enrichment file'.format(len(df), input_type))
+    
     return(df)
 
 
@@ -889,6 +892,9 @@ def get_enrichment_id(enrichments, var_id, geo_buff, time_buff, depth_request, d
                             'time_buff':        time_buff,
                             'depth_request':    depth_request,
                             'downsample':       downsample}
+
+    if time_buff is not None:
+        current_parameters['time_buff'] = list(time_buff)
 
     for enrichment in enrichments:
         if enrichment['parameters'] == current_parameters:
