@@ -1,11 +1,11 @@
-# **geoenrich 0.2**
+# **geoenrich 0.3**
 
 [![Read the Docs](https://img.shields.io/readthedocs/geoenrich)](https://geoenrich.readthedocs.io/en/latest/)
 [![License](https://img.shields.io/github/license/morand-g/geoenrich?color=green)](https://github.com/morand-g/geoenrich/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/geoenrich?color=green)](https://pypi.org/project/geoenrich/)
 [![Python versions](https://img.shields.io/pypi/pyversions/geoenrich)](https://www.python.org/downloads/)
 [![Last commit](https://img.shields.io/github/last-commit/morand-g/geoenrich)](https://github.com/morand-g/geoenrich/)
-[![DOI](https://zenodo.org/badge/474973185.svg)](https://zenodo.org/badge/latestdoi/474973185)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6458090.svg)](https://doi.org/10.5281/zenodo.6458090)
 
 # Package description
 This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays to be used in any way.
@@ -26,11 +26,11 @@ This project is being developed as part of the G2OI project, cofinanced by the E
 
 ## Installation
 
-Installation instructions [in the documentation](https://geoenrich.readthedocs.io/en/latest/install.html).
+Installation instructions are in the documentation, for [python](https://geoenrich.readthedocs.io/en/latest/install.html) and [R](https://geoenrich.readthedocs.io/en/latest/r-install.html).
 
 ## Using the plugin
 
-A Jupyter Notebook tutorial is available [here](https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb).
+Jupyter Notebook tutorials are available for [python](https://geoenrich.readthedocs.io/en/latest/tutorial.html) and [R](https://geoenrich.readthedocs.io/en/latest/r-tutorial.html).
 
 ## Issues and further developments
 
@@ -47,4 +47,4 @@ We plan to add an option to download data for any range of depth.
 
 #### Data export formats
 
-There is a plan to add export options for enrichment data: netCDF files (per occurrence or per dataset), as well as images for visualization or CNN training.
+There is a plan to add export options for enrichment data: netCDF files (per occurrence or per dataset).

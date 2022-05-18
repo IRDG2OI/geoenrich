@@ -59,7 +59,7 @@ def get_taxon_key(query):
 
 
 
-def request_from_gbif(taxonKey, override = False):
+def request_from_gbif(taxon_key, override = False):
 
 
     """

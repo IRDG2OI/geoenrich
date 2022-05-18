@@ -426,4 +426,7 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         else:
             im2 = cv2.resize(im2, target_size, interpolation = cv2.INTER_CUBIC)
 
-    cv2.imwrite(folderpath + str(occ_id) + '_' + var_id + '.png', 255*im2)
+    im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
+    cv2.imwrite(im_path, 255*im2)
+    print('Image saved at ' + im_path)
+

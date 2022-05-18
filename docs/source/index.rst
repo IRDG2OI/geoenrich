@@ -17,26 +17,20 @@ Jupyter notebook tutorial in the `Github repository <https://github.com/morand-g
 .. image:: https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true
    :alt: Illustration of an occurrence dataset enriched with bathymetry data
 
-Installation
-============
-
 
 .. toctree::
    :caption: Installation
-   :hidden:
 
    install
    r-install
+
+
+.. toctree::
+   :caption: Usage
+
+   tutorial
+   r-tutorial
    variables
-
-:doc:`install`
-   Installation instructions for Python.
-
-:doc:`r-install`
-   Installation instructions for R.
-
-:doc:`variables`
-   Available variables.
 
 
 Modules

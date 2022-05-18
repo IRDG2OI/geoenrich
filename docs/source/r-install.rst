@@ -63,13 +63,8 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 - *url*: OpenDAP URL.
 - *varname*: Name of the variable in the remote dataset.
 
-5. Usage
---------
 
-All done, you can now follow the R tutorial.
-
-
-6. Precautions
+5. Precautions
 --------------
 
 If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
