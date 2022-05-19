@@ -8,11 +8,11 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6458090.svg)](https://doi.org/10.5281/zenodo.6458090)
 
 # Package description
-This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays to be used in any way.
+This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays, or exported as png images for visualization or to train deep learning models for instance.
 
-The package provides functions to retrieve occurrence data directly from GBIF, or open a custom dataset from any source. These occurrences are then stored into csv databases that record the netCDF coordinates for the relevant subsets of each environmental variables.
+Sea surface temperature, chlorophyll, and 40 other environmental variables are available natively, and others can easily be added by the user.
 
-All environmental variables used for enrichment must have latitude and longitude dimensions. The package also handles time and depth dimensions.
+The package provides functions to retrieve occurrence data directly from GBIF, or open a custom dataset from any source. Arbitrary areas defined by the user can also be enriched.
 
 Documentation on [Read the Docs](https://geoenrich.readthedocs.io).
 

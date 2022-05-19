@@ -7,27 +7,37 @@ Installation instructions for R
 
 Assuming you have a version of R installed on your computer, as well as Python3 and pip. This is automatic in all recent Linux distributions. Otherwise instructions are available here: `Python <https://wiki.python.org/moin/BeginnersGuide/Download>`_ and `pip <https://pip.pypa.io/en/stable/installation/>`_.
 
+.. note::
+	The GBIF functions of this package cannot be used in R. Please use the `rgbif package <https://www.gbif.org/fr/tool/81747/rgbif>`_ if you need occurrence data from GBIF.
+
 
 2. Installation
 ---------------
 
-First some python packages need to be installed. This can be done directly in R::
-
-	system("python3 -m pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel")
-
-	system("python3 -m pip install git+https://github.com/rvanasa/pygbif.git")
-
-.. note::
-	pygbif needs to be installed from GitHub because the version on PyPI is not up to date. If you have an error message saying that you don't have git installed on your computer, you can either install it or download the whole repository from github in a browser.
-
-Installation of geoenrich is then done in the classic way::
-
-	system("python3 -m pip install geoenrich")
-
-Then the reticulate library is used to load the python package into R::
+The reticulate library is used to load the python package into R::
 
 	install.packages("reticulate")
+
+::
+
 	library(reticulate)
+	
+
+Then some python packages need to be installed. This can be done directly in R. If you are asked to install Miniconda, say yes. It will isolate this python environment from your system environment::
+
+	requirements_conda <- c("matplotlib", "appdirs", "geomet", "fiona", "opencv-python")
+	requirements_pip <- c("geojson_rewind", "pygbif", "geoenrich")
+	
+	py_install(requirements_conda)
+	py_install(requirements_pip, pip = TRUE)
+
+
+If you have an error message, it probably means that conda is already installed. You can then proceed this way::
+
+	conda_create("r-reticulate-geoenrich")
+	conda_install("r-reticulate-geoenrich", requirements_conda)
+	conda_install("r-reticulate-geoenrich", requirements_pip, pip = TRUE)
+
 
 Finally, all submodules can be imported::
 
@@ -64,7 +74,7 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 - *varname*: Name of the variable in the remote dataset.
 
 
-5. Precautions
+4. Precautions
 --------------
 
 If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
