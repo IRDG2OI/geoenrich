@@ -8,7 +8,10 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6458090.svg)](https://doi.org/10.5281/zenodo.6458090)
 
 # Package description
-This package provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. It is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as multidimensional numpy arrays, or exported as png images for visualization or to train deep learning models for instance.
+
+GeoEnrich provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. Users can specify a geographic or temporal buffer to include data in the neighbourhood of occurrences into their analyses.
+
+This package is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as a summary csv file, multidimensional numpy arrays, or exported as png images.
 
 Sea surface temperature, chlorophyll, and 40 other environmental variables are available natively, and others can easily be added by the user.
 
@@ -21,8 +24,6 @@ Documentation on [Read the Docs](https://geoenrich.readthedocs.io).
 This project is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.
 
 <a href="https://european-union.europa.eu/index_fr"><img alt='Europe' src="http://141.95.158.113/uploaded/img/2022/01/union_europeenne_FBtZcHO.png" height="40" ></a> &nbsp; &nbsp; <a href="https://regionreunion.com/"><img alt='Reunion' src="http://141.95.158.113/uploaded/img/2022/01/region_reunion.png" height="40" ></a> &nbsp; &nbsp; <a href="https://www.gouvernement.fr/"><img alt='France' src="http://141.95.158.113/uploaded/img/2022/01/republique_francaise.png" height="40" ></a>
-
-
 
 ## Installation
 

@@ -1,8 +1,8 @@
 """
-The module to load input data before enrichment.
+This module provides functions to load input data before enrichment.
 The package supports two types of input: occurrences or areas.
 Occurrences can be loaded straight from GBIF, from a local DarwinCore archive, or from a custom csv file.
-Areas have to be loaded from a csv file. See :func:`geoenrich.dataloader.load_areas_file`
+Areas have to be loaded from a csv file. See :func:`geoenrich.dataloader.load_areas_file`.
 """
 
 import os
@@ -25,8 +25,6 @@ try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py and fill in the root path and credentials, if needed')
-    print('File location: ' + os.path.split(geoenrich.__file__)[0] + '/credentials_example.py')
 
 pd.options.mode.chained_assignment = None
 #caching(True) # gbif caching

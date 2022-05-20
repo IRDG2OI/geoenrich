@@ -9,3 +9,4 @@ geojson-rewind
 geomet
 requests_cache
 tqdm
+opencv-python

@@ -16,35 +16,27 @@ Assuming you have a version of R installed on your computer, as well as Python3 
 
 The reticulate library is used to load the python package into R::
 
-	install.packages("reticulate")
+	install.packages(reticulate)
 
-::
+Then some python packages need to be installed. This can be done directly in R. If you do not have conda on your computer, you will be asked to install Miniconda. You should say yes and R will take care of everything. This will isolate this python environment from your system environment::
 
-	library(reticulate)
-	
-
-Then some python packages need to be installed. This can be done directly in R. If you are asked to install Miniconda, say yes. It will isolate this python environment from your system environment::
-
-	requirements_conda <- c("matplotlib", "appdirs", "geomet", "fiona", "opencv-python")
-	requirements_pip <- c("geojson_rewind", "pygbif", "geoenrich")
+	requirements_conda <- c("matplotlib", "appdirs", "geomet", "fiona")
+	requirements_pip <- c("opencv-python", "geojson_rewind", "pygbif", "geoenrich")
 	
 	py_install(requirements_conda)
 	py_install(requirements_pip, pip = TRUE)
 
 
-If you have an error message, it probably means that conda is already installed. You can then proceed this way::
+If you already have conda installed, R should find it automatically. If it does not, you can try installing the packages this way::
 
 	conda_create("r-reticulate-geoenrich")
 	conda_install("r-reticulate-geoenrich", requirements_conda)
 	conda_install("r-reticulate-geoenrich", requirements_pip, pip = TRUE)
 
 
-Finally, all submodules can be imported::
+Finally, you can check that geoenrich submodules can be imported properly::
 
 	dataloader <- import("geoenrich.dataloader")
-	satellite <- import("geoenrich.satellite")
-	enrichment <- import("geoenrich.enrichment")
-	exports <- import("geoenrich.exports")
 
 
 3. Configuration
@@ -53,7 +45,7 @@ Finally, all submodules can be imported::
 3.1. First configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first time you import one of the modules, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
+The first time you import the dataloader or enrichment module, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
 
 In this file, you need to specify the *root_path* where all persistent data will be stored. You should pick a stable location with plenty of free space available (depending on your data download needs).
 
@@ -78,3 +70,9 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 --------------
 
 If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
+
+
+5. Using the package
+--------------------
+
+Congrats, you can now use the `tutorial <https://geoenrich.readthedocs.io/en/latest/r-tutorial.html>`_ and start doing science!

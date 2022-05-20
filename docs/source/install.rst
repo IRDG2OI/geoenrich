@@ -31,19 +31,13 @@ Installation of geoenrich is then done in the classic way::
 	python3 -m pip install geoenrich
 
 
-If you want to use the tutorial notebook you also have to install jupyter notebook::
-
-	python3 -m pip install notebook
-
-
-
 4. Configuration
 ----------------
 
 4.1. First configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first time you import one of the modules, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
+The first time you import the dataloader or enrichment module, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
 
 In this file, you need to specify the *root_path* where all persistent data will be stored. You should pick a stable location with plenty of free space available (depending on your data download needs).
 
@@ -68,3 +62,9 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 --------------
 
 If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
+
+
+5. Using the package
+--------------------
+
+Congrats, you can now use the `tutorial <https://geoenrich.readthedocs.io/en/latest/tutorial.html>`_ and start doing science!
