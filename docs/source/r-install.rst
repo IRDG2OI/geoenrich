@@ -20,6 +20,8 @@ The reticulate library is used to load the python package into R::
 
 Then some python packages need to be installed. This can be done directly in R. If you do not have conda on your computer, you will be asked to install Miniconda. You should say yes and R will take care of everything. This will isolate this python environment from your system environment::
 
+	library(reticulate)
+
 	requirements_conda <- c("matplotlib", "appdirs", "geomet", "fiona")
 	requirements_pip <- c("opencv-python", "geojson_rewind", "pygbif", "geoenrich")
 	
