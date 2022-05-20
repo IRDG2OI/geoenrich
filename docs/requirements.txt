@@ -10,3 +10,4 @@ geomet
 requests_cache
 tqdm
 opencv-python
+nbsphinx
