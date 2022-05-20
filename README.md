@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/geoenrich?color=green)](https://pypi.org/project/geoenrich/)
 [![Python versions](https://img.shields.io/pypi/pyversions/geoenrich)](https://www.python.org/downloads/)
 [![Last commit](https://img.shields.io/github/last-commit/morand-g/geoenrich)](https://github.com/morand-g/geoenrich/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6566302.svg)](https://doi.org/10.5281/zenodo.6566302)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6458090.svg)](https://doi.org/10.5281/zenodo.6458090)
 
 # Package description
 
