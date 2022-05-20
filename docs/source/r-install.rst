@@ -16,7 +16,7 @@ Assuming you have a version of R installed on your computer, as well as Python3 
 
 The reticulate library is used to load the python package into R::
 
-	install.packages(reticulate)
+	install.packages("reticulate")
 
 Then some python packages need to be installed. This can be done directly in R. If you do not have conda on your computer, you will be asked to install Miniconda. You should say yes and R will take care of everything. This will isolate this python environment from your system environment::
 
