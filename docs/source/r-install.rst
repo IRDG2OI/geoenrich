@@ -7,33 +7,36 @@ Installation instructions for R
 
 Assuming you have a version of R installed on your computer, as well as Python3 and pip. This is automatic in all recent Linux distributions. Otherwise instructions are available here: `Python <https://wiki.python.org/moin/BeginnersGuide/Download>`_ and `pip <https://pip.pypa.io/en/stable/installation/>`_.
 
+.. note::
+	The GBIF functions of this package cannot be used in R. Please use the `rgbif package <https://www.gbif.org/fr/tool/81747/rgbif>`_ if you need occurrence data from GBIF.
+
 
 2. Installation
 ---------------
 
-First some python packages need to be installed. This can be done directly in R::
+The reticulate library is used to load the python package into R::
 
-	system("pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel")
+	install.packages(reticulate)
 
-	system("pip install git+https://github.com/rvanasa/pygbif.git")
+Then some python packages need to be installed. This can be done directly in R. If you do not have conda on your computer, you will be asked to install Miniconda. You should say yes and R will take care of everything. This will isolate this python environment from your system environment::
 
-.. note::
-	pygbif needs to be installed from GitHub because the version on PyPI is not up to date. If you have an error message saying that you don't have git installed on your computer, you can either install it or download the whole repository from github in a browser.
+	requirements_conda <- c("matplotlib", "appdirs", "geomet", "fiona")
+	requirements_pip <- c("opencv-python", "geojson_rewind", "pygbif", "geoenrich")
+	
+	py_install(requirements_conda)
+	py_install(requirements_pip, pip = TRUE)
 
-Installation of geoenrich is then done in the classic way::
 
-	system("pip install geoenrich")
+If you already have conda installed, R should find it automatically. If it does not, you can try installing the packages this way::
 
-Then the reticulate library is used to load the python package into R::
+	conda_create("r-reticulate-geoenrich")
+	conda_install("r-reticulate-geoenrich", requirements_conda)
+	conda_install("r-reticulate-geoenrich", requirements_pip, pip = TRUE)
 
-	install.packages("reticulate")
-	library(reticulate)
 
-Finally, all submodules can be imported::
+Finally, you can check that geoenrich submodules can be imported properly::
 
-	biodiv <- import("geoenrich.biodiv")
-	satellite <- import("geoenrich.satellite")
-	enrichment <- import("geoenrich.enrichment")
+	dataloader <- import("geoenrich.dataloader")
 
 
 3. Configuration
@@ -42,7 +45,7 @@ Finally, all submodules can be imported::
 3.1. First configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first time you import one of the modules, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
+The first time you import the dataloader or enrichment module, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
 
 In this file, you need to specify the *root_path* where all persistent data will be stored. You should pick a stable location with plenty of free space available (depending on your data download needs).
 
@@ -62,13 +65,14 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 - *url*: OpenDAP URL.
 - *varname*: Name of the variable in the remote dataset.
 
-5. Usage
---------
 
-All done, you can now follow the R tutorial.
-
-
-6. Precautions
+4. Precautions
 --------------
 
 If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
+
+
+5. Using the package
+--------------------
+
+Congrats, you can now use the `tutorial <https://geoenrich.readthedocs.io/en/latest/r-tutorial.html>`_ and start doing science!

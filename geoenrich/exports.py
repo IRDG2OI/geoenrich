@@ -1,8 +1,12 @@
 """
-The exports module handles all operations on data after it is downloaded.
+After enriching occurrences, you can use the exports module to use the downloaded data. Several options are available:
+- Produce a stats file that will give you the average, standard deviation, minimum and maximum values of your variable in the buffer around each occurrence. See :func:`geoenrich.exports.produce_stats`.
+- Calculate the derivative of the environmental data between two different dates, with :func:`geoenrich.exports.get_derivative`.
+- Export png pictures, for visualization or training deep learning models for instance. See :func:`geoenrich.exports.export_png`.
+- Retrieve the raw data as a numpy array with :func:`geoenrich.exports.retrieve data`.
 
 """
-
+import json
 import pandas as pd
 import cv2
 from matplotlib import cm
@@ -28,7 +32,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     
     Args:        
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.exports.read_ids`.
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
@@ -46,7 +50,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, input_type)
+    df = load_enrichment_file(dataset_ref, mute = True)
     row = df.loc[occ_id]
 
     # Identify relevant enrichment ids
@@ -88,16 +92,12 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
             data, coords = fetch_data(row, var_id, var_ind, ds, dimdict, var, downsample)
             ds.close()
 
-        if shape == 'buffer' and input_type == 'occurrence':
-            geo_buff = en['parameters']['geo_buff']
-            mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
-            return({'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit})
-        else:
-            return({'coords': coords, 'values': data, 'unit': unit})
-
-
-        return(results)
-
+            if shape == 'buffer' and input_type == 'occurrence':
+                geo_buff = en['parameters']['geo_buff']
+                mask = ellipsoid_mask(data, coords, row['geometry'], geo_buff)
+                return({'coords': coords, 'values': np.ma.masked_where(mask, data), 'unit': unit})
+            else:
+                return({'coords': coords, 'values': data, 'unit': unit})
 
 
 def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices = None):
@@ -114,7 +114,8 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         indices (dict): Coordinates of the netCDF subset. If None, they are read from row and var_indices arguments. 
-        numpy.ma.MaskedArray: Raw data.
+    Returns:
+        numpy.ma.MaskedArray, list: Raw data and coordinates along all dimensions.
     """
 
 
@@ -164,25 +165,6 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
 
 
 
-def read_ids(dataset_ref):
-
-    """
-    Return a list of all ids of the given enrichment file.
-    
-    Args:
-        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        id_col (str or int): Index or name of the ID column.
-    Returns:
-        list: List of all present ids.
-    """
-
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, index_col = 'id')
-
-    return(list(df.index))
-
-
-
 
 def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = 'surface',
                     downsample = {}, out_path = biodiv_path):
@@ -210,7 +192,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, input_type)
+    df = load_enrichment_file(dataset_ref)
 
     # Identify relevant enrichment ids
 
@@ -263,7 +245,7 @@ def compute_stats(row, en_params, input_type, var_indices, ds, dimdict, var):
     
     Args:
         row (pandas.Series): One row of an enrichment file.
-        enrichments (dict): Enrichment parameters as stored in the json config file.
+        en_params (dict): Enrichment parameters as stored in the json config file.
         input_type (str): 'occurrence' or 'area'.
         var_indices (dict):  Dictionary of column indices for the selected variable, output of :func:`geoenrich.enrichment.parse_columns`.
         ds (netCDF4.Dataset): Local dataset.
@@ -316,7 +298,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
     
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.exports.read_ids`.
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to derivate.
         days (int tuple): Start and end days for derivative calculation.
                 If enriching occurrences, provide bounds relatively to occurrence, eg. (-7, 0).
@@ -334,7 +316,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
         enrichment_metadata = json.load(f)
     input_type = enrichment_metadata['input_type']
 
-    row = load_enrichment_file(dataset_ref, input_type).loc[[occ_id]]
+    row = load_enrichment_file(dataset_ref).loc[[occ_id]]
     row1, row2 = deepcopy(row), deepcopy(row)
     
     
@@ -389,7 +371,7 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
-        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.exports.read_ids`.
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
         target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
         value_range (float list): Range of the variable. Necessary for consistency between all images.
@@ -430,16 +412,15 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         value_range = [im.min(), im.max()]
 
     im1 = np.interp(im, value_range,[0,1])
-
     # Transpose if needed
-    if lon_ax > lat_ax:
+    if lat_ax > lon_ax:
         im1 = np.transpose(im1)
 
     # Flip latitude (because image vertical axis is downwards)
     im1 = np.flipud(im1)
 
     # Map values to color scale
-    im2 = cm.coolwarm(im1)
+    im2 = cm.coolwarm_r(im1)
     im2[:,:,3] =  1 - im.mask.astype(int)
 
     # Resize
@@ -449,4 +430,7 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         else:
             im2 = cv2.resize(im2, target_size, interpolation = cv2.INTER_CUBIC)
 
-    cv2.imwrite(folderpath + occ_id + '_' + var_id + '.png', 255*im2)
+    im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
+    cv2.imwrite(im_path, 255*im2)
+    print('Image saved at ' + im_path)
+

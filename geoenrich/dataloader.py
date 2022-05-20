@@ -1,8 +1,8 @@
 """
-The module to load input data before enrichment.
+This module provides functions to load input data before enrichment.
 The package supports two types of input: occurrences or areas.
 Occurrences can be loaded straight from GBIF, from a local DarwinCore archive, or from a custom csv file.
-Areas have to be loaded from a csv file. See :func:`geoenrich.dataloader.load_areas_file`
+Areas have to be loaded from a csv file. See :func:`geoenrich.dataloader.load_areas_file`.
 """
 
 import os
@@ -10,8 +10,12 @@ import pandas as pd
 import geopandas as gpd
 
 from dwca.read import DwCAReader
-from pygbif import species, caching
-from pygbif import occurrences as occ
+
+try:
+    from pygbif import species, caching
+    from pygbif import occurrences as occ
+except:
+    print('pygbif not loaded properly (this is normal if using this package with R).')
 
 import geoenrich
 
@@ -21,8 +25,6 @@ try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py and fill in the blanks')
-    print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
 pd.options.mode.chained_assignment = None
 #caching(True) # gbif caching
@@ -59,7 +61,7 @@ def get_taxon_key(query):
 
 
 
-def request_from_gbif(taxonKey, override = False):
+def request_from_gbif(taxon_key, override = False):
 
 
     """
@@ -163,6 +165,8 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     columns = ['id', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'depth', 'basisOfRecord']
     rawdf = dsA.pd_read(dsA.descriptor.core.file_location, parse_dates=True, usecols = columns)
 
+    rawdf = rawdf.dropna(subset = ['decimalLatitude', 'decimalLongitude'])
+
     # Pre-sample 2*max_number to reduce processing time.
     if len(rawdf) > 2*max_number:
         rawdf = rawdf.sample(2*max_number)
@@ -214,7 +218,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
-        GeoDataFrame: occurrences data (only relevant columns are included)
+        geopandas.GeoDataFrame: occurrences data (only relevant columns are included)
     """
 
     # Load file
@@ -258,8 +262,7 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     """
     Load data to download a variable for specific areas.
-    Bounds must be provided for all available dimensions.
-    Bound columns must be named *{dim}_min* and *{dim}_max*, with {dim} in latitude, longitude, depth, date
+    Bound columns must be named *{dim}_min* and *{dim}_max*, with {dim} in latitude, longitude, date.
     Additional arguments are passed down to *pandas.read_csv*.
 
     Args:
@@ -269,7 +272,7 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
         crs (str): Crs of the provided coordinates.
 
     Returns:
-        GeoDataFrame: occurrences data (only relevant columns are included)
+        geopandas.GeoDataFrame: areas bounds (only relevant columns are included)
     """
 
     rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],

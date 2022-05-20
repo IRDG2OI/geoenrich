@@ -19,22 +19,16 @@ Assuming you have Python3 and pip installed. This is automatic in all recent Lin
 
 First some packages need to be installed::
 
-	pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel
+	python3 -m pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel
 
-	pip install git+https://github.com/rvanasa/pygbif.git
+	python3 -m pip install git+https://github.com/rvanasa/pygbif.git
 
 .. note::
 	pygbif needs to be installed from GitHub because the version on PyPI is not up to date. If you have an error message saying that you don't have git installed on your computer, you can either install it or download the whole repository from github in a browser.
 
 Installation of geoenrich is then done in the classic way::
 
-	pip install geoenrich
-
-
-If you want to use the tutorial notebook you also have to install jupyter notebook::
-
-	pip install notebook
-
+	python3 -m pip install geoenrich
 
 
 4. Configuration
@@ -43,7 +37,7 @@ If you want to use the tutorial notebook you also have to install jupyter notebo
 4.1. First configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first time you import one of the modules, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
+The first time you import the dataloader or enrichment module, it will display the location of the *credentials_example.py* configuration file. You will need to edit it and then remove *_example* from the file name so its name is just *credentials.py*.
 
 In this file, you need to specify the *root_path* where all persistent data will be stored. You should pick a stable location with plenty of free space available (depending on your data download needs).
 
@@ -63,13 +57,14 @@ If you need additional variables, you can update the *catalog.csv* file to add o
 - *url*: OpenDAP URL.
 - *varname*: Name of the variable in the remote dataset.
 
-5. Usage
---------
 
-All done, you can now follow the `jupyter notebook tutorial <https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb>`_.
-
-
-6. Precautions
+5. Precautions
 --------------
 
 If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
+
+
+5. Using the package
+--------------------
+
+Congrats, you can now use the `tutorial <https://geoenrich.readthedocs.io/en/latest/tutorial.html>`_ and start doing science!
