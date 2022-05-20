@@ -11,3 +11,4 @@ requests_cache
 tqdm
 opencv-python
 nbsphinx
+sphinx_copybutton
