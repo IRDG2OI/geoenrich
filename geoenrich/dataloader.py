@@ -1,5 +1,8 @@
 """
-The module to load biodiversity data from GBIF or a local DarwinCore archive 
+This module provides functions to load input data before enrichment.
+The package supports two types of input: occurrences or areas.
+Occurrences can be loaded straight from GBIF, from a local DarwinCore archive, or from a custom csv file.
+Areas have to be loaded from a csv file. See :func:`geoenrich.dataloader.load_areas_file`.
 """
 
 import os
@@ -7,23 +10,27 @@ import pandas as pd
 import geopandas as gpd
 
 from dwca.read import DwCAReader
-from pygbif import species, caching
-from pygbif import occurrences as occ
+
+try:
+    from pygbif import species, caching
+    from pygbif import occurrences as occ
+except:
+    print('pygbif not loaded properly (this is normal if using this package with R).')
 
 import geoenrich
+
+from geoenrich.enrichment import parse_columns
 
 try:
     from geoenrich.credentials import *
 except:
     from geoenrich.credentials_example import *
-    print('Please rename credentials_example.py to credentials.py and fill in the blanks')
-    print('File location: ' + os.path.split(geoenrich.__file__)[0])
 
 pd.options.mode.chained_assignment = None
 #caching(True) # gbif caching
 
 
-############################ GBIF / Darwin Core ###########################
+############################ GBIF requests and downloads ###########################
 
 
 def get_taxon_key(query):
@@ -54,7 +61,7 @@ def get_taxon_key(query):
 
 
 
-def request_from_gbif(taxonKey, override = False):
+def request_from_gbif(taxon_key, override = False):
 
 
     """
@@ -96,7 +103,6 @@ def request_from_gbif(taxonKey, override = False):
 
 
 
-
 def download_requested(request_key):
 
     """
@@ -104,7 +110,7 @@ def download_requested(request_key):
     Download previously requested data if available, otherwise print request status.
     
     Args:
-        request_key (int): Request key as returned by the :func:`geoenrich.biodiv.request_from_gbif` function.
+        request_key (int): Request key as returned by the :func:`geoenrich.dataloader.request_from_gbif` function.
     Returns:
         None
     """
@@ -129,6 +135,7 @@ def download_requested(request_key):
         print('Requested data not available. Request status: ' + metadata['status'])
 
 
+############################ Loading input files ###########################
 
 
 def open_dwca(path = None, taxonKey = None, max_number = 10000):
@@ -155,10 +162,10 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
     dsA = DwCAReader(path)
 
-    columns = ['id', 'taxonKey', 'eventDate', 'basisOfRecord',
-               'decimalLatitude', 'decimalLongitude', 'depth',
-               'coordinatePrecision', 'coordinateUncertaintyInMeters', 'depthAccuracy']
+    columns = ['id', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'depth', 'basisOfRecord']
     rawdf = dsA.pd_read(dsA.descriptor.core.file_location, parse_dates=True, usecols = columns)
+
+    rawdf = rawdf.dropna(subset = ['decimalLatitude', 'decimalLongitude'])
 
     # Pre-sample 2*max_number to reduce processing time.
     if len(rawdf) > 2*max_number:
@@ -180,7 +187,9 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
         print('Selected {} random occurrences from the dataset'.format(max_number))
 
     # Convert to GeoDataFrame & standardize Date
-    geodf = gpd.GeoDataFrame(df)
+    geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
+    geodf.set_index(pd.Index(geodf['id'].astype(str), name='id'), inplace = True)
+    geodf.drop(['id'], axis='columns', inplace = True)
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
@@ -189,7 +198,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
 
 
-def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
+def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
                      crs="EPSG:4326", *args, **kwargs):
 
 
@@ -200,22 +209,22 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
     Otherwise, return a random sample of max_number occurrences.
     
     Args:
-        path (str): Path to the DarwinCoreArchive (.zip) to open.
+        path (str): Path to the csv file to open.
         id_col (int or str): Name or index of the column containing individual occurence ids.
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
         depth_col (int or str): Name or index of the column containing occurrence depths.
-        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax)
+        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
-        GeoDataFrame: occurrences data (only relevant columns are included)
+        geopandas.GeoDataFrame: occurrences data (only relevant columns are included)
     """
 
     # Load file
 
     columns = [id_col, date_col, lat_col, lon_col, depth_col]
-    rawdf = pd.read_csv(path, usecols = columns, *args, **kwargs)
+    rawdf = pd.read_csv(path, usecols = columns, index_col = id_col, *args, **kwargs)
     idf = rawdf.dropna(subset = [lat_col, lon_col])
 
     # Remove rows with missing coordinate
@@ -239,8 +248,51 @@ def import_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_
     # Convert to GeoDataFrame & standardize Date
     df['id'] = df[id_col]
     geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
+    geodf.set_index(pd.Index(geodf['id'].astype(str), name='id'), inplace = True)
+    geodf.drop(['id'], axis='columns', inplace = True)
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
     return(geodf)
 
+
+
+def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", *args, **kwargs):
+
+
+    """
+    Load data to download a variable for specific areas.
+    Bound columns must be named *{dim}_min* and *{dim}_max*, with {dim} in latitude, longitude, date.
+    Additional arguments are passed down to *pandas.read_csv*.
+
+    Args:
+        path (str): Path to the csv file to open.
+        id_col (int or str): Name or index of the column containing individual occurence ids.
+        date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
+        crs (str): Crs of the provided coordinates.
+
+    Returns:
+        geopandas.GeoDataFrame: areas bounds (only relevant columns are included)
+    """
+
+    rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],
+                infer_datetime_format = True, *args, **kwargs)
+    rawdf.index.rename('id', inplace=True)
+    idf = pd.DataFrame()
+
+    if 'date_min' in rawdf.columns:
+        idf['mint'] = pd.to_datetime(rawdf['date_min'], errors = 'coerce', format = date_format,
+                                        dayfirst = True, infer_datetime_format = True)
+        idf['maxt'] = pd.to_datetime(rawdf['date_max'], errors = 'coerce', format = date_format,
+                                        dayfirst = True, infer_datetime_format = True)
+
+    idf['minx'], idf['maxx'] = rawdf['longitude_min'], rawdf['longitude_max']
+    idf['miny'], idf['maxy'] = rawdf['latitude_min'], rawdf['latitude_max']
+
+    df = idf.dropna()
+    if len(idf) != len(df):
+        print('Dropped {} rows with missing or badly formated coordinates'.format(len(idf) - len(df)))
+    
+    print('{} areas were loaded.'.format(len(df)))
+
+    return(df)
