@@ -1,3 +1,10 @@
+## v0.3.1
+
+#### Bug fixes:
+- Removed depth column in *import_occurrences_csv*
+
+
+
 ## v0.3
 
 #### New functions:
@@ -21,7 +28,6 @@
 - The time buffer can now be any pair of bounds, e.g. (-14, -7) will download data between 14 days before the occurrence and 7 days before the occurrence.
 
 #### Bug fixes:
-
 - Handle singularity at +/- 180° longitude.
 - Fixed buffer calculation so that buffer size is respected. From now on, occurrences within the buffer distance of a pole are not enriched because that represents too much data to download (because of the lat/long grid).
 
