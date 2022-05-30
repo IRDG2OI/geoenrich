@@ -235,7 +235,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
 
     # Remove rows with no event date
     idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format,
-                                    dayfirst = True, infer_datetime_format = True)
+                                    infer_datetime_format = True)
     df = idf.dropna(subset = ['eventDate'])
 
     if len(idf) != len(df):
@@ -275,9 +275,9 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     if 'date_min' in rawdf.columns:
         idf['mint'] = pd.to_datetime(rawdf['date_min'], errors = 'coerce', format = date_format,
-                                        dayfirst = True, infer_datetime_format = True)
+                                        infer_datetime_format = True)
         idf['maxt'] = pd.to_datetime(rawdf['date_max'], errors = 'coerce', format = date_format,
-                                        dayfirst = True, infer_datetime_format = True)
+                                        infer_datetime_format = True)
 
     idf['minx'], idf['maxx'] = rawdf['longitude_min'], rawdf['longitude_max']
     idf['miny'], idf['maxy'] = rawdf['latitude_min'], rawdf['latitude_max']
