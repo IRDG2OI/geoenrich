@@ -1,7 +1,7 @@
 ## v0.3.1
 
 #### Bug fixes:
-- Removed depth column in *import_occurrences_csv*
+- Fixed errors in *dataloader.import_occurrences_csv*
 
 
 

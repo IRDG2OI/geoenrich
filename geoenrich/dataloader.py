@@ -241,11 +241,8 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
     if len(idf) != len(df):
         print('Dropped {} rows with missing or badly formated dates'.format(len(idf) - len(df)))
 
-    # Convert to GeoDataFrame & standardize Date
-    df['id'] = df[id_col]
-    geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
-    geodf.set_index(pd.Index(geodf['id'].astype(str), name='id'), inplace = True)
-    geodf.drop(['id'], axis='columns', inplace = True)
+    # Convert to GeoDataFrame
+    geodf = gpd.GeoDataFrame(df[['geometry', 'eventDate']])
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
