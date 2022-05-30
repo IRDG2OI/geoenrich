@@ -1,8 +1,8 @@
 ## v0.3.1
 
 #### Bug fixes:
-- Fixed errors in *dataloader.import_occurrences_csv*
-
+- Fixed errors in *dataloader.import_occurrences_csv*.
+- Removed an empty line in catalog.csv that was causing errors.
 
 
 ## v0.3
