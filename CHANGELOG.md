@@ -1,3 +1,9 @@
+## v0.3.2
+
+#### Bug fixes:
+- Fixed an error that was occurring when time or depth have a non-standard name in the source dataset.
+- Fixed an error due to time dimension not being flagged as 'Unlimited'. New time points could not be downloaded if data points were more recent than the creation of the local netcdf file.
+
 ## v0.3.1
 
 #### Bug fixes:

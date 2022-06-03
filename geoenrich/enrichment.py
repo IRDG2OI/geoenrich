@@ -199,6 +199,7 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
                                                              dimdict, var, downsample), 
                                 result_type = 'expand')
 
+
     local_ds.close()
     bool_ds.close()
 
@@ -522,7 +523,7 @@ def calculate_indices(dimdict, row, var, depth_request, downsample):
     # if time in dimensions, get lower, upper, and best fit indices
     # make sure the slice contains at least one element
 
-    if ('time' in dimdict) and (dimdict['time']['name'] in params):
+    if ('time' in dimdict) and (dimdict['time']['name'] in var['params']):
 
 
         t0 = np.argmin( np.abs( dimdict['time']['vals'] - row['mint'] ) )
@@ -535,7 +536,7 @@ def calculate_indices(dimdict, row, var, depth_request, downsample):
 
     # if depth is a dimension, either select surface layer or return everything
 
-    if ('depth' in dimdict) and (dimdict['depth']['name'] in params):
+    if ('depth' in dimdict) and (dimdict['depth']['name'] in var['params']):
         if depth_request == 'surface':
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
