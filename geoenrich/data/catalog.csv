@@ -9,7 +9,8 @@ current3d-v,Copernicus,0.25°,7d,1993-01-01 - ongoing,50 levels,https://nrt.cmem
 diatoms,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DIATO
 dinophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DINO
 eke,,,,,,calculated,eke
-fsle,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,http://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,fsle_max
+fsle,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,https://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,fsle_max
+fsle-orientation,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,https://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,theta_max
 geos-current-u,Copernicus,0.25°,1d,1993-01-01 - 2019-12-31,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.25deg_P1D,ugosa
 geos-current-u2,Copernicus,0.25°,1d,2019-12-01 - ongoing,surface,https://nrt.cmems-du.eu/thredds/dodsC/dataset-duacs-nrt-global-merged-allsat-phy-l4,ugosa
 geos-current-v,Copernicus,0.25°,1d,1993-01-01 - 2019-12-31,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.25deg_P1D,vgosa
