@@ -1,12 +1,12 @@
-## v0.3.3
+## v0.4
 
 #### New functions:
-- Possibility to specify colormap when exporting png files
-
+- Possibility to specify colormap when exporting png files.
+- Possibility to export data as resized and normalized numpy arrays.
 
 #### Bug fixes:
-- Fixed an error that occurred when data is not available for all occurrences of the dataset
-- Fixed an error when trying to export a png file with no data
+- Fixed an error that occurred when data is not available for all occurrences of the dataset.
+- Fixed an error when trying to export a png file with no data.
 
 ## v0.3.2
 
