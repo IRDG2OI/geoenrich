@@ -24,7 +24,7 @@ from geoenrich.satellite import *
 
 
 def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None, depth_request = 'surface',
-                    downsample = {}, shape = 'rectangle'):
+                    downsample = {}, shape = 'rectangle', df = None):
 
     """
     Retrieve downloaded data for the given occurrence id and variable.
@@ -39,6 +39,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
+        df (geopandas.GeoDataFrame): (Optional) provide enrichment file (output of :func:`geoenrich.enrichment.load_enrichment_file`) to reduce processing time.
     Returns:
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
@@ -50,7 +51,8 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref, mute = True)
+    if df is None:
+        df = load_enrichment_file(dataset_ref, mute = True)
     row = df.loc[occ_id]
 
     # Identify relevant enrichment ids
@@ -408,17 +410,21 @@ def export_png(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None,
 
 
 
-def export_to_array(res, target_size=None, value_range=None, stack=False, squeezed=True, target_len=None):
+def export_to_array(res, target_size=None, value_range=None, stack=False, squeeze=True, target_len=None):
+
     """
-    Export data as a 2D numpy array where dimensions represent geographical coordinates
+    Export data as a 3D numpy array where the first 2 dimensions represent geographical coordinates.
+    The third dimensions stores multiples bands in case multiple depth or time values are present,
+    and stack is set to *True*.
 
 
     Args:
-        values (numpy.array): output of `geoenrich.exports.retrieve_data`.
-        parameters (dict): enrichment parameters as stored in the json config file.
+        res (dict): output of :func:`geoenrich.exports.retrieve_data`.
         target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
         value_range (float list): Range of the variable. Necessary for consistency between all images.
         stack (bool): If True, keep values for all depths and times (returns 3D array).
+        squeeze (bool): If true, remove unused dimensions in the output.
+        target_len (int): Length of the third dimension if data is None (to return uniform results).
     Returns:
         numpy.array: output data, scaled and resized.
 
@@ -455,7 +461,7 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
             if im.shape[0] < target_size[0] or im.shape[1] < target_size[1]:
                 im = cv2.resize(im, target_size, interpolation = cv2.INTER_AREA)
             else:
-                im = cv2.resize(im, target_size, interpolation = cv2.INTER_CUBIC)
+                im = cv2.resize(im, target_size, interpolation = cv2.INTER_LINEAR)
             im = im.reshape([im.shape[0], im.shape[1], -1])
             
         # Scale from value range to [0,1]
@@ -464,7 +470,7 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
 
         im1 = np.interp(im, value_range, [0, 1])
 
-        if squeezed:
+        if squeeze:
             return (im1.squeeze())
         else:
             return (im1)

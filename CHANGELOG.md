@@ -3,6 +3,7 @@
 #### New functions:
 - Possibility to specify colormap when exporting png files.
 - Possibility to export data as resized and normalized numpy arrays.
+- Possibility to provide enrichment file to retrieve_data to reduce processing time.
 
 #### Bug fixes:
 - Fixed an error that occurred when data is not available for all occurrences of the dataset.
