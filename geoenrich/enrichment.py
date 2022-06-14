@@ -100,27 +100,22 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
     prefix = str(enrichment_id) + '_'
     indices = indices.add_prefix(prefix)
+    missing_index = to_enrich.index.difference(indices.index) # Rows with no data available
+    updated = original
 
     # If variable is already present, update it
+    if not(new_enrichment):
+        relevant_cols = [c for c in original.columns if c[:len(prefix)] == prefix]
+        updated.loc[indices.index, relevant_cols] = indices[relevant_cols]
+        updated.loc[missing_index,relevant_cols] = -1
 
-    if not(new_enrichment) and len(indices):
-        original.update(indices)
-        updated = original
-
-    # If indices is empty
-    elif not(len(indices)):
-        updated = original
-
-    # Else add new columns
-    else:
+    # If indices is not empty
+    elif len(indices.index):
         updated = original.merge(indices, how = 'left', left_index = True, right_index = True)
-
-    # Fill unenriched rows with -1
-    missing_index = to_enrich.index.difference(indices.index)
-    updated.loc[missing_index,indices.columns] = -1
+        updated.loc[missing_index,indices.columns] = -1
 
     # Save file
-    if new_enrichment:
+    if new_enrichment and len(indices):
         save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_buff, depth_request, downsample)
     updated.to_csv(biodiv_path + dataset_ref + '.csv')
 
