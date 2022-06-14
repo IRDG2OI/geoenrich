@@ -361,7 +361,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
         return({'coords': coords, 'values': data, 'unit': unit + ' per day'})
 
 
-def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = None, path = biodiv_path, geo_buff = None,
+def export_png(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None,
                     time_buff = None, depth_request = 'surface', downsample = {}, cmap = 'coolwarm'):
 
     """
@@ -373,8 +373,6 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
-        target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
-        value_range (float list): Range of the variable. Necessary for consistency between all images.
         path (str): Path where image files will be saved.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
@@ -394,47 +392,89 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
     res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample)
 
     if res is not None:
-        im = res['values']
-
-        params = [c[0] for c in res['coords']]
-        
-        # Transform to 2D data by removing additionnal dimensions.
-        lat_ax = params.index('latitude')
-        lon_ax = params.index('longitude')
-
-        if 'time' in params:
-            time_ax = params.index('time')
-            im = im.take(-1, axis = time_ax)
-
-        if 'depth' in params:
-            depth_ax = params.index('depth')
-            im = im.take(np.argmin(res['coords'][depth_ax][1]), axis = depth_ax)
-
-        # Scale from value range to [0,1]
-        if value_range is None:
-            value_range = [im.min(), im.max()]
-
-        im1 = np.interp(im, value_range,[0,1])
-        # Transpose if needed
-        if lat_ax > lon_ax:
-            im1 = np.transpose(im1)
 
         # Flip latitude (because image vertical axis is downwards)
-        im1 = np.flipud(im1)
+        im = export_to_array(res, target_size, value_range)
+        im1 = np.flipud(im)
 
         # Map values to color scale
         im2 = getattr(cm, cmap)(im1)
         im2[:,:,3] =  1 - im.mask.astype(int)
         im3 = cv2.cvtColor(np.float32(im2), cv2.COLOR_BGR2RGB)
 
-        # Resize
-        if target_size is not None:
-            if im3.shape[0] < target_size[0] or im3.shape[1] < target_size[1]:
-                im3 = cv2.resize(im3, target_size, interpolation = cv2.INTER_AREA)
-            else:
-                im3 = cv2.resize(im3, target_size, interpolation = cv2.INTER_CUBIC)
-
         im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
         cv2.imwrite(im_path, 255*im3)
         print('Image saved at ' + im_path)
 
+
+
+def export_to_array(res, target_size=None, value_range=None, stack=False, squeezed=True, target_len=None):
+    """
+    Export data as a 2D numpy array where dimensions represent geographical coordinates
+
+
+    Args:
+        values (numpy.array): output of `geoenrich.exports.retrieve_data`.
+        parameters (dict): enrichment parameters as stored in the json config file.
+        target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
+        value_range (float list): Range of the variable. Necessary for consistency between all images.
+        stack (bool): If True, keep values for all depths and times (returns 3D array).
+    Returns:
+        numpy.array: output data, scaled and resized.
+
+    """
+
+    if res is not None:
+
+        im = res['values']
+        params = [c[0] for c in res['coords']]
+
+        # Transform to 2D data by removing additional dimensions.
+        lat_ax = params.index('latitude')
+        lon_ax = params.index('longitude')
+
+        # Transpose if needed
+        if lat_ax > lon_ax:
+            im1 = np.transpose(im1)
+            lat_ax = params.index('longitude')
+            lon_ax = params.index('latitude')
+
+        if not (stack):
+            if 'time' in params:
+                time_ax = params.index('time')
+                im = im.take(-1, axis=time_ax)
+
+            if 'depth' in params:
+                depth_ax = params.index('depth')
+                im = im.take(np.argmin(res['coords'][depth_ax][1]), axis=depth_ax)
+
+        im = im.reshape([im.shape[lat_ax], im.shape[lon_ax], -1])
+
+        # Resize
+        if target_size is not None:
+            if im.shape[0] < target_size[0] or im.shape[1] < target_size[1]:
+                im = cv2.resize(im, target_size, interpolation = cv2.INTER_AREA)
+            else:
+                im = cv2.resize(im, target_size, interpolation = cv2.INTER_CUBIC)
+            im = im.reshape([im.shape[0], im.shape[1], -1])
+            
+        # Scale from value range to [0,1]
+        if value_range is None:
+            value_range = [im.min(), im.max()]
+
+        im1 = np.interp(im, value_range, [0, 1])
+
+        if squeezed:
+            return (im1.squeeze())
+        else:
+            return (im1)
+
+    elif (target_size is not None) and (target_len is not None):
+
+        empty = np.zeros([*target_size, target_len])
+        return (empty)
+
+    else:
+        return (None)
+
+    
