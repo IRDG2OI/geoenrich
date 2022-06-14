@@ -67,7 +67,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
 
     if len(relevant) == 0:
         print("No enrichment was found with the provided parameters. Try again with fewer current_parameters \
-                or make sure you ar eusing the same as during enrichment")
+                or make sure you are using the same as during enrichment")
 
     elif len(relevant) > 1:
         print('Several enrichment sessions were found with the given parameters.\
@@ -207,7 +207,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
                 relevant.append(en)
 
     if len(relevant) == 0:
-        print("No enrichment was found with the provided parameters. Try again with fewer current_parameters \
+        print("No enrichment was found with the provided parameters. Try again with fewer parameters \
                 or make sure you are using the same as during enrichment")
 
     elif len(relevant) > 1:
@@ -362,7 +362,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
 
 
 def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = None, path = biodiv_path, geo_buff = None,
-                    time_buff = None, depth_request = 'surface', downsample = {}):
+                    time_buff = None, depth_request = 'surface', downsample = {}, cmap = 'coolwarm'):
 
     """
     Export a png image of the requested data.
@@ -380,6 +380,7 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
+        cmap (str): (Optional) Specify a colormap (see matplotlib.cm for reference).
 
     Returns:
         None
@@ -391,46 +392,49 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range = No
 
     # Retrieve data
     res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample)
-    im = res['values']
 
-    params = [c[0] for c in res['coords']]
-    
-    # Transform to 2D data by removing additionnal dimensions.
-    lat_ax = params.index('latitude')
-    lon_ax = params.index('longitude')
+    if res is not None:
+        im = res['values']
 
-    if 'time' in params:
-        time_ax = params.index('time')
-        im = im.take(-1, axis = time_ax)
+        params = [c[0] for c in res['coords']]
+        
+        # Transform to 2D data by removing additionnal dimensions.
+        lat_ax = params.index('latitude')
+        lon_ax = params.index('longitude')
 
-    if 'depth' in params:
-        depth_ax = params.index('depth')
-        im = im.take(np.argmin(res['coords'][depth_ax][1]), axis = depth_ax)
+        if 'time' in params:
+            time_ax = params.index('time')
+            im = im.take(-1, axis = time_ax)
 
-    # Scale from value range to [0,1]
-    if value_range is None:
-        value_range = [im.min(), im.max()]
+        if 'depth' in params:
+            depth_ax = params.index('depth')
+            im = im.take(np.argmin(res['coords'][depth_ax][1]), axis = depth_ax)
 
-    im1 = np.interp(im, value_range,[0,1])
-    # Transpose if needed
-    if lat_ax > lon_ax:
-        im1 = np.transpose(im1)
+        # Scale from value range to [0,1]
+        if value_range is None:
+            value_range = [im.min(), im.max()]
 
-    # Flip latitude (because image vertical axis is downwards)
-    im1 = np.flipud(im1)
+        im1 = np.interp(im, value_range,[0,1])
+        # Transpose if needed
+        if lat_ax > lon_ax:
+            im1 = np.transpose(im1)
 
-    # Map values to color scale
-    im2 = cm.coolwarm_r(im1)
-    im2[:,:,3] =  1 - im.mask.astype(int)
+        # Flip latitude (because image vertical axis is downwards)
+        im1 = np.flipud(im1)
 
-    # Resize
-    if target_size is not None:
-        if im2.shape[0] < target_size[0] or im2.shape[1] < target_size[1]:
-            im2 = cv2.resize(im2, target_size, interpolation = cv2.INTER_AREA)
-        else:
-            im2 = cv2.resize(im2, target_size, interpolation = cv2.INTER_CUBIC)
+        # Map values to color scale
+        im2 = getattr(cm, cmap)(im1)
+        im2[:,:,3] =  1 - im.mask.astype(int)
+        im3 = cv2.cvtColor(np.float32(im2), cv2.COLOR_BGR2RGB)
 
-    im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
-    cv2.imwrite(im_path, 255*im2)
-    print('Image saved at ' + im_path)
+        # Resize
+        if target_size is not None:
+            if im3.shape[0] < target_size[0] or im3.shape[1] < target_size[1]:
+                im3 = cv2.resize(im3, target_size, interpolation = cv2.INTER_AREA)
+            else:
+                im3 = cv2.resize(im3, target_size, interpolation = cv2.INTER_CUBIC)
+
+        im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
+        cv2.imwrite(im_path, 255*im3)
+        print('Image saved at ' + im_path)
 

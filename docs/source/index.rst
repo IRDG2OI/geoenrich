@@ -1,4 +1,4 @@
-geoenrich 0.3 documentation
+geoenrich 0.3.2 documentation
 ===========================
 
 |Read the Docs| |License| |PyPI| |Python versions| |Last commit| |DOI|
@@ -14,7 +14,6 @@ The package provides functions to retrieve occurrence data directly from GBIF, o
 
 Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`_
 
-Jupyter notebook tutorial in the `Github repository <https://github.com/morand-g/geoenrich/blob/main/geoenrich/tutorial.ipynb>`_
 
 .. image:: https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true
    :alt: Illustration of an occurrence dataset enriched with bathymetry data

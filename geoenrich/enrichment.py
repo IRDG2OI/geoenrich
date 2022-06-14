@@ -100,27 +100,22 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
     prefix = str(enrichment_id) + '_'
     indices = indices.add_prefix(prefix)
+    missing_index = to_enrich.index.difference(indices.index) # Rows with no data available
+    updated = original
 
     # If variable is already present, update it
+    if not(new_enrichment):
+        relevant_cols = [c for c in original.columns if c[:len(prefix)] == prefix]
+        updated.loc[indices.index, relevant_cols] = indices[relevant_cols]
+        updated.loc[missing_index,relevant_cols] = -1
 
-    if not(new_enrichment) and len(indices):
-        original.update(indices)
-        updated = original
-
-    # If indices is empty
-    elif not(len(indices)):
-        updated = original
-
-    # Else add new columns
-    else:
+    # If indices is not empty
+    elif len(indices.index):
         updated = original.merge(indices, how = 'left', left_index = True, right_index = True)
-
-    # Fill unenriched rows with -1
-    missing_index = to_enrich.index.difference(indices.index)
-    updated.loc[missing_index,indices.columns] = -1
+        updated.loc[missing_index,indices.columns] = -1
 
     # Save file
-    if new_enrichment:
+    if new_enrichment and len(indices):
         save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_buff, depth_request, downsample)
     updated.to_csv(biodiv_path + dataset_ref + '.csv')
 
@@ -198,6 +193,7 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
     res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets,
                                                              dimdict, var, downsample), 
                                 result_type = 'expand')
+
 
     local_ds.close()
     bool_ds.close()
@@ -522,7 +518,7 @@ def calculate_indices(dimdict, row, var, depth_request, downsample):
     # if time in dimensions, get lower, upper, and best fit indices
     # make sure the slice contains at least one element
 
-    if ('time' in dimdict) and (dimdict['time']['name'] in params):
+    if ('time' in dimdict) and (dimdict['time']['name'] in var['params']):
 
 
         t0 = np.argmin( np.abs( dimdict['time']['vals'] - row['mint'] ) )
@@ -535,7 +531,7 @@ def calculate_indices(dimdict, row, var, depth_request, downsample):
 
     # if depth is a dimension, either select surface layer or return everything
 
-    if ('depth' in dimdict) and (dimdict['depth']['name'] in params):
+    if ('depth' in dimdict) and (dimdict['depth']['name'] in var['params']):
         if depth_request == 'surface':
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}

@@ -39,7 +39,7 @@ def get_metadata(ds, varname):
         # Format time dimension
         # Need to convert netcdf datetime to python datetime
 
-        if name == 'time' or getattr(ds.variables[name], 'standard_name', 'Unknown') == 'time':
+        if getattr(ds.variables[name], 'standard_name', 'Unknown') == 'time' or name in ['time', 'time_agg']:
 
             cal = None
             if 'months since' in ds.variables[name].__dict__['units']:
@@ -154,8 +154,12 @@ def create_nc(var):
     bool_ds = nc.Dataset(pathd, mode = 'w')
 
     for name, dimension in remote_ds.dimensions.items():
-        local_ds.createDimension(name, len(dimension) if not dimension.isunlimited() else None)
-        bool_ds.createDimension(name, len(dimension) if not dimension.isunlimited() else None)
+        if getattr(remote_ds.variables[name], 'standard_name', 'Unknown') == 'time' or name in ['time', 'time_agg']:
+            local_ds.createDimension(name, None)
+            bool_ds.createDimension(name, None)
+        else:
+            local_ds.createDimension(name, len(dimension))
+            bool_ds.createDimension(name, len(dimension))
 
 
     for name, variable in remote_ds.variables.items():

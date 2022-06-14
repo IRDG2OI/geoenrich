@@ -198,7 +198,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
 
 
-def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
+def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format = None,
                      crs="EPSG:4326", *args, **kwargs):
 
 
@@ -214,7 +214,6 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
-        depth_col (int or str): Name or index of the column containing occurrence depths.
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
@@ -223,7 +222,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
 
     # Load file
 
-    columns = [id_col, date_col, lat_col, lon_col, depth_col]
+    columns = [id_col, date_col, lat_col, lon_col]
     rawdf = pd.read_csv(path, usecols = columns, index_col = id_col, *args, **kwargs)
     idf = rawdf.dropna(subset = [lat_col, lon_col])
 
@@ -232,24 +231,18 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
         print('Dropped {} rows with missing coordinates'.format(len(rawdf) - len(idf)))
     
     # Convert Lat/Long to GEOS POINT
-    if depth_col is None:
-        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
-    else:
-        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col], crs=crs)
+    idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
 
     # Remove rows with no event date
     idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format,
-                                    dayfirst = True, infer_datetime_format = True)
+                                    infer_datetime_format = True)
     df = idf.dropna(subset = ['eventDate'])
 
     if len(idf) != len(df):
         print('Dropped {} rows with missing or badly formated dates'.format(len(idf) - len(df)))
 
-    # Convert to GeoDataFrame & standardize Date
-    df['id'] = df[id_col]
-    geodf = gpd.GeoDataFrame(df[['id', 'geometry', 'eventDate']])
-    geodf.set_index(pd.Index(geodf['id'].astype(str), name='id'), inplace = True)
-    geodf.drop(['id'], axis='columns', inplace = True)
+    # Convert to GeoDataFrame
+    geodf = gpd.GeoDataFrame(df[['geometry', 'eventDate']])
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
@@ -282,9 +275,9 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     if 'date_min' in rawdf.columns:
         idf['mint'] = pd.to_datetime(rawdf['date_min'], errors = 'coerce', format = date_format,
-                                        dayfirst = True, infer_datetime_format = True)
+                                        infer_datetime_format = True)
         idf['maxt'] = pd.to_datetime(rawdf['date_max'], errors = 'coerce', format = date_format,
-                                        dayfirst = True, infer_datetime_format = True)
+                                        infer_datetime_format = True)
 
     idf['minx'], idf['maxx'] = rawdf['longitude_min'], rawdf['longitude_max']
     idf['miny'], idf['maxy'] = rawdf['latitude_min'], rawdf['latitude_max']

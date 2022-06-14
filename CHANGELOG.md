@@ -1,3 +1,26 @@
+## v0.3.3
+
+#### New functions:
+- Possibility to specify colormap when exporting png files
+
+
+#### Bug fixes:
+- Fixed an error that occurred when data is not available for all occurrences of the dataset
+- Fixed an error when trying to export a png file with no data
+
+## v0.3.2
+
+#### Bug fixes:
+- Fixed an error that was occurring when time or depth have a non-standard name in the source dataset.
+- Fixed an error due to time dimension not being flagged as 'Unlimited'. New time points could not be downloaded if data points were more recent than the creation of the local netcdf file.
+
+## v0.3.1
+
+#### Bug fixes:
+- Fixed errors in *dataloader.import_occurrences_csv*.
+- Removed an empty line in catalog.csv that was causing errors.
+
+
 ## v0.3
 
 #### New functions:
@@ -17,11 +40,10 @@
 - Added a DarwinCore archive (data/AcDigitifera.zip) to enable testing the package without logging into GBIF.
 - Added import_csv function to load occurrence datasets in custom formats.
 - Added a mask calculation function to return only datapoints within the buffer distance from the occurrence location.
-- The package is now writing into temporaty copies of netCDF files in case errors occur. The definitive file is only overwritten after writing is complete.
+- The package is now writing into temporary copies of netCDF files in case errors occur. The definitive file is only overwritten after writing is complete.
 - The time buffer can now be any pair of bounds, e.g. (-14, -7) will download data between 14 days before the occurrence and 7 days before the occurrence.
 
 #### Bug fixes:
-
 - Handle singularity at +/- 180° longitude.
 - Fixed buffer calculation so that buffer size is respected. From now on, occurrences within the buffer distance of a pole are not enriched because that represents too much data to download (because of the lat/long grid).
 
