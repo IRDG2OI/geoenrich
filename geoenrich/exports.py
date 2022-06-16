@@ -363,8 +363,9 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
         return({'coords': coords, 'values': data, 'unit': unit + ' per day'})
 
 
-def export_png(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None,
-                    time_buff = None, depth_request = 'surface', downsample = {}, cmap = 'coolwarm'):
+def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None, path = biodiv_path,
+               geo_buff = None, time_buff = None, depth_request = 'surface', downsample = {},
+               cmap = 'coolwarm', shape = 'rectangle'):
 
     """
     Export a png image of the requested data.
@@ -375,12 +376,15 @@ def export_png(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None,
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
+        target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
+        value_range (float list): Range of the variable. Necessary for consistency between all images.
         path (str): Path where image files will be saved.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         cmap (str): (Optional) Specify a colormap (see matplotlib.cm for reference).
+        shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
 
     Returns:
         None
@@ -391,18 +395,25 @@ def export_png(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None,
         os.mkdir(folderpath)
 
     # Retrieve data
-    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample)
+    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample, shape=shape)
 
     if res is not None:
 
-        # Flip latitude (because image vertical axis is downwards)
+        if value_range is None:
+            value_range = [np.nanmin(res['values']), np.nanmax(res['values'])]
+
         im = export_to_array(res, target_size, value_range)
-        im1 = np.flipud(im)
+
+        # Flip latitude (because image vertical axis is downwards)
+        lat_ax = [c[0] for c in res['coords']].index('latitude')
+        lats = res['coords'][lat_ax][1]
+        if len(lats)>1 and lats[0] < lats[1]:
+            im = np.flipud(im)
 
         # Map values to color scale
-        im2 = getattr(cm, cmap)(im1)
-        im2[:,:,3] =  1 - im.mask.astype(int)
-        im3 = cv2.cvtColor(np.float32(im2), cv2.COLOR_BGR2RGB)
+        im2 = getattr(cm, cmap)(im)
+        im3 = cv2.cvtColor(np.float32(im2), cv2.COLOR_BGR2RGBA)
+        im3[:,:,3] =  1 - np.isnan(im)
 
         im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
         cv2.imwrite(im_path, 255*im3)
@@ -420,7 +431,7 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
 
     Args:
         res (dict): output of :func:`geoenrich.exports.retrieve_data`.
-        target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
+        target_size (int tuple): Size of the target array (width, height). If None, using the native data resolution.
         value_range (float list): Range of the variable. Necessary for consistency between all images.
         stack (bool): If True, keep values for all depths and times (returns 3D array).
         squeeze (bool): If true, remove unused dimensions in the output.
@@ -440,6 +451,8 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
         lon_ax = params.index('longitude')
 
         # Transpose if needed
+        im1 = deepcopy(im)
+
         if lat_ax > lon_ax:
             im1 = np.transpose(im1)
             lat_ax = params.index('longitude')
@@ -448,36 +461,46 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
         if not (stack):
             if 'time' in params:
                 time_ax = params.index('time')
-                im = im.take(-1, axis=time_ax)
+                im1 = im1.take(-1, axis=time_ax)
 
             if 'depth' in params:
                 depth_ax = params.index('depth')
-                im = im.take(np.argmin(res['coords'][depth_ax][1]), axis=depth_ax)
+                if 'time' in params and params.index('time') < params.index('depth'):
+                    depth_ax -= 1
+                
+                im1 = im1.take(np.argmin(res['coords'][depth_ax][1]), axis=depth_ax)
 
-        im = im.reshape([im.shape[lat_ax], im.shape[lon_ax], -1])
+        im1 = im1.reshape([im.shape[lat_ax], im.shape[lon_ax], -1])
+        mask = im1.mask
 
         # Resize
         if target_size is not None:
-            if im.shape[0] < target_size[0] or im.shape[1] < target_size[1]:
-                im = cv2.resize(im, target_size, interpolation = cv2.INTER_AREA)
+            if len(im1.mask.shape):
+                mask = cv2.resize(im1.mask.astype(int), target_size, interpolation = cv2.INTER_NEAREST)
+
+            if im1.shape[0] < target_size[0] or im1.shape[1] < target_size[1]:
+                im1 = cv2.resize(im1, target_size, interpolation = cv2.INTER_AREA)
             else:
-                im = cv2.resize(im, target_size, interpolation = cv2.INTER_LINEAR)
-            im = im.reshape([im.shape[0], im.shape[1], -1])
+                im1 = cv2.resize(im1, target_size, interpolation = cv2.INTER_LINEAR)
+            
+            # If there is only one band, cv2 returns squeezed version
+            im1 = im1.reshape([im1.shape[0], im1.shape[1], -1])
             
         # Scale from value range to [0,1]
-        if value_range is None:
-            value_range = [im.min(), im.max()]
+        if value_range is not None:
+            im1 = np.interp(im1, value_range, [0, 1])
 
-        im1 = np.interp(im, value_range, [0, 1])
+        im2 = np.ma.masked_array(im1, mask=mask)
+        im3 = np.ma.filled(im2, np.nan)
 
         if squeeze:
-            return (im1.squeeze())
+            return (im3.squeeze())
         else:
-            return (im1)
+            return (im3)
 
     elif (target_size is not None) and (target_len is not None):
 
-        empty = np.zeros([*target_size, target_len])
+        empty = np.full([*target_size, target_len], np.nan)
         return (empty)
 
     else:
