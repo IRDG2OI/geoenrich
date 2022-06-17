@@ -31,6 +31,7 @@ Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`
 
    tutorial
    r-tutorial
+   examples
    variables
 
 

@@ -425,8 +425,8 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
 
     """
     Export data as a 3D numpy array where the first 2 dimensions represent geographical coordinates.
-    The third dimensions stores multiples bands in case multiple depth or time values are present,
-    and stack is set to *True*.
+    Option to standardize data by specifiying target size and target value range.
+    The third dimensions stores multiples bands if stack is set to *True* and multiple depth or time values are present.
 
 
     Args:

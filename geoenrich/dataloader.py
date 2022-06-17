@@ -250,7 +250,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
 
 
 
-def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", *args, **kwargs):
+def load_areas_file(path, date_format = None, crs = "EPSG:4326", *args, **kwargs):
 
 
     """
@@ -260,7 +260,6 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     Args:
         path (str): Path to the csv file to open.
-        id_col (int or str): Name or index of the column containing individual occurence ids.
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
 
