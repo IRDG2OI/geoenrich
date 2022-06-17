@@ -144,7 +144,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     """
     Load data from DarwinCoreArchive located at given path.
     If no path is given, try to open a previously downloaded gbif archive for the given taxonomic key.
-    Remove rows with a missing event date. Return a geodataframe with all occurences if fewer than max_number.
+    Remove rows with a missing event date. Return a geodataframe with all occurrences if fewer than max_number.
     Otherwise, return a random sample of max_number occurrences.
     
     Args:
@@ -205,12 +205,12 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
     """
     Load data from a custom csv file. Additional arguments are passed down to *pandas.read_csv*.
     Remove rows with a missing event date or missing coordinates.
-    Return a geodataframe with all occurences if fewer than max_number.
+    Return a geodataframe with all occurrences if fewer than max_number.
     Otherwise, return a random sample of max_number occurrences.
     
     Args:
         path (str): Path to the csv file to open.
-        id_col (int or str): Name or index of the column containing individual occurence ids.
+        id_col (int or str): Name or index of the column containing individual occurrence ids.
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
@@ -250,7 +250,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
 
 
 
-def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", *args, **kwargs):
+def load_areas_file(path, date_format = None, crs = "EPSG:4326", *args, **kwargs):
 
 
     """
@@ -260,7 +260,6 @@ def load_areas_file(path, id_col = None, date_format = None, crs = "EPSG:4326", 
 
     Args:
         path (str): Path to the csv file to open.
-        id_col (int or str): Name or index of the column containing individual occurence ids.
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
 
