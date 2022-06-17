@@ -9,11 +9,9 @@
 
 # Package description
 
-GeoEnrich provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. Users can specify a geographic or temporal buffer to include data in the neighbourhood of occurrences into their analyses.
+GeoEnrich provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. Users can specify a geographic or temporal buffer to include data in the neighbourhood of occurrences into their analyses. Two main outputs are available: the full multidimensional data array, and a simple summary of the variable on the requested area.
 
-This package is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers. All downloaded environmental data are stored locally in netCDF files and can be retrieved as a summary csv file, multidimensional numpy arrays, or exported as png images.
-
-Sea surface temperature, chlorophyll, and 40 other environmental variables are available natively, and others can easily be added by the user.
+Sea surface temperature, chlorophyll, and 40 other environmental variables are available natively, and others can easily be added by the user. This package is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers.
 
 The package provides functions to retrieve occurrence data directly from GBIF, or open a custom dataset from any source. Arbitrary areas defined by the user can also be enriched.
 
@@ -41,11 +39,6 @@ Please feel free to raise issues or suggest improvements in the [Issues tab](htt
 
 ### Planned improvements
 
-#### Depth requests
-
-There are currently only two options regarding the depth dimension: only surface data, or data for all depths.
-We plan to add an option to download data for any range of depth.
-
-#### Data export formats
-
-There is a plan to add export options for enrichment data: netCDF files (per occurrence or per dataset).
+- Export data as a raster layer.
+- Enrich an area defined by a shapefile.
+- Add bathymetry from GEBCO.
