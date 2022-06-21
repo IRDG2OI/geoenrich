@@ -1,3 +1,8 @@
+## v0.4.1
+
+#### Bug fixes:
+- Fixed an error in load\_areas\_file.
+
 ## v0.4
 
 #### New functions:

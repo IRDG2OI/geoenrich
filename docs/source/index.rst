@@ -1,4 +1,4 @@
-geoenrich 0.4 documentation
+geoenrich 0.4.1 documentation
 ===========================
 
 |Read the Docs| |License| |PyPI| |Python versions| |Last commit| |DOI|
