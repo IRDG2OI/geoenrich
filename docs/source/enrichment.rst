@@ -25,6 +25,8 @@ Other functions (for internal use)
 
 .. autofunction:: geoenrich.enrichment.calculate_indices
 
+.. autofunction:: geoenrich.enrichment.checksize
+
 .. autofunction:: geoenrich.enrichment.compute_variable
 
 .. autofunction:: geoenrich.enrichment.download_data
