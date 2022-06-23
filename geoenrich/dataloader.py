@@ -267,7 +267,7 @@ def load_areas_file(path, date_format = None, crs = "EPSG:4326", *args, **kwargs
         geopandas.GeoDataFrame: areas bounds (only relevant columns are included)
     """
 
-    rawdf = pd.read_csv(path, index_col = id_col, parse_dates = ['date_min', 'date_max'],
+    rawdf = pd.read_csv(path, index_col = 'id', parse_dates = ['date_min', 'date_max'],
                 infer_datetime_format = True, *args, **kwargs)
     rawdf.index.rename('id', inplace=True)
     idf = pd.DataFrame()
