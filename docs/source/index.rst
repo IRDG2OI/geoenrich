@@ -35,6 +35,11 @@ Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`
    variables
 
 
+.. toctree::
+   :caption: Online version
+
+   online
+
 Modules
 =======
 
