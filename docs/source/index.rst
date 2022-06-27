@@ -1,5 +1,5 @@
-geoenrich 0.4.1 documentation
-===========================
+geoenrich 0.4.2 documentation
+==============================
 
 |Read the Docs| |License| |PyPI| |Python versions| |Last commit| |DOI|
 
@@ -32,6 +32,11 @@ Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`
    examples
    variables
 
+
+.. toctree::
+   :caption: Online version
+
+   online
 
 Modules
 =======

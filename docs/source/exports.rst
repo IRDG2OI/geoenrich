@@ -2,6 +2,7 @@ Exports module
 ==============
 
 After enriching occurrences, you can use the exports module to use the downloaded data. Several options are available:
+
 - Produce a stats file that will give you the average, standard deviation, minimum and maximum values of your variable in the buffer around each occurrence. See :func:`geoenrich.exports.produce_stats`.
 - Calculate the derivative of the environmental data between two different dates, with :func:`geoenrich.exports.get_derivative`.
 - Export png pictures, for visualization or training deep learning models for instance. See :func:`geoenrich.exports.export_png`.

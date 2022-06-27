@@ -1,3 +1,8 @@
+## v0.4.2
+
+#### New functions:
+- New function to estimate download size before starting enrichment.
+
 ## v0.4.1
 
 #### Bug fixes:

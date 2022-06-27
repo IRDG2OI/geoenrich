@@ -44,7 +44,7 @@ pd.options.mode.chained_assignment = None
 
 
 def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = 'surface', 
-    downsample = {}, slice = None):
+    downsample = {}, slice = None, maxpoints = None):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -60,6 +60,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
+        maxpoints(int): Maximum number of points to download.
 
     Returns:
         None
@@ -96,7 +97,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         indices = enrich_compute(to_enrich, var_id, geo_buff, time_buff, downsample)
     else:
         indices = enrich_download(to_enrich, var_source['varname'], var_id, var_source['url'],
-                                    geo_buff, time_buff, depth_request, downsample)
+                                    geo_buff, time_buff, depth_request, downsample, maxpoints)
 
     prefix = str(enrichment_id) + '_'
     indices = indices.add_prefix(prefix)
@@ -104,13 +105,13 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     updated = original
 
     # If variable is already present, update it
-    if not(new_enrichment):
+    if not(new_enrichment) and len(indices.columns):
         relevant_cols = [c for c in original.columns if c[:len(prefix)] == prefix]
         updated.loc[indices.index, relevant_cols] = indices[relevant_cols]
         updated.loc[missing_index,relevant_cols] = -1
 
     # If indices is not empty
-    elif len(indices.index):
+    elif len(indices):
         updated = original.merge(indices, how = 'left', left_index = True, right_index = True)
         updated.loc[missing_index,indices.columns] = -1
 
@@ -190,6 +191,8 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     # Apply query to each row sequentially
 
+
+    geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, 'surface', downsample))
     res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets,
                                                              dimdict, var, downsample), 
                                 result_type = 'expand')
@@ -214,7 +217,7 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
 
 
-def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, downsample):
+def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, downsample, maxpoints):
     
     """
     Download data for the requested occurrences and buffer into local netcdf file.
@@ -229,6 +232,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+        maxpoints(int): Maximum number of points to download.
 
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
@@ -278,9 +282,18 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         geodf2 = geodf
 
     # Apply query to each row sequentially
+    geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, depth_request, downsample))
 
-    res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample), 
+    if maxpoints is not None and (s:= checksize(geodf2['ind'])) > maxpoints:
+
+        print(f"You are requesting a download of {s:,} points and the limit is set to {maxpoints:,}\n"
+               "Please reduce your buffer size, your number of occurrences, or use geoenrich locally")
+        res = pd.DataFrame()
+
+    else:
+        res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample), 
                             result_type = 'expand')
+    
 
     local_ds.close()
     bool_ds.close()
@@ -297,6 +310,33 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     print('Enrichment over')
     return(res)
+
+
+
+
+def checksize(ind):
+
+    """
+    Calculate the number of points to be downloaded.
+
+    Args:
+        ind (pd.Series): Series of data indices as output by :func:`geoenrich.enrichment.calculate_indices`.
+    returns:
+        int: number of points to be downloaded.
+    """
+
+    vars = ind.iloc[0].keys()
+    
+    def checkrowsize(indrow):
+        prod = 1
+        for v in vars:
+            prod = prod * (indrow[v]['max'] - indrow[v]['min'] + 1)
+        return(prod)
+
+    sizeseries = ind.apply(checkrowsize)
+
+    return(sizeseries.sum())
+
 
 
 
@@ -363,8 +403,8 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
         remote_ds (netCDF4.Dataset): Remote dataset.
         local_ds (netCDF4.Dataset): Local dataset.
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
-        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
-        var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
+        dimdict (dict): Dictionary of dimensions as returned by :func:`geoenrich.satellite.get_metadata`.
+        var (dict): Variable dictionary as returned by :func:`geoenrich.satellite.get_metadata`.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
@@ -374,7 +414,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
 
     # Find indices for region of interest
 
-    ind = calculate_indices(dimdict, row, var, depth_request, downsample)
+    ind = row['ind']
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
     
@@ -421,7 +461,7 @@ def row_compute(row, local_ds, bool_ds, base_datasets, dimdict, var, downsample)
 
     """
 
-    ind = calculate_indices(dimdict, row, var, 'surface', downsample)
+    ind = row['ind']    
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
     lons = dimdict['longitude']['vals']
@@ -475,14 +515,14 @@ def row_compute(row, local_ds, bool_ds, base_datasets, dimdict, var, downsample)
 
 
 
-def calculate_indices(dimdict, row, var, depth_request, downsample):
+def calculate_indices(row, dimdict, var, depth_request, downsample):
 
     """
     Calculate indices of interest for the given bounds, according to variable dimensions.
     
     Args:
-        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         row (pandas.Series): GeoDataFrame row to enrich.
+        dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
