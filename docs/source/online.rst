@@ -38,11 +38,10 @@ A column with a unique ID is mandatory, to be able to link downloaded data to th
      - resting
 
 
-The date parser should work with any common date format. If you encounter problems with a custom date format, you can try to provide an explicit format string using the *date_format* parameter. See *strptime* documentation `here <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior>`_.
-
-
 1.2. Areas
 ^^^^^^^^^^
+
+A column with a unique ID is mandatory, to be able to link downloaded data to the corresponding area. All columns in the example file below are also mandatory:
 
 .. list-table:: areas.csv
    :widths: 10 15 15 15 15 15 15
