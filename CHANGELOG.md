@@ -1,3 +1,11 @@
+## v0.4.3
+
+#### Bug fixes:
+- Bug fixed in enrichment.calculate_indices when using all depth levels.
+- Eke formula was fixed (0.5 factor was missing).
+- Fixed error in exports.export_to_array that produced abnormal value in the cells neighboring NaNs.
+
+
 ## v0.4.2
 
 #### New functions:

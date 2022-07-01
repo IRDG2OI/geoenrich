@@ -475,13 +475,13 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
 
         # Resize
         if target_size is not None:
-            if len(im1.mask.shape):
-                mask = cv2.resize(im1.mask.astype(int), target_size, interpolation = cv2.INTER_NEAREST)
 
             if im1.shape[0] < target_size[0] or im1.shape[1] < target_size[1]:
                 im1 = cv2.resize(im1, target_size, interpolation = cv2.INTER_AREA)
+                mask = cv2.resize(im1.mask.astype(int), target_size, interpolation = cv2.INTER_AREA)
             else:
                 im1 = cv2.resize(im1, target_size, interpolation = cv2.INTER_LINEAR)
+                mask = cv2.resize(im1.mask.astype(int), target_size, interpolation = cv2.INTER_LINEAR)
             
             # If there is only one band, cv2 returns squeezed version
             im1 = im1.reshape([im1.shape[0], im1.shape[1], -1])
@@ -490,7 +490,7 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
         if value_range is not None:
             im1 = np.interp(im1, value_range, [0, 1])
 
-        im2 = np.ma.masked_array(im1, mask=mask)
+        im2 = np.ma.masked_array(im1.data, mask=mask)
         im3 = np.ma.filled(im2, np.nan)
 
         if squeeze:

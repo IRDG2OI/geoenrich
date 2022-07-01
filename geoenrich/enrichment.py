@@ -576,7 +576,7 @@ def calculate_indices(row, dimdict, var, depth_request, downsample):
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
         else:
-            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals'] - 1), 'best': None, 'step': 1}
+            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']) - 1, 'best': None, 'step': 1}
 
     for dim in downsample:
         ind[dim]['step'] = downsample[dim] + 1
@@ -685,7 +685,7 @@ def compute_variable(var_id, base_data):
 
     if var_id == 'eke':
 
-        result = base_data['geos-current-u']**2 + base_data['geos-current-v']**2
+        result = 0.5*(base_data['geos-current-u']**2 + base_data['geos-current-v']**2)
 
     else:
 
