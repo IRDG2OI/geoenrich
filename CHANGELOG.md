@@ -1,3 +1,8 @@
+## v 0.?
+
+#### Bug fixes:
+- Update time dimension in calculated variables datasets as they grow in the datasets used for calculation.
+
 ## v0.4.3
 
 #### Bug fixes:

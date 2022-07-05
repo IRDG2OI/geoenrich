@@ -71,7 +71,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         enrichment_metadata = json.load(f)
         f.close()
     except FileNotFoundError:
-        print('Please create an enrichment file first (use geoenrich.enrichmet.create_enrichment_file)')
+        print('Please create an enrichment file first (use geoenrich.enrichment.create_enrichment_file)')
 
     input_type = enrichment_metadata['input_type']
     enrichments = enrichment_metadata['enrichments']
@@ -160,24 +160,6 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     dimdict, var = get_metadata(local_ds, var_id)
 
-    # Add bounds if occurrences
-
-    if 'minx' not in geodf.columns:
-        if geo_buff is None or (time_buff is None and 'time' in dimdict):
-            raise BufferError('Please specify time_buff and geo_buff.')
-        geodf = add_bounds(geodf, geo_buff, time_buff)
-
-    # Remove out of timeframe datapoints
-
-    if 'time' in dimdict:
-        t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
-        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
-        print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
-    else:
-        geodf2 = geodf
-
-
-
     # Open needed datasets (read-only)
 
     base_datasets = {}
@@ -188,6 +170,24 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
         base_datasets[sec_var_id]['ds'] = nc.Dataset(sat_path + sec_var_id + '.nc')
         base_datasets[sec_var_id]['bool_ds'] = nc.Dataset(sat_path + sec_var_id + '_downloaded.nc')
         base_datasets[sec_var_id]['varname'] = cat[sec_var_id]['varname']
+
+    # Add bounds if occurrences
+
+    if 'minx' not in geodf.columns:
+        if geo_buff is None or (time_buff is None and 'time' in dimdict):
+            raise BufferError('Please specify time_buff and geo_buff.')
+        geodf = add_bounds(geodf, geo_buff, time_buff)
+
+    # Remove out of timeframe datapoints
+
+    if 'time' in dimdict:
+        firstvar = var['derived_from'][0]
+        dimdict_2, _ = get_metadata(base_datasets[firstvar]['ds'], firstvar)
+        t1, t2 = min(dimdict_2['time']['vals']), max(dimdict_2['time']['vals'])
+        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
+    else:
+        geodf2 = geodf
 
     # Apply query to each row sequentially
 
