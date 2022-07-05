@@ -189,14 +189,18 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
     else:
         geodf2 = geodf
 
+    if 'time' in dimdict:
+        firstvar = var['derived_from'][0]
+        local_ds.variables[dimdict['time']['name']][:] = base_datasets[firstvar]['ds'].variables[
+                                                             dimdict['time']['name']][:]
+        dimdict, var = get_metadata(local_ds, var_id)
+        
     # Apply query to each row sequentially
-
 
     geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, 'surface', downsample))
     res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets,
                                                              dimdict, var, downsample), 
                                 result_type = 'expand')
-
 
     local_ds.close()
     bool_ds.close()
@@ -294,6 +298,14 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample), 
                             result_type = 'expand')
     
+    # Update time variable in local dataset if needed
+    
+    if 'time' in dimdict and local_ds.variables[dimdict['time']['name']][:].mask.any():
+
+        local_ds.variables[dimdict['time']['name']][:] = remote_ds.variables[dimdict['time']['name']][:]
+
+
+    # Close datasets
 
     local_ds.close()
     bool_ds.close()
