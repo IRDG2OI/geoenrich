@@ -1,4 +1,7 @@
-## v 0.?
+## v0.4.4
+
+#### New functions:
+- All paths were converted to pathlib format for improved compatibility.
 
 #### Bug fixes:
 - Update time dimension in calculated variables datasets as they grow in the datasets used for calculation.

@@ -3,7 +3,7 @@ This is the main module of the package.
 It handles the local enrichment files, as well as the download of enrichment data from remote servers.
 """
 
-import os
+from pathlib import Path
 import shutil
 
 import json
@@ -66,12 +66,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         None
     """
 
-    try:
-        f = open(biodiv_path + dataset_ref + '-config.json')
-        enrichment_metadata = json.load(f)
-        f.close()
-    except FileNotFoundError:
-        print('Please create an enrichment file first (use geoenrich.enrichment.create_enrichment_file)')
+    original, enrichment_metadata = load_enrichment_file(dataset_ref)
 
     input_type = enrichment_metadata['input_type']
     enrichments = enrichment_metadata['enrichments']
@@ -81,8 +76,6 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     if enrichment_id == -1:
         new_enrichment = True
         enrichment_id = len(enrichments)
-
-    original = load_enrichment_file(dataset_ref)
 
     if slice is None:
         to_enrich = original
@@ -118,7 +111,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     # Save file
     if new_enrichment and len(indices):
         save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_buff, depth_request, downsample)
-    updated.to_csv(biodiv_path + dataset_ref + '.csv')
+    updated.to_csv(str(Path(biodiv_path, dataset_ref + '.csv')))
 
 
 
@@ -142,21 +135,23 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     # Check if local netcdf files already exist
 
-    if  not(os.path.exists(sat_path + var_id + '.nc')) or \
-        not(os.path.exists(sat_path + var_id + '_downloaded.nc')):
+    if  not Path(sat_path, var_id + '.nc').exists() or \
+        not Path(sat_path, var_id + '-downloaded.nc').exists():
 
         create_nc_calculated(var_id)
 
     # Backup local netCDF files
 
     timestamp = datetime.now().strftime('%d-%H-%M')
-    shutil.copy2(sat_path + var_id + '.nc', sat_path + var_id + '.nc.' + timestamp)
-    shutil.copy2(sat_path + var_id + '_downloaded.nc', sat_path + var_id + '_downloaded.nc.' + timestamp)
+    shutil.copy2(   str(Path(sat_path, var_id + '.nc')),
+                    str(Path(sat_path, var_id + '.nc.' + timestamp)))
+    shutil.copy2(   str(Path(sat_path, var_id + '_downloaded.nc')),
+                    str(Path(sat_path, var_id + '_downloaded.nc.' + timestamp)))
 
     # Load files
 
-    local_ds = nc.Dataset(sat_path + var_id + '.nc.' + timestamp, mode ='r+')
-    bool_ds = nc.Dataset(sat_path + var_id + '_downloaded.nc.' + timestamp, mode ='r+')
+    local_ds = nc.Dataset(str(Path(sat_path, var_id + '.nc.' + timestamp)), mode ='r+')
+    bool_ds = nc.Dataset(str(Path(sat_path, var_id + '_downloaded.nc.' + timestamp)), mode ='r+')
 
     dimdict, var = get_metadata(local_ds, var_id)
 
@@ -167,8 +162,8 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     for sec_var_id in var['derived_from']:
         base_datasets[sec_var_id] = {}
-        base_datasets[sec_var_id]['ds'] = nc.Dataset(sat_path + sec_var_id + '.nc')
-        base_datasets[sec_var_id]['bool_ds'] = nc.Dataset(sat_path + sec_var_id + '_downloaded.nc')
+        base_datasets[sec_var_id]['ds'] = nc.Dataset(str(Path(sat_path, sec_var_id + '.nc')))
+        base_datasets[sec_var_id]['bool_ds'] = nc.Dataset(str(Path(sat_path, sec_var_id + '_downloaded.nc')))
         base_datasets[sec_var_id]['varname'] = cat[sec_var_id]['varname']
 
     # Add bounds if occurrences
@@ -213,11 +208,11 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     # Remove backup
 
-    os.remove(sat_path + var_id + '.nc')
-    os.remove(sat_path + var_id + '_downloaded.nc')
+    Path(sat_path, var_id + '.nc').unlink()
+    Path(sat_path, var_id + '_downloaded.nc').unlink()
 
-    os.rename(sat_path + var_id + '.nc.' + timestamp, sat_path + var_id + '.nc')
-    os.rename(sat_path + var_id + '_downloaded.nc.' + timestamp, sat_path + var_id + '_downloaded.nc')
+    Path(sat_path, var_id + '.nc.' + timestamp).rename(Path(sat_path, var_id + '.nc'))
+    Path(sat_path, var_id + '_downloaded.nc.' + timestamp).rename(Path(sat_path, var_id + '_downloaded.nc'))
 
     return(res)
 
@@ -262,21 +257,23 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     # Check if local netcdf files already exist
 
-    if  not(os.path.exists(sat_path + var['var_id'] + '.nc')) or \
-        not(os.path.exists(sat_path + var['var_id'] + '_downloaded.nc')):
+    if  not Path(sat_path, var_id + '.nc').exists() or \
+        not Path(sat_path, var_id + '-downloaded.nc').exists():
 
         create_nc(get_var_catalog()[var_id])
 
     # Backup local netCDF files
 
     timestamp = datetime.now().strftime('%d-%H-%M')
-    shutil.copy2(sat_path + var['var_id'] + '.nc', sat_path + var['var_id'] + '.nc.' + timestamp)
-    shutil.copy2(sat_path + var['var_id'] + '_downloaded.nc', sat_path + var['var_id'] + '_downloaded.nc.' + timestamp)
+    shutil.copy2(   str(Path(sat_path, var_id + '.nc')),
+                    str(Path(sat_path, var_id + '.nc.' + timestamp)))
+    shutil.copy2(   str(Path(sat_path, var_id + '_downloaded.nc')),
+                    str(Path(sat_path, var_id + '_downloaded.nc.' + timestamp)))
 
     # Load files
 
-    local_ds = nc.Dataset(sat_path + var['var_id'] + '.nc.' + timestamp, mode ='r+')
-    bool_ds = nc.Dataset(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, mode ='r+')
+    local_ds = nc.Dataset(str(Path(sat_path, var_id + '.nc.' + timestamp)), mode ='r+')
+    bool_ds = nc.Dataset(str(Path(sat_path, var_id + '_downloaded.nc.' + timestamp)), mode ='r+')
 
     # Remove out of timeframe datapoints
 
@@ -316,11 +313,11 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     # Remove backup
 
-    os.remove(sat_path + var['var_id'] + '.nc')
-    os.remove(sat_path + var['var_id'] + '_downloaded.nc')
+    Path(sat_path, var_id + '.nc').unlink()
+    Path(sat_path, var_id + '_downloaded.nc').unlink()
 
-    os.rename(sat_path + var['var_id'] + '.nc.' + timestamp, sat_path + var['var_id'] + '.nc')
-    os.rename(sat_path + var['var_id'] + '_downloaded.nc.' + timestamp, sat_path + var['var_id'] + '_downloaded.nc')
+    Path(sat_path, var_id + '.nc.' + timestamp).rename(Path(sat_path, var_id + '.nc'))
+    Path(sat_path, var_id + '_downloaded.nc.' + timestamp).rename(Path(sat_path, var_id + '_downloaded.nc'))
 
     print('Enrichment over')
     return(res)
@@ -725,28 +722,29 @@ def load_enrichment_file(dataset_ref, mute = False):
         mute (bool): Not printing load message if mute is True.
     Returns:
         geopandas.GeoDataFrame or pandas.DataFrame: Data to enrich (including previously added columns).
+        dict: Enrichment metadata
     """
 
 
-    with open(biodiv_path + dataset_ref + '-config.json') as f:
+    with Path(biodiv_path, dataset_ref + '-config.json').open() as f:
         enrichment_metadata = json.load(f)
     input_type = enrichment_metadata['input_type']
 
-    filepath = biodiv_path + dataset_ref + '.csv'
+    filepath = Path(biodiv_path, dataset_ref + '.csv')
 
 
     if input_type == 'occurrence':
-        df = pd.read_csv(filepath, parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 'id')
+        df = pd.read_csv(str(filepath), parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 'id')
         df['geometry'] = df['geometry'].apply(wkt.loads)
         df = gpd.GeoDataFrame(df, crs = 'epsg:4326')
 
     else:
-        df = pd.read_csv(filepath, parse_dates = ['mint', 'maxt'], infer_datetime_format = True, index_col = 'id')
+        df = pd.read_csv(str(filepath), parse_dates = ['mint', 'maxt'], infer_datetime_format = True, index_col = 'id')
 
     if not(mute):
         print('{} {}s were loaded from enrichment file'.format(len(df), input_type))
     
-    return(df)
+    return(df, enrichment_metadata)
 
 
 
@@ -764,15 +762,15 @@ def create_enrichment_file(gdf, dataset_ref):
         None
     """
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    filepath_json = biodiv_path + dataset_ref + '-config.json'
+    filepath = Path(biodiv_path, dataset_ref + '.csv')
+    filepath_json = Path(biodiv_path, dataset_ref + '-config.json')
 
-    if(os.path.exists(filepath)):
-        print('Abort. File already exists at ' + filepath)
+    if filepath.exists():
+        print('Abort. File already exists at ' + str(filepath))
     else:
 
         # Write input data to csv
-        gdf.to_csv(filepath)
+        gdf.to_csv(str(filepath))
 
         # Create config file
         config = {}
@@ -789,10 +787,10 @@ def create_enrichment_file(gdf, dataset_ref):
 
         # Writing json config file 
 
-        with open(filepath_json, 'x') as f:
+        with filepath_json.open('x') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
 
-        print('File saved at ' + filepath)
+        print('File saved at ' + str(filepath))
 
 
 
@@ -807,19 +805,13 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
     Returns:
         None
     """
-    try:
-        f = open(biodiv_path + dataset_ref + '-config.json')
-        enrichment_metadata = json.load(f)
-        f.close()
-    except FileNotFoundError:
-        print('No enrichment file was found for this dataset')
+
+    df, enrichment_metadata = load_enrichment_file(dataset_ref)
 
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
+
     remaining_enrichments = []
-
-    df = load_enrichment_file(dataset_ref)
-
     to_drop = []
 
     for enrichment in enrichments:
@@ -839,7 +831,7 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
 
     enrichment_metadata['enrichments'] = remaining_enrichments
 
-    with open(biodiv_path + dataset_ref + '-config.json', 'w') as f:
+    with Path(biodiv_path, dataset_ref + '-config.json').open('w') as f:
         json.dump(enrichment_metadata, f, ensure_ascii=False, indent=4)
 
     print('Enrichment file for dataset ' + dataset_ref + ' was reset.')
@@ -858,13 +850,10 @@ def enrichment_status(dataset_ref):
         pandas.DataFrame: A table of variables and statuses of enrichment.
     """
 
-    with open(biodiv_path + dataset_ref + '-config.json') as f:
-        enrichment_metadata = json.load(f)
+    df, enrichment_metadata = load_enrichment_file(dataset_ref)
 
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
-
-    df = load_enrichment_file(dataset_ref)
 
     col_indices = parse_columns(df)
 
@@ -972,7 +961,7 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
         None
     """
 
-    with open(biodiv_path + dataset_ref + '-config.json') as f:
+    with Path(biodiv_path, dataset_ref + '-config.json').open() as f:
         enrichment_metadata = json.load(f)
 
     new_enrichment = {'id': enrichment_id,
@@ -987,7 +976,7 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
 
     enrichment_metadata['enrichments'].append(new_enrichment)
 
-    with open(biodiv_path + dataset_ref + '-config.json', 'w') as f:
+    with Path(biodiv_path, dataset_ref + '-config.json').open('w') as f:
         json.dump(enrichment_metadata, f, ensure_ascii=False, indent=4)
 
 
@@ -1003,7 +992,7 @@ def read_ids(dataset_ref):
         list: List of all present ids.
     """
 
-    filepath = biodiv_path + dataset_ref + '.csv'
-    df = pd.read_csv(filepath, index_col = 'id')
+    filepath = Path(biodiv_path, dataset_ref + '.csv')
+    df = pd.read_csv(str(filepath), index_col = 'id')
 
     return(list(df.index))

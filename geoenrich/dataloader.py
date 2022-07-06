@@ -5,7 +5,7 @@ Occurrences can be loaded straight from GBIF, from a local DarwinCore archive, o
 Areas have to be loaded from a csv file. See :func:`geoenrich.dataloader.load_areas_file`.
 """
 
-import os
+from pathlib import Path
 import pandas as pd
 import geopandas as gpd
 
@@ -124,12 +124,12 @@ def download_requested(request_key):
             if p['key'] == 'TAXON_KEY':
                 taxKey = p['value']
 
-        path = biodiv_path + 'gbif'
-        if not(os.path.exists(path)):
-            os.mkdir(path)
+        path = biodiv_path / 'gbif'
+        if not path.exists():
+            path.mkdir()
 
-        occ.download_get(request_key, path)
-        os.rename(path + '/' + request_key + '.zip', path + '/' + str(taxKey) + '.zip')
+        occ.download_get(request_key, str(path))
+        path.rename(path.with_stem(str(taxKey)))
 
     else:
         print('Requested data not available. Request status: ' + metadata['status'])
@@ -158,7 +158,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
     # Load file
 
     if path is None:
-        path = biodiv_path + 'gbif' + '/' + str(taxonKey) + '.zip'
+        path = biodiv_path / 'gbif' / (str(taxonKey) + '.zip')
 
     dsA = DwCAReader(path)
 

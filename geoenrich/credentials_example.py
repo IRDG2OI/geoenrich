@@ -1,23 +1,22 @@
-
-import os
+from pathlib import Path
 
 # Paths
 
 ########################################################
-root_path = './' # <---- Enter your chosen root path here
+root_path = Path('./') # <---- Enter your chosen root path here
 ########################################################
 
-biodiv_path = root_path + 'biodiv/'
-sat_path = root_path + 'sat/'
+biodiv_path = root_path / 'biodiv'
+sat_path = root_path / 'sat'
 
-if not(os.path.exists(root_path)):
-	os.mkdir(root_path)
+if not root_path.exists() :
+	root_path.mkdir()
 
-if not(os.path.exists(biodiv_path)):
-	os.mkdir(biodiv_path)
+if not sat_path.exists() :
+	sat_path.mkdir()
 
-if not(os.path.exists(sat_path)):
-	os.mkdir(sat_path)
+if not biodiv_path.exists() :
+	biodiv_path.mkdir()
 
 
 

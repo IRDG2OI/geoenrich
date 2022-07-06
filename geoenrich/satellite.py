@@ -15,7 +15,7 @@ try:
 except:
     from geoenrich.credentials_example import *
     print('Please rename credentials_example.py to credentials.py and fill in the root path and credentials, if needed')
-    print('File location: ' + os.path.split(geoenrich.__file__)[0] + '/credentials_example.py')
+    print('File location: ' + str(Path(geoenrich.__file__).with_name('credentials_example.py')))
 
 
 def get_metadata(ds, varname):
@@ -114,8 +114,8 @@ def get_var_catalog():
         dict: Dictionary with variable id, variable name in dataset, and dataset url
     """
 
-    path, _ = os.path.split(geoenrich.__file__)
-    var_catalog = pd.read_csv(path + '/data/catalog.csv', index_col = 0).to_dict('index')
+    path = Path(geoenrich.__file__).parent
+    var_catalog = pd.read_csv(path / 'data' / 'catalog.csv', index_col = 0).to_dict('index')
 
     for v in var_catalog:
         var_catalog[v]['var_id'] = v
@@ -142,16 +142,16 @@ def create_nc(var):
         None
     """
 
-    path = sat_path + var['var_id'] + '.nc'
-    pathd = sat_path + var['var_id'] + '_downloaded.nc'
+    path = Path(sat_path, var['var_id'] + '.nc')
+    pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
     remote_ds = nc.Dataset(var['url'])
     varname = var['varname']
     dimdict, var = get_metadata(remote_ds, varname)
 
-    local_ds = nc.Dataset(path, mode = 'w')
+    local_ds = nc.Dataset(str(path), mode = 'w')
     local_ds.set_fill_off()
-    bool_ds = nc.Dataset(pathd, mode = 'w')
+    bool_ds = nc.Dataset(str(pathd), mode = 'w')
 
     for name, dimension in remote_ds.dimensions.items():
         if getattr(remote_ds.variables[name], 'standard_name', 'Unknown') == 'time' or name in ['time', 'time_agg']:
@@ -200,17 +200,17 @@ def create_nc_calculated(var_id):
 
     var_meta = calculated[var_id]
 
-    path = sat_path + var_id + '.nc'
-    pathd = sat_path + var_id + '_downloaded.nc'
+    path = Path(sat_path, var['var_id'] + '.nc')
+    pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
     var_catalog = get_var_catalog()
-    like_ds = nc.Dataset(sat_path + var_meta['derived_from'][0] + '.nc')
+    like_ds = nc.Dataset(str(Path(sat_path, var_meta['derived_from'][0] + '.nc')))
     like_varname = var_catalog[var_meta['derived_from'][0]]['varname']
     dimdict, var = get_metadata(like_ds, like_varname)
 
-    local_ds = nc.Dataset(path, mode = 'w')
+    local_ds = nc.Dataset(str(path), mode = 'w')
     local_ds.set_fill_off()
-    bool_ds = nc.Dataset(pathd, mode = 'w')
+    bool_ds = nc.Dataset(str(pathd), mode = 'w')
 
     for name, dimension in like_ds.dimensions.items():
         local_ds.createDimension(name, len(dimension) if not dimension.isunlimited() else None)

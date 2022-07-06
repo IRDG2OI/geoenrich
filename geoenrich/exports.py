@@ -6,6 +6,7 @@ After enriching occurrences, you can use the exports module to use the downloade
 - Retrieve the raw data as a numpy array with :func:`geoenrich.exports.retrieve data`.
 
 """
+from pathlib import Path
 import json
 import pandas as pd
 import cv2
@@ -45,14 +46,14 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     """
 
 
-    with open(biodiv_path + dataset_ref + '-config.json') as f:
+    with Path(biodiv_path, dataset_ref + '-config.json').open() as f:
         enrichment_metadata = json.load(f)
 
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
     if df is None:
-        df = load_enrichment_file(dataset_ref, mute = True)
+        df, _ = load_enrichment_file(dataset_ref)
     row = df.loc[occ_id]
 
     # Identify relevant enrichment ids
@@ -86,7 +87,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
             results = {'coords': None, 'values': None}
 
         else:
-            ds = nc.Dataset(sat_path + var_id + '.nc')
+            ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
             unit = getattr(ds.variables[var_source['varname']], 'units', 'Unspecified')
 
             dimdict, var = get_metadata(ds, var_source['varname'])
@@ -188,13 +189,10 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         None
     """
 
-    with open(biodiv_path + dataset_ref + '-config.json') as f:
-        enrichment_metadata = json.load(f)
-
+    df, enrichment_metadata = load_enrichment_file(dataset_ref)
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    df = load_enrichment_file(dataset_ref)
 
     # Identify relevant enrichment ids
 
@@ -224,7 +222,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         results = {}
 
         var_source = get_var_catalog()[var_id]
-        ds = nc.Dataset(sat_path + var_id + '.nc')
+        ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
         dimdict, var = get_metadata(ds, var_source['varname'])
 
         print('Computing stats for ' + var_id + '...')
@@ -233,8 +231,8 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         ds.close()
 
 
-        filepath = out_path + dataset_ref + '_' + str(en['id']) + '_stats.csv'
-        res.to_csv(filepath)
+        filepath = Path(out_path, dataset_ref + '_' + str(en['id']) + '_stats.csv')
+        res.to_csv(str(filepath))
         print('File saved at ' + filepath)
 
 
@@ -314,11 +312,11 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
 
-    with open(biodiv_path + dataset_ref + '-config.json') as f:
-        enrichment_metadata = json.load(f)
+    df, enrichment_metadata = load_enrichment_file(dataset_ref)
+
     input_type = enrichment_metadata['input_type']
 
-    row = load_enrichment_file(dataset_ref).loc[[occ_id]]
+    row = df.loc[[occ_id]]
     row1, row2 = deepcopy(row), deepcopy(row)
     
     
@@ -338,7 +336,7 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
     var_source = get_var_catalog()[var_id]
 
 
-    ds = nc.Dataset(sat_path + var_id + '.nc')
+    ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
     unit = getattr(ds.variables[var_source['varname']], 'units', 'Unspecified')
     dimdict, var = get_metadata(ds, var_source['varname'])
 
@@ -390,9 +388,9 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None
         None
     """
 
-    folderpath = path + dataset_ref + '/'
-    if not(os.path.exists(folderpath)):
-        os.mkdir(folderpath)
+    folderpath = Path(path) / dataset_ref
+    if not folderpath.exists():
+        folderpath.mkdir()
 
     # Retrieve data
     res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample, shape=shape)
@@ -415,8 +413,8 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None
         im3 = cv2.cvtColor(np.float32(im2), cv2.COLOR_BGR2RGBA)
         im3[:,:,3] =  1 - np.isnan(im)
 
-        im_path = folderpath + str(occ_id) + '_' + var_id + '.png'
-        cv2.imwrite(im_path, 255*im3)
+        im_path = Path(folderpath, str(occ_id) + '_' + var_id + '.png')
+        cv2.imwrite(str(im_path), 255*im3)
         print('Image saved at ' + im_path)
 
 
