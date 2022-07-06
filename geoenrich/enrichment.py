@@ -182,7 +182,9 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     if 'time' in dimdict:
         firstvar = var['derived_from'][0]
-        dimdict_2, _ = get_metadata(base_datasets[firstvar]['ds'], firstvar)
+        remote_ds = nc.Dataset(cat[firstvar]['url'])
+        dimdict_2, _ = get_metadata(remote_ds, firstvar)
+        remote_ds.close()
         t1, t2 = min(dimdict_2['time']['vals']), max(dimdict_2['time']['vals'])
         geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
