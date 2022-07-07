@@ -1,10 +1,9 @@
 ## v0.4.4
 
-#### New functions:
-- All paths were converted to pathlib format for improved compatibility.
-
 #### Bug fixes:
-- Update time dimension in calculated variables datasets as they grow in the datasets used for calculation.
+- All paths were converted to pathlib format to improve compatibility.
+- Sync time dimension in calculated datasets with time dimensions in the source datasets.
+- Updated Chlorophyll dataset url to follow a recent Copernicus reorganization.
 
 ## v0.4.3
 
