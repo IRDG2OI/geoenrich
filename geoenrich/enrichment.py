@@ -135,9 +135,10 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
     # Check if local netcdf files already exist
 
-    if  not Path(sat_path, var_id + '.nc').exists() or \
-        not Path(sat_path, var_id + '-downloaded.nc').exists():
+    if  not(Path(sat_path, var_id + '.nc').exists()) or \
+        not(Path(sat_path, var_id + '_downloaded.nc').exists()):
 
+        print('achtung')
         create_nc_calculated(var_id)
 
     # Backup local netCDF files
@@ -257,8 +258,8 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     # Check if local netcdf files already exist
 
-    if  not Path(sat_path, var_id + '.nc').exists() or \
-        not Path(sat_path, var_id + '-downloaded.nc').exists():
+    if  not(Path(sat_path, var_id + '.nc').exists()) or \
+        not(Path(sat_path, var_id + '_downloaded.nc').exists()):
 
         create_nc(get_var_catalog()[var_id])
 

@@ -200,8 +200,8 @@ def create_nc_calculated(var_id):
 
     var_meta = calculated[var_id]
 
-    path = Path(sat_path, var['var_id'] + '.nc')
-    pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
+    path = Path(sat_path, var_id + '.nc')
+    pathd = Path(sat_path, var_id + '_downloaded.nc')
 
     var_catalog = get_var_catalog()
     like_ds = nc.Dataset(str(Path(sat_path, var_meta['derived_from'][0] + '.nc')))
