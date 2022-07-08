@@ -138,7 +138,6 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
     if  not(Path(sat_path, var_id + '.nc').exists()) or \
         not(Path(sat_path, var_id + '_downloaded.nc').exists()):
 
-        print('achtung')
         create_nc_calculated(var_id)
 
     # Backup local netCDF files
@@ -628,11 +627,18 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         totalsize = totalsize * act_len
         
 
-    if 'time' in ind:
+    if ('time' in ind) and (check.ndim == len(ind)):
 
-        lentime = 1 + (ind['time']['max'] - ind['time']['min']) // ind['time']['step']
-        flatcheck = check.reshape((lentime, -1)).sum(axis = 1)
-        checklist = (flatcheck == (totalsize / lentime))
+        time_pos = var['params'].index(dimdict['time']['name'])
+        expected_lentime = 1 + (ind['time']['max'] - ind['time']['min']) // ind['time']['step']
+        actual_lentime = check.shape[time_pos]
+    
+        if expected_lentime == actual_lentime:
+            #flatcheck = check.reshape((actual_lentime, -1)).sum(axis = 1)
+            flatcheck = np.array([check.take(i,time_pos).sum() for i in range(actual_lentime)])
+            checklist = (flatcheck == (totalsize / actual_lentime))
+        else:
+            checklist = np.array(False)
 
     else:
         checklist = np.array(check.sum() == totalsize)
