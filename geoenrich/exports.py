@@ -233,7 +233,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
 
         filepath = Path(out_path, dataset_ref + '_' + str(en['id']) + '_stats.csv')
         res.to_csv(str(filepath))
-        print('File saved at ' + filepath)
+        print('File saved at ' + str(filepath))
 
 
 
