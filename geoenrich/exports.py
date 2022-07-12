@@ -159,7 +159,10 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
             if 'months since' in time_var.__dict__['units']:
                 times = num2date(time_var[i1:i2+1:step], time_var.__dict__['units'], '360_day')
             else:
-                times = num2pydate(time_var[i1:i2+1:step], time_var.__dict__['units'])
+                if var['name'] in ['uwnd', 'vwnd']:
+                    times = num2pydate(time_var[i1:i2+1:step] - 725563, 'days since 1987-01-01 00:00:00')
+                else:
+                    times = num2pydate(time_var[i1:i2+1:step], time_var.__dict__['units'])
             coordinates.append([p, times])
         else:
             coordinates.append([p, ds.variables[dimdict[p]['name']][i1:i2+1:step]])

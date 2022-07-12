@@ -1,9 +1,10 @@
 ## v0.4.4
 
 #### Bug fixes:
-- All paths were converted to pathlib format to improve compatibility.
-- Sync time dimension in calculated datasets with time dimensions in the source datasets.
-- Updated Chlorophyll dataset url to follow a recent Copernicus reorganization.
+- All paths were converted to pathlib format to improve compatibility. This means that CREDENTIALS file format changed. Please update the new credentials_example file with your credentials and path.
+- Sync time dimension in calculated datasets with time dimensions in the source datasets to account for new datapoints.
+- Updated Chlorophyll dataset url following a recent Copernicus reorganization.
+- Fixed dataset source for CCMP surface winds
 
 ## v0.4.3
 
