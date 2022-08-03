@@ -1,3 +1,8 @@
+## v0.4.5
+
+#### Bug fixes:
+- NetCDF4 version must be 1.5.8. Updated setup.cfg file accordingly.
+
 ## v0.4.4
 
 #### Bug fixes:
