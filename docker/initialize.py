@@ -10,6 +10,7 @@ if not any(Path('/app').iterdir()):
     Path('/app/templates/').mkdir()
     Path('/app/static/styles/').mkdir(parents=True)
     Path('/app/static/uploads/').mkdir()
+    Path('/app/static/stats/').mkdir()
     
     r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/app/static/styles/style.css') 
     Path('/app/static/styles/style.css').open('wb').write(r.content)
