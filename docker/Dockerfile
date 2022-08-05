@@ -7,7 +7,7 @@ RUN python3 -m pip install matplotlib appdirs geojson_rewind geomet requests_cac
 RUN python3 -m pip install git+https://github.com/rvanasa/pygbif.git
 RUN python3 -m pip install git+https://github.com/morand-g/geoenrich@develop
 
-RUN rm app/*
-RUN curl https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/initialize.py -o /initialize.py
+RUN rm /app/*
+RUN curl https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/initialize.py -o /home/initialize.py
 
-RUN sed -i "s+\'./\'+\'/app/Data/\'+" /usr/local/lib/python3.8/site-packages/geoenrich/credentials_example.py
+RUN sed -i "s+\'./\'+\'/app/data/\'+" /usr/local/lib/python3.8/site-packages/geoenrich/credentials_example.py
