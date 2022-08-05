@@ -1,20 +1,14 @@
 version: '3'
 
-#----------------------------------------------------
-#---------------------- SERVICES --------------------
-#----------------------------------------------------
-
 services:
 
-# ---------------------- PYTHON 90
   web:
     build: .
     container_name: geoenrich
     restart: always
 
     volumes:
-      - ./app:/app
-      - ./conf/credentials.py:/usr/local/lib/python3.8/site-packages/geoenrich/credentials.py
+      - app:/app
     ports:
       - "8080:8080"
     environment:
@@ -23,3 +17,6 @@ services:
       - 'RUN=flask run --host=0.0.0.0 --port=8080'
     command: bash -c "python /home/initialize.py
              && flask run --host=0.0.0.0 --port=8080"
+
+volumes:
+  app:
