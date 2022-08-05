@@ -20,3 +20,5 @@ if not any(Path('/app').iterdir()):
 
 	r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/app/main.py')	
 	Path('/app/main.py').open('wb').write(r.content)
+
+	print('Initialization complete.')
