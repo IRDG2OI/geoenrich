@@ -21,6 +21,5 @@ services:
       - FLASK_APP=main.py
       - FLASK_DEBUG=1
       - 'RUN=flask run --host=0.0.0.0 --port=8080'
-    command: bash -c "cat /home/initialize.py && python /home/initialize.py
-             && rm /home/initialize.py
+    command: bash -c "python /home/initialize.py
              && flask run --host=0.0.0.0 --port=8080"
