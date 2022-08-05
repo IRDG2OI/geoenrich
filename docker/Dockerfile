@@ -10,6 +10,4 @@ RUN python3 -m pip install git+https://github.com/morand-g/geoenrich@develop
 RUN rm /app/*
 RUN curl https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/initialize.py -o /home/initialize.py
 
-RUN old_path="'./'"
-RUN new_path="/app/data/"
-RUN sed -i "s%$old_path%$new_path%g" /usr/local/lib/python3.8/site-packages/geoenrich/credentials_example.py
+RUN old_path="'./'" && new_path="'/app/data/'" && sed -i "s%$old_path%$new_path%g" /usr/local/lib/python3.8/site-packages/geoenrich/credentials_example.py
