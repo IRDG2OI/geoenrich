@@ -12,16 +12,16 @@ if not any(Path('/app').iterdir()):
     Path('/app/static/uploads/').mkdir()
     Path('/app/static/stats/').mkdir()
     
-    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/app/static/styles/style.css') 
+    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/styles/style.css') 
     Path('/app/static/styles/style.css').open('wb').write(r.content)
 
-    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/app/templates/home.html') 
+    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/templates/home.html') 
     Path('/app/templates/home.html').open('wb').write(r.content)
 
-    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/app/templates/download.html') 
+    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/templates/download.html') 
     Path('/app/templates/download.html').open('wb').write(r.content)
 
-    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/develop/docker/app/main.py') 
+    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/main.py') 
     Path('/app/main.py').open('wb').write(r.content)
 
     print('Initialization complete.')

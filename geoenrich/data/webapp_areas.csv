@@ -1,0 +1,4 @@
+id,latitude_min,latitude_max,longitude_min,longitude_max,date_min,date_max
+corsica,41.2,43.2,8.3,9.7,2015-06-01,2015-06-30
+galapagos,-1.5,0.79,-91.9,-89,2022-03-18,2022-03-18
+samoa,-14.1,-13.3,-172.9,-171.3,2018-11-21,2018-11-28
