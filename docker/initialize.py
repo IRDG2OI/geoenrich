@@ -2,7 +2,7 @@ from pathlib import Path
 import requests
 
 
-if not any(Path('/app').iterdir()):
+if not(len(list(Path('/app').iterdir()))):
 
 	# Download files from github if they don't already exist
 	Path('/app/data/').mkdir()
