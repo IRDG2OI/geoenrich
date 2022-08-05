@@ -1,7 +1,7 @@
 Geoenrich online (beta)
 =======================
 
-A web app is available as a `docker image <https://github.com/morand-g/geoenrich/tree/main/docker>`_ for self hosting.
+A web app will be available online soon. In the meantime a self-hosted version is available as a `docker image <https://github.com/morand-g/geoenrich/tree/main/docker>`_.
 
 
 1. File format
@@ -45,3 +45,21 @@ For more features, you may install geoenrich (python or R) onto your computer an
 - Support for csv files with custom column names.
 - Support for calculated variables (eke and derivatives).
 - No maximum download size.
+
+3. Setting up the self-hosted version
+--------------------------------------
+
+You may use GeoEnrich and its associated webapp locally by loading a Docker container.
+
+To do this you can download *docker-compose.yml* and *Dockerfile*, and load the container the following way::
+
+  docker-compose up -d --build
+
+
+You can then use geoenrich from the command line::
+
+  docker exec -it python-flask-2 python
+
+Or launch the web app in a browser::
+
+  localhost:8080
