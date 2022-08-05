@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+    <head>
+        <title>GeoEnrich online</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+        <link rel="shortcut icon" href="http://141.95.158.113/static/img/favicon.ico" />
+    </head>
+
+    <body>
+      <div class="login-root">
+        <div class="box-root flex-flex flex-direction--column" style="min-height: 100vh;flex-grow: 1;">
+          <div class="loginbackground box-background--white padding-top--64">
+            <div class="loginbackground-gridContainer">
+              <div class="box-root flex-flex" style="grid-area: top / start / 8 / end;">
+                <div class="box-root" style="background-image: linear-gradient(white 0%, rgb(247, 250, 252) 33%); flex-grow: 1;">
+                </div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 4 / 2 / auto / 5;">
+                <div class="box-root box-divider--light-all-2" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 6 / start / auto / 2;">
+                <div class="box-root box-background--blue800" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 7 / start / auto / 4;">
+                <div class="box-root box-background--blue" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 8 / 4 / auto / 6;">
+                <div class="box-root box-background--gray100" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 2 / 15 / auto / end;">
+                <div class="box-root box-background--cyan200" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 3 / 14 / auto / end;">
+                <div class="box-root box-background--blue" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 4 / 17 / auto / 20;">
+                <div class="box-root box-background--gray100" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 5 / 14 / auto / 17;">
+                <div class="box-root box-divider--light-all-2" style="flex-grow: 1;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="box-root padding-top--24 flex-flex flex-direction--column center-center" style="z-index: 9;">
+            <div class="header-logos grid--50-50 padding-top--24" >
+              <div class="flex-flex" style="justify-content: left;">
+                <a href="/">
+                  <img alt="G2OI" src="http://141.95.158.113/static/img/logo_ird.png">
+                </a>
+              </div>
+              <div class="flex-flex" style="justify-content: right;">
+                <a href="https://www.ird.fr/" >
+                  <img alt="IRD" height="58" src="http://141.95.158.113/uploaded/img/2022/01/ird_o4FOeRY.png">
+                </a>  
+              </div>
+            </div>  
+            <div class="box-root padding-top--24 padding-bottom--24 flex-flex flex-justifyContent--center">
+              <h1>GeoEnrich online</h1>
+            </div>
+            <div class="formbg-outer">
+              <div class="formbg">
+                <div class="formbg-inner padding-horizontal--48">
+                  <div class="field flex-flex center-center">
+                    <a class="important-link" href="/getStats">Download</a>
+                  </div>
+                  <div class="flex-flex center-center grid--50-50 padding-top--24">
+                    <div class="flex-flex">
+                      <a class="secondary-link" href="https://geoenrich.readthedocs.io" target="_blank">
+                        <div class="flex-flex center-center">
+                          <img height="20px" style="margin-right:10px"
+                             src="https://readthedocs-static-prod.s3.amazonaws.com/images/favicon.f231b6609d0b.png">  
+                           <span>Documentation</span>
+                        </div> 
+                      </a>
+                    </div>
+                    <div class="flex-flex">
+                      <a class="secondary-link" href="https://github.com/morand-g/geoenrich" target="_blank">
+                        <div class="flex-flex center-center">
+                          <img height="25px" style="margin-right:10px"
+                             src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png">  
+                           <span>Code & Support</span>
+                        </div> 
+                      </a>
+                    </div>
+                  </div>  
+                </div>  
+              </div> 
+              <div class="header-logos padding-top--48">  
+                <div class="footer-link">
+                  <div class="listing padding-bottom--24 flex-flex center-center">
+                      <a href="https://european-union.europa.eu/index_fr" rel="nofollow" target="_blank">
+                          <img alt="Europe" height="40" src="http://141.95.158.113/uploaded/img/2022/01/union_europeenne_FBtZcHO.png">
+                      </a>
+                      <a href="https://regionreunion.com/" target="_blank">
+                          <img alt="Reunion" height="40" src="http://141.95.158.113/uploaded/img/2022/01/region_reunion.png">
+                      </a>
+                      <a href="https://www.gouvernement.fr/" target="_blank">
+                          <img alt="France" height="40" src="http://141.95.158.113/uploaded/img/2022/01/republique_francaise.png">
+                      </a>
+                  </div>
+                  <div class="padding-leftright--48 padding-bottom--24">
+                      <span>This website is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.</span>
+                  </div>
+                </div>
+              </div>
+            </div>  
+          </div>
+        </div>
+      </div>
+    </body>
