@@ -1,5 +1,8 @@
 ## v0.4.5
 
+#### New functions:
+- Docker image to run GeoEnrich locally as well as the associated web app (currently in beta).
+
 #### Bug fixes:
 - NetCDF4 version must be 1.5.8. Updated setup.cfg file accordingly.
 

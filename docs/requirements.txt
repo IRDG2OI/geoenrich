@@ -1,7 +1,7 @@
 numpy
 pandas
 geopandas
-netCDF4
+netCDF4==1.5.8
 python-dwca-reader
 matplotlib
 appdirs

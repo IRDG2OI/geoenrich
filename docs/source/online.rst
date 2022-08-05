@@ -1,5 +1,7 @@
-Geoenrich online
-================
+Geoenrich online (beta)
+=======================
+
+A web app is available as a docker image for self hosting.
 
 
 1. File format
