@@ -19,4 +19,4 @@ Or launch the web app in a browser:
 localhost:8080
 ```
 
-If you need to use datasets that require authentification, you can follow the configuration instructions (here)[https://geoenrich.readthedocs.io/en/latest/install.html#first-configuration>]
+If you need to use datasets that require authentification, you can follow the configuration instructions (here)[https://geoenrich.readthedocs.io/en/latest/install.html#first-configuration]
