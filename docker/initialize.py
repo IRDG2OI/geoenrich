@@ -1,6 +1,8 @@
 from pathlib import Path 
 import requests
 
+print('Initialization...')
+print(len(list(Path('/app').iterdir())))
 
 if not(len(list(Path('/app').iterdir()))):
 
