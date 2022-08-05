@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+    <head>
+        <title>GeoEnrich online</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+        <link rel="shortcut icon" href="http://141.95.158.113/static/img/favicon.ico" />
+    </head>
+
+    <body>
+      <div class="login-root">
+        <div class="box-root flex-flex flex-direction--column" style="min-height: 100vh;flex-grow: 1;">
+          <div class="loginbackground box-background--white padding-top--64">
+            <div class="loginbackground-gridContainer">
+              <div class="box-root flex-flex" style="grid-area: top / start / 8 / end;">
+                <div class="box-root" style="background-image: linear-gradient(white 0%, rgb(247, 250, 252) 33%); flex-grow: 1;">
+                </div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 4 / 2 / auto / 5;">
+                <div class="box-root box-divider--light-all-2" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 6 / start / auto / 2;">
+                <div class="box-root box-background--blue800" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 7 / start / auto / 4;">
+                <div class="box-root box-background--blue" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 8 / 4 / auto / 6;">
+                <div class="box-root box-background--gray100" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 2 / 15 / auto / end;">
+                <div class="box-root box-background--cyan200" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 3 / 14 / auto / end;">
+                <div class="box-root box-background--blue" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 4 / 17 / auto / 20;">
+                <div class="box-root box-background--gray100" style="flex-grow: 1;"></div>
+              </div>
+              <div class="box-root flex-flex" style="grid-area: 5 / 14 / auto / 17;">
+                <div class="box-root box-divider--light-all-2" style="flex-grow: 1;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="box-root padding-top--24 flex-flex flex-direction--column center-center" style="z-index: 9;">
+            <div class="header-logos grid--50-50 padding-top--24" >
+              <div class="flex-flex" style="justify-content: left;">
+                <a href="/">
+                  <img alt="G2OI" src="http://141.95.158.113/static/img/logo_ird.png">
+                </a>
+              </div>
+              <div class="flex-flex" style="justify-content: right;">
+                <a href="https://www.ird.fr/" target="_blank">
+                  <img alt="IRD" height="58" src="http://141.95.158.113/uploaded/img/2022/01/ird_o4FOeRY.png">
+                </a>  
+              </div>
+            </div>  
+            <div class="box-root padding-top--24 padding-bottom--24 flex-flex flex-justifyContent--center">
+              <h1>GeoEnrich online</h1>
+            </div>
+            <div class="formbg-outer">
+              <div class="formbg">
+                <div class="formbg-inner padding-horizontal--48 center-center" style="justify-content:center;">
+                  <form method = "POST" action="" enctype="multipart/form-data">
+                    <div class="grid--50-50">
+                        <label for="fileselect">Select your occurrences file:</label>
+                        <div class="reset-pass">
+                          <a href="https://geoenrich.readthedocs.io/en/latest/online.html" target="_blank">Formatting examples</a>
+                        </div>
+                    </div>
+                    <div class="field padding-bottom--24">
+                        <input id="fileselect" type="file" name="file"></p>
+                    </div>
+                    <div class="grid--50-50">
+                        <label for="var_id">Choose a variable:</label>
+                        <div class="reset-pass">
+                          <a href="https://geoenrich.readthedocs.io/en/latest/variables.html" target="_blank">Catalog</a>
+                        </div>
+                    </div>
+                    <div class="field padding-bottom--24">
+                        <input list="var_id" name = "var_id" placeholder="Start typing to see available variables">
+                        <datalist id="var_id">
+                            <option value="backscattering3d">Backscattering (3D)</option>
+                            <option value="bathymetry">Bathymetry (ETOPO1)</option>
+                            <!-- <option value="bathymetry-gebco">Bathymetry (GEBCO)</option> -->
+                            <option value="chlorophyll">Chlorophyll (Copernicus)</option>
+                            <option value="chlorophyll3d">Chlorophyll (3D)</option>
+                            <option value="chlorophyll-occi">Chlorophyll (OCCI)</option>
+                            <option value="current3d-u">Current (u)</option>
+                            <option value="current3d-v">Current (v)</option>
+                            <option value="diatoms">Diatoms</option>
+                            <option value="dinophytes">Dinophytes</option>
+                            <option value="geos-current-u">Geostrophic current (u)</option>
+                            <option value="geos-current-v">Geostrophic current (v)</option>
+                            <option value="green-algae">Green algae</option>
+                            <option value="haptophytes">Haptophytes</option>
+                            <option value="microphytoplankton">Microphytoplankton</option>
+                            <option value="mixed-layer-thickness">Mixed Layer Thickness</option>
+                            <option value="nanophytoplankton">Nanophytoplankton</option>
+                            <option value="ocean-heat-content">Ocean Heat Content</option>
+                            <option value="organic-carbon3d">Organic Carbon (3D)</option>
+                            <option value="oxygen">Oxygen</option>
+                            <option value="ph">PH</option>
+                            <option value="picophytoplankton">Picophytoplankton</option>
+                            <option value="primary-production">Primary production</option>
+                            <option value="prochlorophytes">Prochlorophytes</option>
+                            <option value="prokaryotes">Prokaryotes</option>
+                            <option value="salinity">Salinity (SMOS)</option>
+                            <option value="salinity3d">Salinity (3D)</option>
+                            <option value="sla">Sea level anomaly</option>
+                            <option value="sst">Sea surface temperature (Copernicus)</option>
+                            <option value="sst-mur">Sea surface temperature (MUR)</option>
+                            <option value="sst-mur25">Sea surface temperature (MUR25)</option>
+                            <option value="surface-current-u">Surface current (u)</option>
+                            <option value="surface-current-v">Surface current (v)</option>
+                            <option value="surface-wind-u">Surface wind (u)</option>
+                            <option value="surface-wind-v">Surface wind (v)</option>
+                            <option value="temperature3d">Temperature (3D)</option>
+                            <option value="wave-height">Wave height</option>
+                        </datalist> </p>
+                    </div>
+                    <div class="padding-bottom--24">
+                        <label for="params">Choose your buffer boundaries:</label>
+                        <fieldset id ="params">
+                            <div class="field padding-bottom--24">
+                                <label for="geo_buff">Geographical buffer (km):</label>
+                                <input type="number" id="geo_buff" name="geo_buff" value=10>
+                            </div>
+                            <div class="field grid--50-50">
+                                <label for="time_buff1">Time period start (days):</label>
+                                <label for="time_buff2">Time period end (days):</label>
+                            </div>
+                            <div class="field padding-bottom--24 grid--50-50">
+                                <input type="number" id="time_buff1" value=-1 name="tbuff1">
+                                <input type="number" id="time_buff2" value=0 name="tbuff2">
+                            </div>
+                            <div class="field field-checkbox padding-bottom--24 flex-flex align-center">
+                                <label for="checkbox">
+                                    <input type="checkbox" name="checkbox"> Use all depths level instead of surface only (not recommended)
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="field flex-flex center-center">
+                        <input type="submit" name="submit" value="Continue">
+                    </div>
+                  </form>
+                  <div class="flex-flex center-center grid--50-50 padding-top--24">
+                    <div class="flex-flex">
+                      <a class="secondary-link" href="https://geoenrich.readthedocs.io" target="_blank">
+                        <div class="flex-flex center-center">
+                          <img height="20px" style="margin-right:10px"
+                             src="https://readthedocs-static-prod.s3.amazonaws.com/images/favicon.f231b6609d0b.png">  
+                           <span>Documentation</span>
+                        </div> 
+                      </a>
+                    </div>
+                    <div class="flex-flex">
+                      <a class="secondary-link" href="https://github.com/morand-g/geoenrich" target="_blank">
+                        <div class="flex-flex center-center">
+                          <img height="25px" style="margin-right:10px"
+                             src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png">  
+                           <span>Code & Support</span>
+                        </div> 
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="header-logos padding-top--48">  
+              <div class="footer-link">
+                <div class="listing padding-bottom--24 flex-flex center-center">
+                    <a href="https://european-union.europa.eu/index_fr" rel="nofollow" target="_blank">
+                        <img alt="Europe" height="40" src="http://141.95.158.113/uploaded/img/2022/01/union_europeenne_FBtZcHO.png">
+                    </a>
+                    <a href="https://regionreunion.com/" target="_blank">
+                        <img alt="Reunion" height="40" src="http://141.95.158.113/uploaded/img/2022/01/region_reunion.png">
+                    </a>
+                    <a href="https://www.gouvernement.fr/" target="_blank">
+                        <img alt="France" height="40" src="http://141.95.158.113/uploaded/img/2022/01/republique_francaise.png">
+                    </a>
+                </div>
+                <div class="padding-leftright--48 padding-bottom--24">
+                    <span>This website is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
