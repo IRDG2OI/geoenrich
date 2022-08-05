@@ -58,7 +58,7 @@ To do this you can download *docker-compose.yml* and *Dockerfile*, and load the 
 
 You can then use geoenrich from the command line::
 
-  docker exec -it python-flask-2 python
+  docker exec -it geoenrich python
 
 Or launch the web app in a browser::
 
