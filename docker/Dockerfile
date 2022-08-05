@@ -5,7 +5,7 @@ RUN apt-get install ffmpeg libsm6 libxext6  -y
 
 RUN python3 -m pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel
 RUN python3 -m pip install git+https://github.com/rvanasa/pygbif.git
-RUN python3 -m pip install git+https://github.com/morand-g/geoenrich@develop
+RUN python3 -m pip install geoenrich
 
 RUN rm /app/*
 RUN curl https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/initialize.py -o /home/initialize.py
