@@ -9,7 +9,7 @@ services:
 # ---------------------- PYTHON 90
   web:
     build: .
-    container_name: python-flask-2
+    container_name: geoenrich
     restart: always
 
     volumes:
