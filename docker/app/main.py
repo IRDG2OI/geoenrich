@@ -56,11 +56,11 @@ def uploadFiles():
           lat_col, lon_col, date_col = 'latitude', 'longitude', 'date'
           colnames = pd.read_csv(csv_filepath, nrows=0).columns.tolist()
           for col in colnames:
-               if col.lower() in ['y', 'lat', 'decimallatitude']:
+               if col.lower() in ['latitude', 'y', 'lat', 'decimallatitude']:
                     lat_col = col
-               elif col.lower() in ['x', 'lon', 'decimallongitude']:
+               elif col.lower() in ['longitude', 'x', 'lon', 'decimallongitude']:
                     lon_col = col
-               elif col == 'eventDate':
+               elif col.lower() in ['date', 'eventDate']:
                     date_col = col
 
           try:
