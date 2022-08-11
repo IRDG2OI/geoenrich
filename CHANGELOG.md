@@ -1,7 +1,7 @@
 ## v0.4.6
 
 #### New functions:
-- Web app now works with several column names, including standard DarwinCore names.
+- Web app now works with most common column names, including standard DarwinCore names.
 
 #### Bug fixes:
 - Fixed a bug that occurred when data is partially in cache.
