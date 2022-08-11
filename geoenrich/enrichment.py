@@ -657,7 +657,7 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         start = 0
         started = False
 
-        for i in range(lentime):
+        for i in range(len(checklist)):
             is_present = checklist[i]
 
             if not(started) and not(is_present):
@@ -674,7 +674,7 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         if(started):
             new_ind = deepcopy(ind)
             new_ind['time']['min'] = ind['time']['min'] + start * ind['time']['step']
-            new_ind['time']['max'] = ind['time']['min'] + (lentime - 1) * ind['time']['step']
+            new_ind['time']['max'] = ind['time']['min'] + (len(checklist) - 1) * ind['time']['step']
             download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
             
 
