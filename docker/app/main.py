@@ -8,6 +8,10 @@ from geoenrich.dataloader import import_occurrences_csv, load_areas_file
 from geoenrich.enrichment import create_enrichment_file, enrich
 from geoenrich.exports import produce_stats
 
+
+latdict = {'latitude':'latitude', 'decimallatitude':'latitude', 'lat': 'latitude'}
+londict = {'longitude':'longitude', 'decimallongitude':'longitude', 'lon': 'longitude'}
+
 app = Flask(__name__)
 
 # enable debugging mode
@@ -48,9 +52,20 @@ def uploadFiles():
           ########## TO DO #########
           # Check csv file integrity
 
+          # Guess column names
+          lat_col, lon_col, date_col = 'latitude', 'longitude', 'date'
+          colnames = pd.read_csv(csv_filepath, nrows=0).columns.tolist()
+          for col in colnames:
+               if col.lower() in ['y', 'lat', 'decimallatitude']:
+                    lat_col = col
+               elif col.lower() in ['x', 'lon', 'decimallongitude']:
+                    lon_col = col
+               elif col == 'eventDate':
+                    date_col = col
+
           try:
                df = import_occurrences_csv(path = csv_filepath,
-                         id_col = 'id', date_col = 'date', lat_col = 'latitude', lon_col = 'longitude')
+                         id_col = 'id', date_col = date_col, lat_col = lat_col, lon_col = lon_col)
           except:
                df = load_areas_file(csv_filepath)
 
