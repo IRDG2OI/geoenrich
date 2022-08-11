@@ -64,13 +64,14 @@ def uploadFiles():
                elif col.lower() in ['date', 'eventDate']:
                     date_col = col
 
+          # Try loading uploaded file as occurrences, and if it doesn't work, as areas
           try:
                df = import_occurrences_csv(path = csv_filepath,
                          id_col = 'id', date_col = date_col, lat_col = lat_col, lon_col = lon_col)
           except:
                df = load_areas_file(csv_filepath)
 
-
+          # Create a unique dataset reference and run the enrichment process.
           ds_ref = datetime.now().__str__().replace(' ','_')
           app.config['DS_REF'] = ds_ref
           create_enrichment_file(df, ds_ref)
