@@ -1,5 +1,6 @@
 from pathlib import Path 
 import requests
+import shutil
 
 print('Initialization...')
 
@@ -10,6 +11,9 @@ if not(Path('/app/data/').exists()):
 
 if not(Path('/app/templates/').exists()):
     Path('/app/templates/').mkdir()
+
+if not(Path('/app/conf/').exists()):
+    Path('/app/conf/').mkdir()
 
 if not(Path('/app/static/styles/').exists()):
     Path('/app/static/styles/').mkdir(parents=True)
@@ -35,5 +39,8 @@ if not(Path('/app/templates/download.html').exists()):
 if not(Path('/app/main.py').exists()): 
     r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/main.py') 
     Path('/app/main.py').open('wb').write(r.content)
+
+if Path('/app/conf/credentials.py').exists():
+    shutil.copy(Path('/app/conf/credentials.py'), Path('/usr/local/lib/python3.8/site-packages/geoenrich/credentials.py'))
 
 print('Initialization complete.')
