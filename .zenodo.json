@@ -1,0 +1,46 @@
+{
+    "creators": [
+        {
+            "orcid": "0000-0002-0826-4487",
+            "affiliation": "UMR Marbec, IRD",
+            "name": "Morand, Gaetan"
+        },
+        {
+            "affiliation": "UMR Marbec, IRD",
+            "name": "Poulain, Sylvain"
+        }
+    ],
+
+    "license": "GPL-3.0",
+
+    "title": "GeoEnrich v0.4.6: a new tool for scientists to painlessly enrich their species occurrence data with environmental variables",
+
+    "related_identifiers": [
+        {
+            "identifier": "https://github.com/morand-g/geoenrich/",
+            "relation": "isDerivedFrom",
+            "resource_type": "software"
+        },
+        {
+            "identifier": "https://geoenrich.readthedocs.io/en/latest/ ",
+            "relation": "isDocumentedBy",
+            "resource_type": "softwaredocumentation"
+        }
+    ],
+
+    "keywords": [
+        "Biodiversity", 
+        "Species", 
+        "Distribution", 
+        "Model", 
+        "Migration", 
+        "Chlorophyll", 
+        "Sea surface temperature", 
+        "DarwinCore", 
+        "NetCDF", 
+        "Enrichment", 
+        "Data", 
+        "Environmental", 
+        "Variables"
+    ]
+}
