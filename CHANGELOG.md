@@ -1,3 +1,9 @@
+## v0.5
+
+#### New functions:
+- Export data as geotiff raster.
+- Added a new source for wind.
+
 ## v0.4.6
 
 #### New functions:

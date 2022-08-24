@@ -12,6 +12,9 @@ import pandas as pd
 import cv2
 from matplotlib import cm
 
+import rasterio
+from rasterio.transform import from_origin
+
 import geoenrich
 
 try:
@@ -474,6 +477,8 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
         im1 = im1.reshape([im.shape[lat_ax], im.shape[lon_ax], -1])
         mask = im1.mask
 
+        im2 = deepcopy(im1)
+
         # Resize
         if target_size is not None:
 
@@ -510,3 +515,72 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
         return (None)
 
     
+
+def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None, time_buff = None,
+                    depth_request = 'surface', downsample = {}, shape = 'rectangle'):
+
+    """
+    Export a GeoTiff raster of the requested data.
+    If depth is a dimension, the shallowest layer is selected.
+    If time is a dimension, the most recent layer is selected.
+
+    Args:
+        dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
+        var_id (str): ID of the variable to retrieve.
+        path (str): Path where image files will be saved.
+        geo_buff (int): (Optional) Geo_buff that was used for enrichment.
+        time_buff (float list): (Optional) Time_buff that was used for enrichment.
+        depth_request (str): (Optional) Depth request that was used for enrichment.
+        downsample (dict): (Optional) Downsample that was used for enrichment.
+        shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
+
+    Returns:
+        None
+    """
+
+    folderpath = Path(path) / (dataset_ref + '_rasters')
+    if not folderpath.exists():
+        folderpath.mkdir()
+
+    # Retrieve data
+    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample, shape=shape)
+
+    if res is not None:
+
+        im = export_to_array(res, target_size=None, value_range=None)
+
+        # Flip latitude (because image vertical axis is downwards)
+        lat_ax = [c[0] for c in res['coords']].index('latitude')
+        lats = res['coords'][lat_ax][1]
+
+        lon_ax = [c[0] for c in res['coords']].index('longitude')
+        lons = res['coords'][lon_ax][1]
+
+
+        if len(lats)>1 and lats[0] > lats[1]:
+            im = np.flipud(im)
+
+        if im.shape[0] > 1 and im.shape[1] > 1:
+
+            x_pxl = lons[1] - lons[0]
+            y_pxl = lats[0] - lats[1]
+
+            transform = from_origin(lons[0] - .5*x_pxl, lats[0] + .5*y_pxl, x_pxl, y_pxl)
+
+            im_path = Path(folderpath, str(occ_id) + '_' + var_id + '.tiff')
+
+            new_raster = rasterio.open(im_path, 'w', driver='GTiff',
+                            height = im.shape[0], width = im.shape[1],
+                            count=1, dtype=str(im.dtype),
+                            crs='EPSG:4326',
+                            transform=transform)
+
+            new_raster.write(im, 1)
+            new_raster.close()
+
+            print('Raster saved at ' + str(im_path))
+
+        else:
+
+            print('Abort. Array is smaller than 2x2 pixels.')
