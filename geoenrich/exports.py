@@ -56,7 +56,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     input_type = enrichment_metadata['input_type']
 
     if df is None:
-        df, _ = load_enrichment_file(dataset_ref)
+        df, _ = load_enrichment_file(dataset_ref, mute = True)
     row = df.loc[occ_id]
 
     # Identify relevant enrichment ids
@@ -421,23 +421,23 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None
 
         im_path = Path(folderpath, str(occ_id) + '_' + var_id + '.png')
         cv2.imwrite(str(im_path), 255*im3)
-        print('Image saved at ' + im_path)
+        print('Image saved at ' + str(im_path))
 
 
 
-def export_to_array(res, target_size=None, value_range=None, stack=False, squeeze=True, target_len=None):
+def export_to_array(res, target_size=None, value_range=None, stack=None, squeeze=True, target_len=None):
 
     """
     Export data as a 3D numpy array where the first 2 dimensions represent geographical coordinates.
     Option to standardize data by specifiying target size and target value range.
-    The third dimensions stores multiples bands if stack is set to *True* and multiple depth or time values are present.
+    The third dimensions stores multiples bands if stack is set to *depth*, *time* or *all*.
 
 
     Args:
         res (dict): output of :func:`geoenrich.exports.retrieve_data`.
         target_size (int tuple): Size of the target array (width, height). If None, using the native data resolution.
         value_range (float list): Range of the variable. Necessary for consistency between all images.
-        stack (bool): If True, keep values for all depths and times (returns 3D array).
+        stack (str): If True, keep values for all depths or all times (returns 3D array).
         squeeze (bool): If true, remove unused dimensions in the output.
         target_len (int): Length of the third dimension if data is None (to return uniform results).
     Returns:
@@ -449,20 +449,17 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
 
         im = res['values']
         params = [c[0] for c in res['coords']]
-
-        # Transform to 2D data by removing additional dimensions.
         lat_ax = params.index('latitude')
         lon_ax = params.index('longitude')
 
         # Transpose if needed
         im1 = deepcopy(im)
 
-        if lat_ax > lon_ax:
-            im1 = np.transpose(im1)
-            lat_ax = params.index('longitude')
-            lon_ax = params.index('latitude')
+        # Remove unwanted dimensions
+        if stack is None:
 
-        if not (stack):
+            # Keep only shallowest and most recent
+
             if 'time' in params:
                 time_ax = params.index('time')
                 im1 = im1.take(-1, axis=time_ax)
@@ -474,7 +471,50 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
                 
                 im1 = im1.take(np.argmin(res['coords'][depth_ax][1]), axis=depth_ax)
 
-        im1 = im1.reshape([im.shape[lat_ax], im.shape[lon_ax], -1])
+        elif stack == 'time':
+
+            # Keep all times but only most shallow
+
+            if 'depth' in params:
+                depth_ax = params.index('depth')                
+                im1 = im1.take(np.argmin(res['coords'][depth_ax][1]), axis=depth_ax)
+
+            # Reorder axes
+            
+            # if 'time' in params:
+            #     time_ax = params.index('time')
+            #     if time_ax != 2:
+            #         im1 = np.swapaxes(im1, time_ax, 2)
+
+        elif stack == 'depth':
+
+            # Keep all depths but only most recent
+
+            if 'time' in params:
+                time_ax = params.index('time')
+                im1 = im1.take(-1, axis=time_ax)
+
+            # Reorder axes
+
+            # if 'depth' in params:
+            #     depth_ax = params.index('depth')
+            #     if depth_ax != 2:
+            #         im1 = np.swapaxes(im1, depth_ax, 2)
+
+        else:
+
+            # Keep everything
+
+            pass
+
+        # Reorder axes
+
+        if lat_ax != 0:
+            im1 = np.swapaxes(im1, lat_ax, 0)
+        if lon_ax != 1:
+            im1 = np.swapaxes(im1, lon_ax, 1)
+
+        im1 = im1.reshape([im.shape[0], im.shape[1], -1])
         mask = im1.mask
 
         im2 = deepcopy(im1)
@@ -517,12 +557,12 @@ def export_to_array(res, target_size=None, value_range=None, stack=False, squeez
     
 
 def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None, time_buff = None,
-                    depth_request = 'surface', downsample = {}, shape = 'rectangle'):
+                    depth_request = 'surface', downsample = {}, shape = 'rectangle', multiband = None):
 
     """
     Export a GeoTiff raster of the requested data.
-    If depth is a dimension, the shallowest layer is selected.
-    If time is a dimension, the most recent layer is selected.
+    Depth or time dimension (not both) can be stored as band (see multiband argument)
+    Otherwise, the shallowest depth and most recent time are selected.
 
     Args:
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
@@ -534,7 +574,7 @@ def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = No
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
-
+        multiband (str): If multiband='depth' or 'time', the corresponding dimension is saved into multiple bands.
     Returns:
         None
     """
@@ -548,7 +588,9 @@ def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = No
 
     if res is not None:
 
-        im = export_to_array(res, target_size=None, value_range=None)
+        assert multiband in [None, 'time', 'depth']
+
+        im = export_to_array(res, target_size=None, value_range=None, stack=multiband)
 
         # Flip latitude (because image vertical axis is downwards)
         lat_ax = [c[0] for c in res['coords']].index('latitude')
@@ -570,14 +612,31 @@ def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = No
 
             im_path = Path(folderpath, str(occ_id) + '_' + var_id + '.tiff')
 
-            new_raster = rasterio.open(im_path, 'w', driver='GTiff',
-                            height = im.shape[0], width = im.shape[1],
-                            count=1, dtype=str(im.dtype),
-                            crs='EPSG:4326',
-                            transform=transform)
+            if len(im.shape) == 2:
+                new_raster = rasterio.open(im_path, 'w', driver='GTiff',
+                                height = im.shape[0], width = im.shape[1],
+                                count=1, dtype=str(im.dtype),
+                                crs='EPSG:4326',
+                                transform=transform)
 
-            new_raster.write(im, 1)
-            new_raster.close()
+                new_raster.write(im, 1)
+                new_raster.close()
+            else:
+                band_ax = [c[0] for c in res['coords']].index(multiband)
+                bandnames = res['coords'][band_ax][1]
+
+                new_raster = rasterio.open(im_path, 'w', driver='GTiff',
+                                height = im.shape[0], width = im.shape[1],
+                                count=len(bandnames), dtype=str(im.dtype),
+                                crs='EPSG:4326',
+                                transform=transform)
+
+                for i in range(im.shape[2]):
+                    band = im.take(i, axis=2)
+                    new_raster.write_band(i+1, band)
+                    new_raster.set_band_description(i+1, f'{multiband}={bandnames[i]}')
+
+                new_raster.close()
 
             print('Raster saved at ' + str(im_path))
 

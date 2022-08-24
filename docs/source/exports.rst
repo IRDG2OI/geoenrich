@@ -5,6 +5,7 @@ After enriching occurrences, you can use the exports module to use the downloade
 
 - Produce a stats file that will give you the average, standard deviation, minimum and maximum values of your variable in the buffer around each occurrence. See :func:`geoenrich.exports.produce_stats`.
 - Calculate the derivative of the environmental data between two different dates, with :func:`geoenrich.exports.get_derivative`.
+- Export data as geotiff rasters with :func:`geoenrich.exports.export_raster`.
 - Export png pictures, for visualization or training deep learning models for instance. See :func:`geoenrich.exports.export_png`.
 - Retrieve the raw data as a numpy array with :func:`geoenrich.exports.retrieve data`.
 
@@ -13,6 +14,8 @@ Main functions
 --------------
 
 .. autofunction:: geoenrich.exports.export_png
+
+.. autofunction:: geoenrich.exports.export_raster
 
 .. autofunction:: geoenrich.exports.export_to_array
 
