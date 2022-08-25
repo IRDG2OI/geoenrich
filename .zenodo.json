@@ -24,7 +24,8 @@
         {
             "identifier": "https://geoenrich.readthedocs.io/en/latest/ ",
             "relation": "isDocumentedBy",
-            "resource_type": "softwaredocumentation"
+            "resource_type": "publication",
+            "publication_type": "softwaredocumentation"
         }
     ],
 
