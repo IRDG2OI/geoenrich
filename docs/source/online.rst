@@ -19,7 +19,7 @@ A column with a unique ID is mandatory, to be able to link downloaded data to th
    :widths: 20 20 20 20 20
    :header-rows: 1
 
-Download sample csv file `here <https://raw.githubusercontent.com/morand-g/geoenrich/main/geoenrich/data/webapp_turtles.csv>`_ (right click -> Save As).
+Download sample csv file `webapp_turtles.csv <https://raw.githubusercontent.com/morand-g/geoenrich/main/geoenrich/data/webapp_turtles.csv>`_ (right click -> Save As).
 
 
 1.2. Areas
@@ -33,7 +33,7 @@ A column with a unique ID is mandatory, to be able to link downloaded data to th
    :widths: 10 15 15 15 15 15 15
    :header-rows: 1
 
-Download sample csv file `here <https://raw.githubusercontent.com/morand-g/geoenrich/main/geoenrich/data/webapp_areas.csv>`_ (right click -> Save As).
+Download sample csv file `webapp_areas.csv <https://raw.githubusercontent.com/morand-g/geoenrich/main/geoenrich/data/webapp_areas.csv>`_ (right click -> Save As).
 
 
 2. Restrictions

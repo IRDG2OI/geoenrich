@@ -4,6 +4,7 @@
 - Export data as geotiff raster. Added examples in the tutorial notebooks.
 - Added a new source for wind.
 - Added option to keep depth or time dimensions in exports.export\_to\_array.
+- Added dump_metadata function to retrieve metadata associated with enriched variables.
 
 #### Bug fixes:
 - Data retrieval fixed when *downsample* or *depth\_request* are not default values.

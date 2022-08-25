@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 
+import json
 import numpy as np
 import pandas as pd
 import netCDF4 as nc
@@ -378,3 +379,46 @@ def ellipsoid_mask(data, coords, center, geo_buff):
     mask = np.broadcast_to(mask2d, data.shape)
 
     return(mask)
+
+
+
+class NpEncoder(json.JSONEncoder):
+
+    """
+    Custom encoder to handle numpy data formats in json dump.
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
+
+
+def dump_metadata(var_id, out_path=Path('./')):
+
+    """
+    Dump metadata related to the given variable.
+
+    Args:
+        var_id (str): ID of the variable to retrieve metadata for.
+        out_path (str or pathlib.Path): Path where metadata file will be saved.
+
+    Returns:
+        None
+    """
+
+    var = get_var_catalog()[var_id]
+    path = Path(sat_path, var['var_id'] + '.nc')
+
+    ds = nc.Dataset(path)
+    variable = ds[var['varname']]
+    args = {k: variable.getncattr(k) for k in variable.ncattrs()}
+
+    with (out_path / f'{var_id}_metadata.json').open('w') as f:
+        json.dump(args, f, ensure_ascii=False, indent=4, cls=NpEncoder)
+
+    print(f"File saved at {out_path / f'{var_id}_metadata.json'}")
