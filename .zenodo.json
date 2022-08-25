@@ -17,11 +17,13 @@
 
     "related_identifiers": [
         {
-            "identifier": "https://github.com/morand-g/geoenrich/",
+            "scheme": "url", 
+            "identifier": "https://github.com/morand-g/geoenrich/tree/v0.5",
             "relation": "isDerivedFrom",
             "resource_type": "software"
         },
         {
+            "scheme": "url", 
             "identifier": "https://geoenrich.readthedocs.io/en/latest/ ",
             "relation": "isDocumentedBy",
             "resource_type": "publication-softwaredocumentation"
