@@ -452,10 +452,23 @@ def export_to_array(res, target_size=None, value_range=None, stack=None, squeeze
         lat_ax = params.index('latitude')
         lon_ax = params.index('longitude')
 
-        # Transpose if needed
         im1 = deepcopy(im)
 
+
+        # Reorder axes
+
+        if lat_ax != 0:
+            im1 = np.swapaxes(im1, lat_ax, 0)
+            params[0], params[lat_ax] = params[lat_ax], params[0]
+            lat_ax = 0
+
+        if lon_ax != 1:
+            im1 = np.swapaxes(im1, lon_ax, 1)
+            params[1], params[lon_ax] = params[lon_ax], params[1]
+            lon_ax = 1
+
         # Remove unwanted dimensions
+
         if stack is None:
 
             # Keep only shallowest and most recent
@@ -479,12 +492,6 @@ def export_to_array(res, target_size=None, value_range=None, stack=None, squeeze
                 depth_ax = params.index('depth')                
                 im1 = im1.take(np.argmin(res['coords'][depth_ax][1]), axis=depth_ax)
 
-            # Reorder axes
-            
-            # if 'time' in params:
-            #     time_ax = params.index('time')
-            #     if time_ax != 2:
-            #         im1 = np.swapaxes(im1, time_ax, 2)
 
         elif stack == 'depth':
 
@@ -494,12 +501,6 @@ def export_to_array(res, target_size=None, value_range=None, stack=None, squeeze
                 time_ax = params.index('time')
                 im1 = im1.take(-1, axis=time_ax)
 
-            # Reorder axes
-
-            # if 'depth' in params:
-            #     depth_ax = params.index('depth')
-            #     if depth_ax != 2:
-            #         im1 = np.swapaxes(im1, depth_ax, 2)
 
         else:
 
@@ -507,14 +508,8 @@ def export_to_array(res, target_size=None, value_range=None, stack=None, squeeze
 
             pass
 
-        # Reorder axes
 
-        if lat_ax != 0:
-            im1 = np.swapaxes(im1, lat_ax, 0)
-        if lon_ax != 1:
-            im1 = np.swapaxes(im1, lon_ax, 1)
-
-        im1 = im1.reshape([im.shape[0], im.shape[1], -1])
+        im1 = im1.reshape([im1.shape[0], im1.shape[1], -1])
         mask = im1.mask
 
         im2 = deepcopy(im1)
