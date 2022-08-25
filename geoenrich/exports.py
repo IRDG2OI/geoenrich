@@ -242,7 +242,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
 
         filepath = Path(out_path, dataset_ref + '_' + str(en['id']) + '_stats.csv')
         res.to_csv(str(filepath))
-        print('File saved at ' + str(filepath))
+        print(f'File saved at {filepath}')
 
 
 
@@ -425,7 +425,8 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None
 
         im_path = Path(folderpath, str(occ_id) + '_' + var_id + '.png')
         cv2.imwrite(str(im_path), 255*im3)
-        print('Image saved at ' + str(im_path))
+
+        print(f'Image saved at {im_path}')
 
 
 
@@ -638,7 +639,7 @@ def export_raster(dataset_ref, occ_id, var_id, path = Path('./'), geo_buff = Non
 
                 new_raster.close()
 
-            print('Raster saved at ' + str(im_path))
+            print(f'Raster saved at {im_path}')
 
         else:
 

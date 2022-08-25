@@ -386,6 +386,7 @@ class NpEncoder(json.JSONEncoder):
 
     """
     Custom encoder to handle numpy data formats in json dump.
+    """
 
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -412,13 +413,14 @@ def dump_metadata(var_id, out_path=Path('./')):
     """
 
     var = get_var_catalog()[var_id]
-    path = Path(sat_path, var['var_id'] + '.nc')
+    ds_path = Path(sat_path, var['var_id'] + '.nc')
 
-    ds = nc.Dataset(path)
+    ds = nc.Dataset(ds_path)
     variable = ds[var['varname']]
     args = {k: variable.getncattr(k) for k in variable.ncattrs()}
 
-    with (out_path / f'{var_id}_metadata.json').open('w') as f:
+    write_path = Path(out_path, f'{var_id}_metadata.json')
+    with (write_path).open('w') as f:
         json.dump(args, f, ensure_ascii=False, indent=4, cls=NpEncoder)
 
-    print(f"File saved at {out_path / f'{var_id}_metadata.json'}")
+    print(f"File saved at {write_path}")
