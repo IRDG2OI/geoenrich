@@ -27,8 +27,8 @@ from geoenrich.satellite import *
 
 
 
-def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None, depth_request = 'surface',
-                    downsample = {}, shape = 'rectangle', df = None):
+def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None, depth_request = None,
+                    downsample = None, shape = 'rectangle', df = None):
 
     """
     Retrieve downloaded data for the given occurrence id and variable.
@@ -137,6 +137,9 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
     else:
         ordered_indices = [indices[p] for p in params]
 
+    if downsample is None:
+        downsample = {}
+
     for i in range(len(params)):
         p = params[i]
         if p in downsample:
@@ -175,8 +178,8 @@ def fetch_data(row, var_id, var_indices, ds, dimdict, var, downsample, indices =
 
 
 
-def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = 'surface',
-                    downsample = {}, out_path = biodiv_path):
+def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = None,
+                    downsample = None, out_path = Path('./')):
 
     """
     Produce a document named *dataset\_ref*\_stats.csv with summary stats of all enriched data.
@@ -189,7 +192,7 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
-        out_path (str): Path where you want to save the output stats file.
+        out_path (str or pathlib.Path): Path where you want to save the output stats file.
 
     Returns:
         None
@@ -207,8 +210,8 @@ def produce_stats(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_
         if en['parameters']['var_id'] == var_id:
             if  (geo_buff is None or en['parameters']['geo_buff'] == geo_buff)                  and \
                 (time_buff is None or en['parameters']['time_buff'] == time_buff)               and \
-                (depth_request == 'surface' or en['parameters']['depth_request'] == depth_request)   and \
-                (en['parameters']['downsample'] == downsample):
+                (depth_request is None or en['parameters']['depth_request'] == depth_request)   and \
+                (downsample is None or en['parameters']['downsample'] == downsample):
 
                 relevant.append(en)
 
@@ -367,8 +370,8 @@ def get_derivative(dataset_ref, occ_id, var_id, days = (0,0), geo_buff = None, d
         return({'coords': coords, 'values': data, 'unit': unit + ' per day'})
 
 
-def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None, path = biodiv_path,
-               geo_buff = None, time_buff = None, depth_request = 'surface', downsample = {},
+def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None, path = Path('./'),
+               geo_buff = None, time_buff = None, depth_request = None, downsample = None,
                cmap = 'coolwarm', shape = 'rectangle'):
 
     """
@@ -382,7 +385,7 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None
         var_id (str): ID of the variable to retrieve.
         target_size (int tuple): Size of the target picture (width, height). If None, using the native data resolution.
         value_range (float list): Range of the variable. Necessary for consistency between all images.
-        path (str): Path where image files will be saved.
+        path (str or pathlib.Path): Path where image files will be saved.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
@@ -399,7 +402,8 @@ def export_png(dataset_ref, occ_id, var_id, target_size = None, value_range=None
         folderpath.mkdir()
 
     # Retrieve data
-    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample, shape=shape)
+    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, depth_request=depth_request,
+                        downsample = downsample, shape=shape)
 
     if res is not None:
 
@@ -551,8 +555,8 @@ def export_to_array(res, target_size=None, value_range=None, stack=None, squeeze
 
     
 
-def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = None, time_buff = None,
-                    depth_request = 'surface', downsample = {}, shape = 'rectangle', multiband = None):
+def export_raster(dataset_ref, occ_id, var_id, path = Path('./'), geo_buff = None, time_buff = None,
+                    depth_request = None, downsample = None, shape = 'rectangle', multiband = None):
 
     """
     Export a GeoTiff raster of the requested data.
@@ -563,7 +567,7 @@ def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = No
         dataset_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         occ_id (str): ID of the occurrence to get data for. Can be obtained with :func:`geoenrich.enrichment.read_ids`.
         var_id (str): ID of the variable to retrieve.
-        path (str): Path where image files will be saved.
+        path (str or pathlib.Path): Path where image files will be saved.
         geo_buff (int): (Optional) Geo_buff that was used for enrichment.
         time_buff (float list): (Optional) Time_buff that was used for enrichment.
         depth_request (str): (Optional) Depth request that was used for enrichment.
@@ -579,7 +583,8 @@ def export_raster(dataset_ref, occ_id, var_id, path = biodiv_path, geo_buff = No
         folderpath.mkdir()
 
     # Retrieve data
-    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, downsample = downsample, shape=shape)
+    res = retrieve_data(dataset_ref, occ_id, var_id, geo_buff, time_buff, depth_request=depth_request,
+                        downsample = downsample, shape=shape)
 
     if res is not None:
 
