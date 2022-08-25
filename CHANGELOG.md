@@ -1,8 +1,14 @@
 ## v0.5
 
 #### New functions:
-- Export data as geotiff raster.
+- Export data as geotiff raster. Added examples in the tutorial notebooks.
 - Added a new source for wind.
+- Added option to keep depth or time dimensions in exports.export\_to\_array.
+
+#### Bug fixes:
+- Data retrieval fixed when *downsample* or *depth\_request* are not default values.
+- Fixed remaining errors due to the migration to pathlib paths.
+- Fixed axes order errors in exports.export\_to\_array
 
 ## v0.4.6
 
