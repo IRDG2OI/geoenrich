@@ -1,7 +1,7 @@
 Geoenrich online (beta)
 =======================
 
-A web app is available (`beta<https://geoenrich.marbec-tools.ird.fr/>`_) for basic uses of GeoEnrich. For more advanced uses, a self-hosted version is available as a `docker image <https://github.com/morand-g/geoenrich/tree/main/docker>`_.
+A web app is available (`beta <https://geoenrich.marbec-tools.ird.fr/>`_) for basic uses of GeoEnrich. For more advanced uses, a self-hosted version is available as a `docker image <https://github.com/morand-g/geoenrich/tree/main/docker>`_.
 
 
 1. File format
