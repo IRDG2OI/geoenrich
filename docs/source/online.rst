@@ -1,18 +1,18 @@
 Geoenrich online (beta)
 =======================
 
-A web app will be available online soon. In the meantime a self-hosted version is available as a `docker image <https://github.com/morand-g/geoenrich/tree/main/docker>`_.
+A web app is available (`beta<https://geoenrich.marbec-tools.ird.fr/>`_) for basic uses of GeoEnrich. For more advanced uses, a self-hosted version is available as a `docker image <https://github.com/morand-g/geoenrich/tree/main/docker>`_.
 
 
 1. File format
 ------------------------
 
-Only csv files are supported.
+Only DarwinCore archives and csv files are supported. The csv files *must* follow the following format requirements.
 
 1.1. Species occurrences
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-A column with a unique ID is mandatory, to be able to link downloaded data to the corresponding occurrence. Date, latitude, and longitude columns are mandatory. Here is an exemple of such a file:
+The following columns are mandatory: a unique ID, an occurrence date, its latitude and longitude. They must be named respectively  *id*, *date*, *latitude* and *longitude*. Here is an exemple of such a file:
 
 .. csv-table:: Turtle occurrences
    :file: ../../geoenrich/data/webapp_turtles.csv
@@ -25,7 +25,7 @@ Download sample csv file `webapp_turtles.csv <https://raw.githubusercontent.com/
 1.2. Areas
 ^^^^^^^^^^
 
-A column with a unique ID is mandatory, to be able to link downloaded data to the corresponding area. All columns in the example file below are also mandatory:
+A unique ID is mandatory, as well as the bounds of the areas that are requested. Columns must be named as in the following example:
 
 
 .. csv-table:: Areas of interest
@@ -41,10 +41,10 @@ Download sample csv file `webapp_areas.csv <https://raw.githubusercontent.com/mo
 
 For more features, you may install geoenrich (python or R) onto your computer and this will enable the following features:
 
-- Support for DarwinCore archives.
 - Support for csv files with custom column names.
-- Support for calculated variables (eke and derivatives).
+- Support for calculated variables (Eddy Kinetic Energy and derivatives).
 - No maximum download size.
+
 
 3. Setting up the self-hosted version
 --------------------------------------
