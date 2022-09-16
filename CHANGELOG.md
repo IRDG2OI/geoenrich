@@ -1,3 +1,9 @@
+## v0.5.1
+
+#### Bug fixes:
+- Fix critical error when a csv with custom ID column name is imported.
+
+
 ## v0.5
 
 #### New functions:

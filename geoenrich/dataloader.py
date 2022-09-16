@@ -243,6 +243,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
 
     # Convert to GeoDataFrame
     geodf = gpd.GeoDataFrame(df[['geometry', 'eventDate']])
+    geodf.index.names = ['id']
 
     print('{} occurrences were loaded.'.format(len(geodf)))
     
