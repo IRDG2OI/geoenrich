@@ -2,6 +2,7 @@
 
 #### Bug fixes
 - Fix missing import in satellite.py
+- Updated links for Copernicus Ocean Color / Plankton dataset.
 
 ## v0.5.1
 
