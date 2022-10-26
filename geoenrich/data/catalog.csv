@@ -6,8 +6,8 @@ chlorophyll3d,Copernicus,0.25°,7d,1998-01-01 - ongoing,36 levels,https://my.cme
 chlorophyll-occi,OCCI,0.042°,1d,1997-09-06 - 2021-12-31,surface,https://www.oceancolour.org/thredds/dodsC/CCI_ALL-v5.0-DAILY,chlor_a
 current3d-u,Copernicus,0.25°,7d,1993-01-01 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,ugo
 current3d-v,Copernicus,0.25°,7d,1993-01-01 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,vgo
-diatoms,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DIATO
-dinophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,DINO
+diatoms,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,DIATO
+dinophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,DINO
 eke,,,,,,calculated,eke
 fsle,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,https://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,fsle_max
 fsle-orientation,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,https://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,theta_max
@@ -15,20 +15,20 @@ geos-current-u,Copernicus,0.25°,1d,1993-01-01 - 2019-12-31,surface,https://my.c
 geos-current-u2,Copernicus,0.25°,1d,2019-12-01 - ongoing,surface,https://nrt.cmems-du.eu/thredds/dodsC/dataset-duacs-nrt-global-merged-allsat-phy-l4,ugosa
 geos-current-v,Copernicus,0.25°,1d,1993-01-01 - 2019-12-31,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.25deg_P1D,vgosa
 geos-current-v2,Copernicus,0.25°,1d,2019-12-01 - ongoing,surface,https://nrt.cmems-du.eu/thredds/dodsC/dataset-duacs-nrt-global-merged-allsat-phy-l4,vgosa
-green-algae,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,GREEN
-haptophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,HAPTO
-microphytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,MICRO
+green-algae,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,GREEN
+haptophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,HAPTO
+microphytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,MICRO
 mixed-layer-thickness,Copernicus,0.25°,7d,1993-01-01 - ongoing,surface,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,mlotst
-nanophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,NANO
+nanophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,NANO
 ocean-heat-content,NOAA,1°,3m,1955-01-01 - ongoing,surface,https://www.ncei.noaa.gov/thredds-ocean/dodsC/woa/heat_content/heat_content/heat_content_anomaly_0-700_seasonal.nc,h18_hc
 organic-carbon3d,Copernicus,0.25°,7d,1998-01-01 - ongoing,36 levels,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,poc
 oxygen,Copernicus,0.25°,1d,1993-01-01 - 2020-12-31,75 levels,https://my.cmems-du.eu/thredds/dodsC/cmems_mod_glo_bgc_my_0.25_P1D-m,o2
 oxygen2,Copernicus,0.25°,1d,2019-05-04 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/global-analysis-forecast-bio-001-028-daily,o2
 ph,Copernicus,0.25°,1d,2019-05-04 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/global-analysis-forecast-bio-001-028-daily,ph
-picophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,PICO
+picophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PICO
 primary-production,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pp_4km_monthly-rep,PP
-prochlorophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,PROCHLO
-prokaryotes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/dataset-oc-glo-bio-multi-l4-pft_4km_monthly-rep,PROKAR
+prochlorophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROCHLO
+prokaryotes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROKAR
 salinity,SMOS+Aquarius,0.25°,7d,2011-09-01 - 2021-09-08,surface,[FillMismatch]https://thredds.jpl.nasa.gov/thredds/dodsC/SalinityDensity/OISSS_L4_multimission_7day_v1.nc,sss
 salinity3d,Copernicus,0.25°,7d,1993-01-01 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/dataset-armor-3d-rep-weekly,so
 sla,Copernicus,0.25°,1d,1993-01-01 - 2019-12-31,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.25deg_P1D,sla

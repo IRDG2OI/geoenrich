@@ -1,3 +1,8 @@
+## v0.5.2
+
+#### Bug fixes
+- Fix missing import in satellite.py
+
 ## v0.5.1
 
 #### Bug fixes:
