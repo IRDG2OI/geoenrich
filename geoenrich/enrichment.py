@@ -194,6 +194,10 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
         
     # Apply query to each row sequentially
 
+    if not(len(geodf2)):
+        print('No data in input dataframe.')
+        return(pd.DataFrame())
+
     geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, 'surface', downsample))
     res = geodf2.progress_apply(row_compute, axis=1, args = (local_ds, bool_ds, base_datasets,
                                                              dimdict, var, downsample), 
@@ -285,6 +289,11 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         geodf2 = geodf
 
     # Apply query to each row sequentially
+
+    if not(len(geodf2)):
+        print('No data in input dataframe.')
+        return(pd.DataFrame())
+
     geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, depth_request, downsample))
 
     if maxpoints is not None and (s:= checksize(geodf2['ind'])) > maxpoints:
