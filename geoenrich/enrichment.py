@@ -843,6 +843,9 @@ def reset_enrichment_file(dataset_ref, var_ids_to_remove):
 
 
     to_save = df.drop(columns = to_drop)
+    
+    filepath = Path(biodiv_path, dataset_ref + '.csv')
+
     to_save.to_csv(filepath)
 
     enrichment_metadata['enrichments'] = remaining_enrichments

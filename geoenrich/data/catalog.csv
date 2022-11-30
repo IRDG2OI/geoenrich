@@ -24,7 +24,7 @@ ocean-heat-content,NOAA,1°,3m,1955-01-01 - ongoing,surface,https://www.ncei.noa
 organic-carbon3d,Copernicus,0.25°,7d,1998-01-01 - ongoing,36 levels,https://my.cmems-du.eu/thredds/dodsC/cmems_obs_glo_bgc3d_rep_weekly,poc
 oxygen,Copernicus,0.25°,1d,1993-01-01 - 2020-12-31,75 levels,https://my.cmems-du.eu/thredds/dodsC/cmems_mod_glo_bgc_my_0.25_P1D-m,o2
 oxygen2,Copernicus,0.25°,1d,2019-05-04 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/global-analysis-forecast-bio-001-028-daily,o2
-ph,Copernicus,0.25°,1d,2019-05-04 - ongoing,50 levels,https://nrt.cmems-du.eu/thredds/dodsC/global-analysis-forecast-bio-001-028-daily,ph
+ph,Copernicus,0.25°,1m,1993-01-01 - 2020-12-31,75 levels,https://my.cmems-du.eu/thredds/dodsC/cmems_mod_glo_bgc_my_0.25_P1M-m,ph
 picophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PICO
 primary-production,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-pp_my_l4-multi-4km_P1M,PP
 prochlorophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROCHLO

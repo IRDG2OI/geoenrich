@@ -1,3 +1,9 @@
+## v0.5.3
+
+#### Bug fixes
+- Updated data source for ph
+- Fixed critical bug in geoenrich.enrichment.reset\_enrichment\_file
+
 ## v0.5.2
 
 #### Bug fixes
