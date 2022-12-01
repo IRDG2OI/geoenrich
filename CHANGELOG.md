@@ -1,5 +1,8 @@
 ## v0.5.3
 
+#### New functions
+- Ability to serialize exports.retrieve_data for batch processing. Running time divided by 6.4.
+
 #### Bug fixes
 - Updated data source for ph
 - Fixed critical bug in geoenrich.enrichment.reset\_enrichment\_file

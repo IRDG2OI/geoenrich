@@ -26,9 +26,8 @@ from geoenrich.enrichment import *
 from geoenrich.satellite import *
 
 
-
 def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None, depth_request = None,
-                    downsample = None, shape = 'rectangle', df = None):
+                    downsample = None, shape = 'rectangle', serialized = {}):
 
     """
     Retrieve downloaded data for the given occurrence id and variable.
@@ -43,7 +42,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
-        df (geopandas.GeoDataFrame): (Optional) provide enrichment file (output of :func:`geoenrich.enrichment.load_enrichment_file`) to reduce processing time.
+        serialized (dict): (Optional) provide a dictionary of variables to reduce processing time (supports df, dimdict, var, var_source).
     Returns:
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
@@ -55,7 +54,9 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
     enrichments = enrichment_metadata['enrichments']
     input_type = enrichment_metadata['input_type']
 
-    if df is None:
+    if 'df' in serialized:
+        df = serialized['df']
+    else:
         df, _ = load_enrichment_file(dataset_ref, mute = True)
     row = df.loc[occ_id]
 
@@ -84,19 +85,36 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
 
         en = relevant[0]
         var_ind = parse_columns(df)[en['id']]
-        var_source = get_var_catalog()[var_id]
+        if 'var_source' in serialized:
+            var_source = serialized['var_source']
+        else:
+            var_source = get_var_catalog()[var_id]
 
         if -1 in [row.iloc[d['min']] for d in var_ind.values()]:
             results = {'coords': None, 'values': None}
 
         else:
-            ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
+
+            # Recover serialized variables
+
+            if 'ds' in serialized:
+                ds = serialized['ds']
+            else:
+                ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
+
+            if ('dimdict' in serialized) and ('var' in serialized):
+                dimdict, var = serialized['dimdict'], serialized['var']
+            else:
+                dimdict, var = get_metadata(ds, var_source['varname'])
+
+
+
             unit = getattr(ds.variables[var_source['varname']], 'units', 'Unspecified')
 
-            dimdict, var = get_metadata(ds, var_source['varname'])
-
             data, coords = fetch_data(row, var_id, var_ind, ds, dimdict, var, downsample)
-            ds.close()
+
+            if 'ds' not in serialized:
+                ds.close()
 
             if shape == 'buffer' and input_type == 'occurrence':
                 geo_buff = en['parameters']['geo_buff']
