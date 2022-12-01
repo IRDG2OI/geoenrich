@@ -42,7 +42,7 @@ def retrieve_data(dataset_ref, occ_id, var_id, geo_buff = None, time_buff = None
         depth_request (str): (Optional) Depth request that was used for enrichment.
         downsample (dict): (Optional) Downsample that was used for enrichment.
         shape (str): If 'rectangle', return data inside the rectangle containing the buffer. If 'buffer', only return data within the buffer distance from the occurrence location.
-        serialized (dict): (Optional) provide a dictionary of variables to reduce processing time (supports df, dimdict, var, var_source).
+        serialized (dict): (Optional) provide a dictionary of variables to reduce processing time (supports df, dimdict, var, var_source, ds).
     Returns:
         dict: A dictionary of all available variables with corresponding data (numpy.ma.MaskedArray), unit (str), and coordinates (ordered list of dimension names and values).
     """
