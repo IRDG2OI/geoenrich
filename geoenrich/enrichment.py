@@ -75,7 +75,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     new_enrichment = False
     if enrichment_id == -1:
         new_enrichment = True
-        enrichment_id = len(enrichments)
+        enrichment_id = max([en['id'] for en in enrichments]) + 1
 
     if slice is None:
         to_enrich = original

@@ -3,6 +3,7 @@
 #### Bug fixes
 - Updated data source for ph
 - Fixed critical bug in geoenrich.enrichment.reset\_enrichment\_file
+- Fixed bug that occurred when making new enrichments after deleting previous ones (ID assignment issue).
 
 ## v0.5.2
 
