@@ -39,6 +39,5 @@ Please feel free to raise issues or suggest improvements in the [Issues tab](htt
 
 ### Planned improvements
 
-- Export data as a raster layer.
 - Enrich an area defined by a shapefile.
 - Add bathymetry from GEBCO.
