@@ -1,3 +1,8 @@
+## v0.5.4
+
+#### Bug fix
+- Fixed critical bug that occurred when trying to enrich a new dataset (introduced in v0.5.3).
+
 ## v0.5.3
 
 #### New functions
