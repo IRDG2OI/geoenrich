@@ -44,7 +44,7 @@ pd.options.mode.chained_assignment = None
 
 
 def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request = 'surface', 
-    downsample = {}, slice = None, maxpoints = None):
+    downsample = {}, slice = None, maxpoints = None, force_download = False):
 
     """
     Enrich the given dataset with data of the requested variable.
@@ -61,6 +61,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
         maxpoints(int): Maximum number of points to download.
+        force_download(bool): If True, download data regardless of cache status.
 
     Returns:
         None
@@ -93,8 +94,9 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     if var_source['url'] == 'calculated':
         indices = enrich_compute(to_enrich, var_id, geo_buff, time_buff, downsample)
     else:
-        indices = enrich_download(to_enrich, var_source['varname'], var_id, var_source['url'],
-                                    geo_buff, time_buff, depth_request, downsample, maxpoints)
+        indices = enrich_download(  to_enrich, var_source['varname'], var_id, var_source['url'],
+                                    geo_buff, time_buff, depth_request, downsample, maxpoints,
+                                    force_download)
 
     prefix = str(enrichment_id) + '_'
     indices = indices.add_prefix(prefix)
@@ -226,7 +228,7 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
 
 
 
-def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, downsample, maxpoints):
+def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_request, downsample, maxpoints, force_download):
     
     """
     Download data for the requested occurrences and buffer into local netcdf file.
@@ -242,6 +244,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         maxpoints(int): Maximum number of points to download.
+        force_download(bool): If True, download data regardless of cache status.
 
     Returns:
         pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
@@ -307,7 +310,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         res = pd.DataFrame()
 
     else:
-        res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample), 
+        res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample, force_download), 
                             result_type = 'expand')
     
     # Update time variable in local dataset if needed
@@ -416,7 +419,7 @@ def add_bounds(geodf1, geo_buff, time_buff):
 ############################# Element-wise enrichment #################################
 
 
-def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample):
+def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample, force_download):
 
     """
     Query geospatial data for the given GeoDataFrame row.
@@ -431,6 +434,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
         var (dict): Variable dictionary as returned by :func:`geoenrich.satellite.get_metadata`.
         depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+        force_download(bool): If True, download data regardless of cache status.    
     Returns:
         pandas.Series: Coordinates of the data of interest in the netCDF file.
 
@@ -442,7 +446,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
     params = [dimdict[n]['standard_name'] for n in var['params']]
     ordered_indices = [ind[p] for p in params]
     
-    download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind)
+    download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind, force_download)
 
     # Return coordinates of the saved subset for data retrieval
 
@@ -609,7 +613,7 @@ def calculate_indices(row, dimdict, var, depth_request, downsample):
 
 
 
-def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
+def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind, force_download):
 
     """
     Download missing data from the remote dataset to the local dataset.
@@ -621,6 +625,7 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         ind (dict): Dictionary with ordered slicing indices for all dimensions.
+        force_download(bool): If True, download data regardless of cache status.
     Returns:
         None
     """
@@ -640,7 +645,12 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
         totalsize = totalsize * act_len
         
 
-    if ('time' in ind) and (check.ndim == len(ind)):
+    if force_download:
+        checklist = np.array(False)
+
+    elif ('time' in ind) and (check.ndim == len(ind)):
+
+        # If time is a dimension, check wich timepoints already have the data.
 
         time_pos = var['params'].index(dimdict['time']['name'])
         expected_lentime = 1 + (ind['time']['max'] - ind['time']['min']) // ind['time']['step']
@@ -681,14 +691,14 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind):
                 new_ind = deepcopy(ind)
                 new_ind['time']['min'] = ind['time']['min'] + start * ind['time']['step']
                 new_ind['time']['max'] = ind['time']['min'] + (i - 1) * ind['time']['step']
-                download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
+                download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind, force_download)
                 
 
         if(started):
             new_ind = deepcopy(ind)
             new_ind['time']['min'] = ind['time']['min'] + start * ind['time']['step']
             new_ind['time']['max'] = ind['time']['min'] + (len(checklist) - 1) * ind['time']['step']
-            download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind)
+            download_data(remote_ds, local_ds, bool_ds, var, dimdict, new_ind, force_download)
             
 
     # Otherwise download everything

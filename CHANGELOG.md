@@ -1,6 +1,7 @@
 ## v0.5.5
 
 #### New functions:
+- Added a force\_download option to geoenrich.enrichment.enrich to ignore cache if needed.
 - Included all packages into setup.cfg so the installation process becomes a one-liner. Updated documentation accordingly.
 
 ## v0.5.4
