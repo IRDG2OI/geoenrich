@@ -7,8 +7,6 @@ Installation instructions for R
 
 Assuming you have a version of R installed on your computer, as well as Python3 and pip. This is automatic in all recent Linux distributions. Otherwise instructions are available here: `Python <https://wiki.python.org/moin/BeginnersGuide/Download>`_ and `pip <https://pip.pypa.io/en/stable/installation/>`_.
 
-.. note::
-	The GBIF functions of this package cannot be used in R. Please use the `rgbif package <https://www.gbif.org/fr/tool/81747/rgbif>`_ if you need occurrence data from GBIF.
 
 
 2. Installation
@@ -18,22 +16,17 @@ The reticulate library is used to load the python package into R::
 
 	install.packages("reticulate")
 
-Then some python packages need to be installed. This can be done directly in R. If you do not have conda on your computer, you will be asked to install Miniconda. You should say yes and R will take care of everything. This will isolate this python environment from your system environment::
+Then the package needs to be installed. This can be done directly in R. If you do not have conda on your computer, you will be asked to install Miniconda. You should say yes and R will take care of everything. This will isolate this python environment from your system environment::
 
 	library(reticulate)
 
-	requirements_conda <- c("matplotlib", "appdirs", "geomet", "fiona")
-	requirements_pip <- c("opencv-python", "geojson_rewind", "pygbif", "geoenrich")
-	
-	py_install(requirements_conda)
-	py_install(requirements_pip, pip = TRUE)
+	py_install("geoenrich", pip = TRUE)
 
 
 If you already have conda installed, R should find it automatically. If it does not, you can try installing the packages this way::
 
 	conda_create("r-reticulate-geoenrich")
-	conda_install("r-reticulate-geoenrich", requirements_conda)
-	conda_install("r-reticulate-geoenrich", requirements_pip, pip = TRUE)
+	conda_install("r-reticulate-geoenrich", "geoenrich", pip = TRUE)
 
 
 Finally, you can check that geoenrich submodules can be imported properly::

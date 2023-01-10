@@ -1,21 +1,26 @@
+## v0.5.5
+
+#### New functions:
+- Included all packages into setup.cfg so the installation process becomes a one-liner. Updated documentation accordingly.
+
 ## v0.5.4
 
-#### Bug fix
+#### Bug fix:
 - Fixed critical bug that occurred when trying to enrich a new dataset (introduced in v0.5.3).
 
 ## v0.5.3
 
-#### New functions
+#### New functions:
 - Ability to serialize exports.retrieve_data for batch processing. Running time divided by 20.
 
-#### Bug fixes
+#### Bug fixes:
 - Updated data source for ph
 - Fixed critical bug in geoenrich.enrichment.reset\_enrichment\_file
 - Fixed bug that occurred when making new enrichments after deleting previous ones (ID assignment issue).
 
 ## v0.5.2
 
-#### Bug fixes
+#### Bug fixes:
 - Fix missing import in satellite.py
 - Updated links for Copernicus Ocean Color / Plankton dataset.
 - Error handling when enriching empty dataframe.

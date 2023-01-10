@@ -17,16 +17,7 @@ Assuming you have Python3 and pip installed. This is automatic in all recent Lin
 3. Installation
 ---------------
 
-First some packages need to be installed::
-
-	python3 -m pip install matplotlib appdirs geojson_rewind geomet requests_cache wheel
-
-	python3 -m pip install git+https://github.com/rvanasa/pygbif.git
-
-.. note::
-	pygbif needs to be installed from GitHub because the version on PyPI is not up to date. If you have an error message saying that you don't have git installed on your computer, you can either install it or download the whole repository from github in a browser.
-
-Installation of geoenrich is then done in the classic way::
+Installation of geoenrich is done in the classic way::
 
 	python3 -m pip install geoenrich
 

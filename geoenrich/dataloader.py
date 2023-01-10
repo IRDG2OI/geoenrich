@@ -11,11 +11,8 @@ import geopandas as gpd
 
 from dwca.read import DwCAReader
 
-try:
-    from pygbif import species, caching
-    from pygbif import occurrences as occ
-except:
-    print('pygbif not loaded properly (this is normal if using this package with R).')
+from pygbif import species, caching
+from pygbif import occurrences as occ
 
 import geoenrich
 

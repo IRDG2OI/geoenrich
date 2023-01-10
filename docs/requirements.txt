@@ -12,3 +12,6 @@ tqdm
 opencv-python
 nbsphinx
 sphinx_copybutton
+pathlib
+rasterio
+pygbif==0.6.1
