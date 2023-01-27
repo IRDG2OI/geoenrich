@@ -24,7 +24,7 @@ if not(Path('/app/static/uploads/').exists()):
 if not(Path('/app/static/stats/').exists()):   
     Path('/app/static/stats/').mkdir(parents=True)
 
-if not(Path('/app/static/stats/').exists()):   
+if not(Path('/app/static/assets/').exists()):   
     Path('/app/static/assets/').mkdir(parents=True)
 
 if not(Path('/app/static/styles/style.css').exists()): 
