@@ -3,7 +3,7 @@
     <head>
         <title>GeoEnrich online</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
-        <link rel="shortcut icon" href="http://141.95.158.113/static/img/favicon.ico" />
+        <link rel="shortcut icon" href="{{ url_for('static',filename='assets/favicon.ico') }}" />
     </head>
 
     <body>
@@ -45,12 +45,12 @@
             <div class="header-logos grid--50-50 padding-top--24" >
               <div class="flex-flex" style="justify-content: left;">
                 <a href="/">
-                  <img alt="G2OI" src="http://141.95.158.113/static/img/logo_ird.png">
+                  <img alt="G2OI" src="{{ url_for('static',filename='assets/logo_g2oi.png') }}">
                 </a>
               </div>
               <div class="flex-flex" style="justify-content: right;">
                 <a href="https://www.ird.fr/" target="_blank">
-                  <img alt="IRD" height="58" src="http://141.95.158.113/uploaded/img/2022/01/ird_o4FOeRY.png">
+                  <img alt="IRD" height="58" src="{{ url_for('static',filename='assets/logo_ird.png') }}">
                 </a>  
               </div>
             </div>  
@@ -149,7 +149,7 @@
                       <a class="secondary-link" href="https://geoenrich.readthedocs.io" target="_blank">
                         <div class="flex-flex center-center">
                           <img height="20px" style="margin-right:10px"
-                             src="https://readthedocs-static-prod.s3.amazonaws.com/images/favicon.f231b6609d0b.png">  
+                             src="{{ url_for('static',filename='assets/logo_rtd.png') }}">  
                            <span>Documentation</span>
                         </div> 
                       </a>
@@ -158,7 +158,7 @@
                       <a class="secondary-link" href="https://github.com/morand-g/geoenrich" target="_blank">
                         <div class="flex-flex center-center">
                           <img height="25px" style="margin-right:10px"
-                             src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png">  
+                             src="{{ url_for('static',filename='assets/logo_github.png') }}">  
                            <span>Code & Support</span>
                         </div> 
                       </a>
@@ -170,13 +170,13 @@
               <div class="footer-link">
                 <div class="listing padding-bottom--24 flex-flex center-center">
                     <a href="https://european-union.europa.eu/index_fr" rel="nofollow" target="_blank">
-                        <img alt="Europe" height="40" src="http://141.95.158.113/uploaded/img/2022/01/union_europeenne_FBtZcHO.png">
+                        <img alt="Europe" height="40" src="{{ url_for('static',filename='assets/logo_ue.png') }}">
                     </a>
                     <a href="https://regionreunion.com/" target="_blank">
-                        <img alt="Reunion" height="40" src="http://141.95.158.113/uploaded/img/2022/01/region_reunion.png">
+                        <img alt="Reunion" height="40" src="{{ url_for('static',filename='assets/logo_reunion.png') }}">
                     </a>
                     <a href="https://www.gouvernement.fr/" target="_blank">
-                        <img alt="France" height="40" src="http://141.95.158.113/uploaded/img/2022/01/republique_francaise.png">
+                        <img alt="France" height="40" src="{{ url_for('static',filename='assets/logo_france.png') }}">
                     </a>
                 </div>
                 <div class="padding-leftright--48 padding-bottom--24">
