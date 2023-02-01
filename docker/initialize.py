@@ -39,9 +39,9 @@ if not(Path('/app/templates/download.html').exists()):
     r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/templates/download.html') 
     Path('/app/templates/download.html').open('wb').write(r.content)
 
-if not(Path('/app/templates/download.html').exists()): 
-    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/templates/download.html') 
-    Path('/app/templates/download.html').open('wb').write(r.content)
+if not(Path('/app/main.py').exists()): 
+    r = requests.get('https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/main.py') 
+    Path('/app/main.py').open('wb').write(r.content)
 
 
 assets = ['favicon.ico', 'logo_france.png', 'logo_g2oi.png', 'logo_github.png', 'logo_ird.png',
