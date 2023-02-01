@@ -21,15 +21,15 @@ This project is being developed as part of the G2OI project, cofinanced by the E
 .. image:: https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_ue.png
    :target: https://european-union.europa.eu/index_fr
    :alt: Union Européenne
-   :width: 30%
+   :height: 40
 .. image:: https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_reunion.png
    :target: https://regionreunion.com/
    :alt: Région Réunion
-   :width: 30%
+   :height: 40
 .. image:: https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_france.png
    :target: https://www.gouvernement.fr
    :alt: République Française
-   :width: 30%
+   :height: 40
 
 
 
