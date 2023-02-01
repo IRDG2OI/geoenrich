@@ -16,6 +16,22 @@ Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`
 .. image:: https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true
    :alt: Illustration of an occurrence dataset enriched with bathymetry data
 
+This project is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.
+
+.. image:: https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_ue.png
+   :target: https://european-union.europa.eu/index_fr
+   :alt: Union Européenne
+   :width: 30%
+.. image:: https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_reunion.png
+   :target: https://regionreunion.com/
+   :alt: Région Réunion
+   :width: 30%
+.. image:: https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_france.png
+   :target: https://www.gouvernement.fr
+   :alt: République Française
+   :width: 30%
+
+
 
 How to cite
 -----------
