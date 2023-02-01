@@ -15,6 +15,8 @@ Source on GitHub at `morand-g/geoenrich <https://github.com/morand-g/geoenrich>`
 
 .. image:: https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true
    :alt: Illustration of an occurrence dataset enriched with bathymetry data
+Illustration of an occurrence dataset enriched with bathymetry data
+
 
 This project is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.
 
