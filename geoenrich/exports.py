@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 import pandas as pd
 import cv2
+import random
 from matplotlib import cm
 
 import rasterio
@@ -662,3 +663,92 @@ def export_raster(dataset_ref, occ_id, var_id, path = Path('./'), geo_buff = Non
         else:
 
             print('Abort. Array is smaller than 2x2 pixels.')
+
+
+def gen_npy(ds_ref, data_path, output_res = 32, sample = None, dimension3 = {'surface-current-u': 2}):
+
+    """
+    Export a 3D numpy array with all layers for each occurrence of a dataset.
+    WARNING: the dimension3 dictionary must be provided if some variables have a time or depth dimension.
+
+    Args:
+        ds_ref (str): The enrichment file name (e.g. gbif_taxonKey).
+        data_path (str): path where numpy files will be saved.
+        output_res (int) : output data resolution along lat and lon axes.
+        sample (int): if not None, only process a random sample of the dataset (N=*sample*)
+        dimension3: provides the expected 3rd dimension length (time dimension * depth dimension) for each variable where it is larger than 1.
+
+    Returns:
+        None
+    """
+
+    folderpath = data_path / (ds_ref + '-npy')
+    if not(folderpath.exists()):
+        folderpath.mkdir()
+
+    df, enrichment_metadata = load_enrichment_file(ds_ref, mute=True)
+    enrichments = enrichment_metadata['enrichments']
+    input_type = enrichment_metadata['input_type']
+    serial_dict = {}
+
+
+    # Prepare variable-specific data to be passed to retrieve_data function.
+
+    for en in enrichments:
+            
+        params = en['parameters']
+        var_id = params['var_id']
+
+        ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
+        var_source = get_var_catalog()[var_id]
+        serial_dict[en['id']] = {'df': df} 
+        serial_dict[en['id']]['var_source'] = var_source
+        serial_dict[en['id']]['dimdict'], serial_dict[en['id']]['var'] = get_metadata(ds, var_source['varname'])
+        serial_dict[en['id']]['ds'] = ds
+
+
+    # Define ids to be exported
+
+    if sample is None:
+        ids = df.index
+    else:
+        ids = random.sample(list(df.index), sample)
+
+
+    # Export np arrays for each occurrence
+
+    for occ_id in tqdm(ids):
+        all_bands = []
+        for en in enrichments:
+            
+            params = en['parameters']
+            var_id = params['var_id']
+
+            res = retrieve_data(ds_ref, occ_id, var_id, geo_buff=params['geo_buff'],
+                                time_buff=params['time_buff'],
+                                depth_request=params['depth_request'],
+                                downsample=params['downsample'],
+                                serialized=serial_dict[en['id']])
+
+            # Specify target length in case res is empty.
+
+            if var_id in dimension3:
+                target_len = dimension3[var_id]
+            else:
+                target_len = 1
+
+            band = export_to_array(res, target_size = [output_dimension, output_dimension],
+                                              value_range = None,
+                                              stack = True,
+                                              squeeze = False,
+                                              target_len = target_len)
+            all_bands.append(band)
+
+        to_save = np.concatenate(all_bands, -1)
+        np.save(folderpath / (str(occ_id) + '.npy'), to_save)
+
+
+    # close NC datasets
+
+    for en in enrichments:
+        serial_dict[en['id']]['ds'].close()

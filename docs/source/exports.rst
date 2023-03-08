@@ -19,6 +19,8 @@ Main functions
 
 .. autofunction:: geoenrich.exports.export_to_array
 
+.. autofunction:: geoenrich.exports.gen_npy
+
 .. autofunction:: geoenrich.exports.get_derivative
 
 .. autofunction:: geoenrich.exports.produce_stats
