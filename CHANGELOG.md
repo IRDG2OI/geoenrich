@@ -1,3 +1,8 @@
+## v0.5.6
+
+#### New functions:
+- Added a gen_npy function to export multiple layers of data to a single .npy file
+
 ## v0.5.5
 
 #### New functions:
