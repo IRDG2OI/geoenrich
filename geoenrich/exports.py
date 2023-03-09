@@ -737,7 +737,7 @@ def gen_npy(ds_ref, data_path, output_res = 32, sample = None, dimension3 = {'su
             else:
                 target_len = 1
 
-            band = export_to_array(res, target_size = [output_dimension, output_dimension],
+            band = export_to_array(res, target_size = [output_res, output_res],
                                               value_range = None,
                                               stack = True,
                                               squeeze = False,
