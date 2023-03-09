@@ -13,13 +13,13 @@ After enriching occurrences, you can use the exports module to use the downloade
 Main functions
 --------------
 
+.. autofunction:: geoenrich.exports.collate_npy
+
 .. autofunction:: geoenrich.exports.export_png
 
 .. autofunction:: geoenrich.exports.export_raster
 
 .. autofunction:: geoenrich.exports.export_to_array
-
-.. autofunction:: geoenrich.exports.gen_npy
 
 .. autofunction:: geoenrich.exports.get_derivative
 
