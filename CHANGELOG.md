@@ -1,3 +1,10 @@
+## v0.5.7
+
+#### New functions:
+- Added support for a *personal_catalog* file for a reliable use of user-defined datasets (see installation instructions).
+- Updated Docker image accordingly.
+- Added support for OpenMPI into the Docker image to enable parallel computing (Only to be used for separate points & separate variables, otherwise data loss will occur).
+
 ## v0.5.6
 
 #### New functions:

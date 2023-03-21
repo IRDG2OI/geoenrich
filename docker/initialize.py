@@ -55,4 +55,7 @@ for asset in assets:
 if Path('/app/conf/credentials.py').exists():
     shutil.copy(Path('/app/conf/credentials.py'), Path('/usr/local/lib/python3.8/site-packages/geoenrich/credentials.py'))
 
+if Path('/app/conf/personal_catalog.csv').exists():
+    shutil.copy(Path('/app/conf/personal_catalog.csv'), Path('/usr/local/lib/python3.8/site-packages/geoenrich/data/personal_catalog.csv'))
+
 print('Initialization complete.')

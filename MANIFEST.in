@@ -1,4 +1,5 @@
 include geoenrich/data/AcDigitifera.zip
 include geoenrich/data/catalog.csv
+exclude geoenrich/personal_catalog.csv
 include geoenrich/data/areas.csv
 exclude geoenrich/credentials.py

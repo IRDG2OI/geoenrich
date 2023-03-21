@@ -122,6 +122,10 @@ def get_var_catalog():
     path = Path(geoenrich.__file__).parent
     var_catalog = pd.read_csv(path / 'data' / 'catalog.csv', index_col = 0).to_dict('index')
 
+    if (path / 'data' / 'personal_catalog.csv').exists():
+        pers_vars = pd.read_csv(path / 'data' / 'personal_catalog.csv', index_col = 0).to_dict('index')
+        var_catalog = {**var_catalog, **pers_vars}
+
     for v in var_catalog:
         var_catalog[v]['var_id'] = v
         for domain in dap_creds:

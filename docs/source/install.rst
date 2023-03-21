@@ -42,20 +42,14 @@ There is also a dictionary named *dap_creds* that is intended to store credentia
 
 At the same location, there is a *catalog.csv* file that already contains a list of available variables. If you want to use a dataset from Copernicus, you first need to register on `their website <https://resources.marine.copernicus.eu/registration-form>`_ and write your credentials in the *credentials.py* file.
 
-If you need additional variables, you can update the *catalog.csv* file to add other opendap servers. Three columns are compulsory:
+If you need additional variables, you can update add a *personal_catalog.csv* file to the same folder (template on `GitHub <https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/personal_catalog.csv>`_). Three columns are compulsory:
 
-- *variable*: A unique name for that variable (user defined).
+- *variable*: A unique name for that variable (user defined). It needs to be different from the variable names already in the built-in catalog.
 - *url*: OpenDAP URL.
 - *varname*: Name of the variable in the remote dataset.
 
 
-5. Precautions
---------------
-
-If you edited the *catalog.csv* file to add variables, you should make a backup of it, as it will get overwritten if you update or reinstall this package.
-
-
-5. Using the package
+6. Using the package
 --------------------
 
 Congrats, you can now use the `tutorial <https://geoenrich.readthedocs.io/en/latest/tutorial.html>`_ and start doing science!
