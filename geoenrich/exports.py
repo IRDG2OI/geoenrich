@@ -675,7 +675,7 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
         ds_ref (str): The enrichment file name (e.g. gbif_taxonKey).
         data_path (str): path where numpy files will be saved.
         output_res (int) : output data resolution along lat and lon axes.
-        sample (int): if not None, only process a random sample of the dataset (N=*sample*)
+        slice (list[int]): if not None, only process the given slice of the dataset.
         dimension3: provides the expected 3rd dimension length (time dimension * depth dimension) for each variable where it is larger than 1.
 
     Returns:
