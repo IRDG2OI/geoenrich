@@ -1,9 +1,9 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.8
 
 RUN apt-get update
-RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get install ffmpeg libsm6 libxext6 python3-mpi4py -y
 
-RUN python3 -m pip install geoenrich
+RUN python3 -m pip install geoenrich mpi4py
 
 RUN rm /app/*
 RUN curl https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/initialize.py -o /home/initialize.py
