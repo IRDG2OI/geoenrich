@@ -85,12 +85,12 @@ def uploadFiles():
 # Provide stats file
 @app.route("/getStats")
 def getStats():
-     with open('static/stats/' + app.config['DS_REF'] + '_0_stats.csv') as fp:
+     with open('static/stats/' + app.config['DS_REF'] + '_1_stats.csv') as fp:
          csv = fp.read()
          return Response(csv,
                          mimetype="text/csv",
                          headers={"Content-disposition":
-                                   f"attachment; filename={app.config['DS_REF']}_0_stats.csv"})
+                                   f"attachment; filename={app.config['DS_REF']}_1_stats.csv"})
 
 
 # Run app
