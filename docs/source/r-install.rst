@@ -53,6 +53,7 @@ There is also a dictionary named *dap_creds* that is intended to store credentia
 .. warning::
   If there are reserved characters in your username or password, you need to replace them with the %XX code as you would in an URL. See the full list below.
 
+
 ==	==	==	==	==	==	==	==	==	==	==	==	==	==	==	==	==	==	==	==	==
 ␣	!	"	#	$	%	&	'	(	)	*	+	,	/	:	;	=	?	@	[	] 
 %20	%21	%22	%23	%24	%25	%26	%27	%28	%29	%2A	%2B	%2C	%2F	%3A	%3B	%3D	%3F	%40	%5B	%5D
