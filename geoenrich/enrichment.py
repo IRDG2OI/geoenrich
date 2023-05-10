@@ -764,12 +764,12 @@ def load_enrichment_file(dataset_ref, mute = False):
 
 
     if input_type == 'occurrence':
-        df = pd.read_csv(str(filepath), parse_dates = ['eventDate'], infer_datetime_format = True, index_col = 'id')
+        df = pd.read_csv(str(filepath), parse_dates = ['eventDate'], index_col = 'id')
         df['geometry'] = df['geometry'].apply(wkt.loads)
         df = gpd.GeoDataFrame(df, crs = 'epsg:4326')
 
     else:
-        df = pd.read_csv(str(filepath), parse_dates = ['mint', 'maxt'], infer_datetime_format = True, index_col = 'id')
+        df = pd.read_csv(str(filepath), parse_dates = ['mint', 'maxt'], index_col = 'id')
 
     if not(mute):
         print('{} {}s were loaded from enrichment file'.format(len(df), input_type))

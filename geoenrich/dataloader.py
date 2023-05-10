@@ -177,7 +177,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
     # Remove rows with no event date
     idf['eventDate'] = pd.to_datetime(idf['eventDate'], errors = 'coerce')
-    df = idf[idf['eventDate'].notna()]
+    df = idf.dropna(subset = ['eventDate'])
 
     if len(df) > max_number:
         df = df.sample(max_number)
@@ -231,8 +231,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
     idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
 
     # Remove rows with no event date
-    idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format,
-                                    infer_datetime_format = True)
+    idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format)
     df = idf.dropna(subset = ['eventDate'])
 
     if len(idf) != len(df):
@@ -271,10 +270,8 @@ def load_areas_file(path, date_format = None, crs = "EPSG:4326", *args, **kwargs
     idf = pd.DataFrame()
 
     if 'date_min' in rawdf.columns:
-        idf['mint'] = pd.to_datetime(rawdf['date_min'], errors = 'coerce', format = date_format,
-                                        infer_datetime_format = True)
-        idf['maxt'] = pd.to_datetime(rawdf['date_max'], errors = 'coerce', format = date_format,
-                                        infer_datetime_format = True)
+        idf['mint'] = pd.to_datetime(rawdf['date_min'], errors = 'coerce', format = date_format)
+        idf['maxt'] = pd.to_datetime(rawdf['date_max'], errors = 'coerce', format = date_format)
 
     idf['minx'], idf['maxx'] = rawdf['longitude_min'], rawdf['longitude_max']
     idf['miny'], idf['maxy'] = rawdf['latitude_min'], rawdf['latitude_max']
