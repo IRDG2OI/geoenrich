@@ -35,8 +35,6 @@ salinity3d,Copernicus,0.25°,7d,1993-01-01 - ongoing,50 levels,https://nrt.cmems
 sla,Copernicus,0.25°,1d,1993-01-01 - 2019-12-31,surface,https://my.cmems-du.eu/thredds/dodsC/cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.25deg_P1D,sla
 sla2,Copernicus,0.25°,1d,2019-12-01 - ongoing,surface,https://nrt.cmems-du.eu/thredds/dodsC/dataset-duacs-nrt-global-merged-allsat-phy-l4,sla
 sst,Copernicus,0.05°,1d,1981-10-01 - ongoing,surface,https://my.cmems-du.eu/thredds/dodsC/METOFFICE-GLO-SST-L4-REP-OBS-SST,analysed_sst
-sst-mur,MUR-SST,0.01°,1d,2002-06-02 - ongoing,surface,https://thredds.jpl.nasa.gov/thredds/dodsC/OceanTemperature/MUR-JPL-L4-GLOB-v4.1.nc,analysed_sst
-sst-mur25,MUR-SST,0.25°,1d,2002-06-02 - ongoing,surface,https://thredds.jpl.nasa.gov/thredds/dodsC/OceanTemperature/MUR25-JPL-L4-GLOB-v04.2.nc,analysed_sst
 surface-current-u,Copernicus,0.25°,3h,1993-10-01 - ongoing,"surface, 15m",https://my.cmems-du.eu/thredds/dodsC/dataset-uv-rep-hourly,uo
 surface-current-v,Copernicus,0.25°,3h,1993-10-01 - ongoing,"surface, 15m",https://my.cmems-du.eu/thredds/dodsC/dataset-uv-rep-hourly,vo
 surface-wind-u,CCMP,0.25°,6h,1987-07-02 - 2011-12-31,surface,http://apdrc.soest.hawaii.edu:80/dods/public_data/satellite_product/CCMP/6hourly_v2,uwnd
