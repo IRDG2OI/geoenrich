@@ -5,6 +5,7 @@
 - Pandas must now be in a version >=2.0.0.
 - Added new source for ph.
 - Unfortunately we had to remove SST-MUR due to a substantial change in PODAAC data access possibilities.
+- Changed *sample* argument to *slice* in geoenrich.exports.collate_npy.
 
 #### Bug fixes:
 - Removed infer_datetime_format from pandas.to_datetime calls as it is deprecated.
