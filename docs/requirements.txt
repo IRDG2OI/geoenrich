@@ -12,3 +12,5 @@ matplotlib
 appdirs
 geojson_rewind
 geomet
+nbsphinx
+sphinx_copybutton
