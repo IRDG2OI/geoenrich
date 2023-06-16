@@ -9,6 +9,10 @@ A beta version of the GeoEnrich web app is `available <https://geoenrich.marbec-
 
 Only DarwinCore archives and csv files are supported. The csv files *must* follow the following format requirements.
 
+.. warning::
+  A common mistake (caused by a well-known proprietary spreadsheet software) is that separators in the csv files are semicolons instead of commas. If you're having a mysterious error message when using geoenrich, please double-check this.
+
+
 1.1. Species occurrences
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
