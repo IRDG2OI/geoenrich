@@ -8,6 +8,7 @@ import netCDF4 as nc
 from pathlib import Path
 
 from datetime import datetime
+import pytz
 from cftime import num2date, num2pydate, date2num
 
 import geoenrich
@@ -306,12 +307,12 @@ def create_nc_copernicus(var):
                 times = []
                 for t in variable.data:
                     seconds_since_epoch = (t - unix_epoch) / one_second
-                    d = datetime.datetime.utcfromtimestamp(seconds_since_epoch)
+                    d = datetime.fromtimestamp(seconds_since_epoch, pytz.utc)
                     times.append(date2num(d, "days since 1950-01-01 00:00:00"))
 
                 local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
                 local_ds.variables[name][:] = np.array(times)
-                
+
             else:
                 local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
                 local_ds.variables[name][:] = variable.data
