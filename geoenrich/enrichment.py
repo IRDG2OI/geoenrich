@@ -419,7 +419,7 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
         print('No data in input dataframe.')
         return(pd.DataFrame())
 
-    geodf2['ind'] = geodf2.apply(calculate_indices_copernicus, axis = 1, args = (dimdict, var, depth_request, downsample))
+    geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, depth_request, downsample))
 
     if maxpoints is not None and (s:= checksize(geodf2['ind'])) > maxpoints:
 
@@ -428,7 +428,7 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
         res = pd.DataFrame()
 
     else:
-        res = geodf2.progress_apply(row_enrich_copernicus, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample, force_download), 
+        res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample, force_download), 
                             result_type = 'expand')
     
     # Update time variable in local dataset if needed
