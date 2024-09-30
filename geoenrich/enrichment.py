@@ -97,7 +97,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     if var_source['url'] == 'calculated':
         indices = enrich_compute(to_enrich, var_id, geo_buff, time_buff, downsample)
     elif var_source['source'] == 'Copernicus':
-        indices = enrich_copernicus(  to_enrich, var_source['varname'], var_id, var_source['url'],
+        indices = enrich_copernicus(to_enrich, var_source['varname'], var_id, var_source['url'],
                                     geo_buff, time_buff, depth_request, downsample, maxpoints,
                                     force_download)
     else:

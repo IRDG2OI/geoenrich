@@ -125,8 +125,7 @@ def get_metadata_copernicus(ds, varname):
 
         # Format time dimension
 
-        if ('standard_name' in ds.variables[name].attrs and ds.variables[name].attrs['standard_name'] == 'time') \
-            or name in ['time', 'time_agg']:
+        if name in ['time', 'time_agg']:
             item = {'name': name, 'standard_name': 'time', 'vals': pd.Series(ds.variables['time']), 'unit': None}
             dimdict[name] = item
             dimdict['time'] = item
