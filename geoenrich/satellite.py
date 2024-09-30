@@ -211,26 +211,21 @@ def get_var_catalog():
 
 
 
-def create_nc(var, copernicus = False):
+def create_nc(remote_ds, var):
 
     """
     Create empty netcdf file for requested variable for subsequent local storage.
     Same dimensions as the online dataset.
 
     Args:
+        remote_ds (netCDF4.Dataset or xarray.Dataset): Remote dataset.
         var (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
-        copernicus (bool): Set to true if remote dataset is from Copernicus.
     Returns:
         None
     """
 
     path = Path(sat_path, var['var_id'] + '.nc')
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
-
-    if copernicus:
-        remote_ds = copernicusmarine.open_dataset(var['url'])
-    else:
-        remote_ds = nc.Dataset(var['url'])
 
     varname = var['varname']
     dimdict, var = get_metadata(remote_ds, varname)
