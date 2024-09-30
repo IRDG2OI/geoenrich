@@ -298,13 +298,13 @@ def create_nc_copernicus(var):
     for name, variable in remote_ds.variables.items():
         if (name in dimdict) and (dimdict[name]['standard_name'] in ['time', 'latitude', 'longitude', 'depth']):
             local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
-            local_ds.variables[name].setncatts({k: variable[k] for k in variable.attrs})
+            local_ds.variables[name].setncatts(variable.attrs)
             local_ds.variables[name][:] = variable.data
 
 
     variable = remote_ds.variables[varname]
     local_ds.createVariable(varname, variable.dtype, variable.dims, zlib = True)
-    local_ds.variables[varname].setncatts({k: variable[k] for k in variable.attrs})
+    local_ds.variables[varname].setncatts(variable.attrs)
 
     bool_ds.createVariable(varname, 'B', variable.dims, zlib = True, fill_value = 0)
 
