@@ -11,6 +11,7 @@ from datetime import datetime
 from cftime import num2date, num2pydate
 
 import geoenrich
+import copernicusmarine
 
 try:
     from geoenrich.credentials import *
@@ -210,7 +211,7 @@ def get_var_catalog():
 
 
 
-def create_nc(var):
+def create_nc(var, copernicus = False):
 
     """
     Create empty netcdf file for requested variable for subsequent local storage.
@@ -218,6 +219,7 @@ def create_nc(var):
 
     Args:
         var (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
+        copernicus (bool): Set to true if remote dataset is from Copernicus.
     Returns:
         None
     """
@@ -225,7 +227,11 @@ def create_nc(var):
     path = Path(sat_path, var['var_id'] + '.nc')
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
-    remote_ds = nc.Dataset(var['url'])
+    if copernicus:
+        remote_ds = copernicusmarine.open_dataset(var['url'])
+    else:
+        remote_ds = nc.Dataset(var['url'])
+
     varname = var['varname']
     dimdict, var = get_metadata(remote_ds, varname)
 
