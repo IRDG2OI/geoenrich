@@ -137,7 +137,7 @@ def get_metadata_copernicus(ds, varname):
             item = {'name': name,
                     'standard_name': ds.variables[name].attrs['standard_name'],
                     'vals': np.array(ds.variables[name]),
-                    'unit': ds.variables[name].units}
+                    'unit': ds.variables[name].attrs['units']}
             dimdict[name] = item
             dimdict[ds.variables[name].attrs['standard_name']] = item
 
@@ -146,7 +146,7 @@ def get_metadata_copernicus(ds, varname):
         elif name == varname:
 
             var = {'name':name,
-                    'unit': ds.variables[name].units,
+                    'unit': ds.variables[name].attrs['units'],
                     'params': ds.variables[name].dims}
 
             if 'standard_name' in ds.variables[name].attrs:
@@ -160,7 +160,7 @@ def get_metadata_copernicus(ds, varname):
             item = {'name': name,
                     'standard_name': 'latitude',
                     'vals': np.array(ds.variables[name]),
-                    'unit': ds.variables[name].units}
+                    'unit': ds.variables[name].attrs['units']}
             dimdict[name] = item
             dimdict['latitude'] = item
 
@@ -169,7 +169,7 @@ def get_metadata_copernicus(ds, varname):
             item = {'name': name,
                     'standard_name': 'longitude',
                     'vals': np.array(ds.variables[name]),
-                    'unit': ds.variables[name].units}
+                    'unit': ds.variables[name].attrs['units']}
             dimdict[name] = item
             dimdict['longitude'] = item
 
