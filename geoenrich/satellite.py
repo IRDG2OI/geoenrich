@@ -133,11 +133,11 @@ def get_metadata_copernicus(ds, varname):
 
         # Format lon & lat dimensions
 
-        elif ('standard_name' in ds.variables[name].attrs and ds.variables[name].attrs['standard_name'] in ['longitude', 'latitude', 'depth']):
+        elif ('standard_name' in ds.variables[name].attrs) and (ds.variables[name].attrs['standard_name'] in ['longitude', 'latitude', 'depth']):
 
             item = {'name': name,
                     'standard_name': ds.variables[name].attrs['standard_name'],
-                    'vals': np.array(ds.variables[name]),
+                    'vals': ds.variables[name].data,
                     'unit': ds.variables[name].attrs['units']}
             dimdict[name] = item
             dimdict[ds.variables[name].attrs['standard_name']] = item
@@ -160,7 +160,7 @@ def get_metadata_copernicus(ds, varname):
 
             item = {'name': name,
                     'standard_name': 'latitude',
-                    'vals': np.array(ds.variables[name]),
+                    'vals': ds.variables[name].data,
                     'unit': ds.variables[name].attrs['units']}
             dimdict[name] = item
             dimdict['latitude'] = item
@@ -169,7 +169,7 @@ def get_metadata_copernicus(ds, varname):
 
             item = {'name': name,
                     'standard_name': 'longitude',
-                    'vals': np.array(ds.variables[name]),
+                    'vals': ds.variables[name].data,
                     'unit': ds.variables[name].attrs['units']}
             dimdict[name] = item
             dimdict['longitude'] = item
@@ -211,14 +211,13 @@ def get_var_catalog():
 
 
 
-def create_nc(remote_ds, var):
+def create_nc(var):
 
     """
     Create empty netcdf file for requested variable for subsequent local storage.
     Same dimensions as the online dataset.
 
     Args:
-        remote_ds (netCDF4.Dataset or xarray.Dataset): Remote dataset.
         var (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
     Returns:
         None
@@ -226,6 +225,8 @@ def create_nc(remote_ds, var):
 
     path = Path(sat_path, var['var_id'] + '.nc')
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
+
+    remote_ds = nc.Dataset(var['url'])
 
     varname = var['varname']
     dimdict, var = get_metadata(remote_ds, varname)
@@ -254,12 +255,62 @@ def create_nc(remote_ds, var):
     local_ds.createVariable(varname, variable.dtype, variable.dimensions, zlib = True)
     local_ds.variables[varname].setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
 
-    bool_ds.createVariable(varname, 'B', remote_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
+    bool_ds.createVariable(varname, 'B', variable.dimensions, zlib = True, fill_value = 0)
 
     local_ds.close()
     bool_ds.close()
     remote_ds.close()
 
+
+def create_nc_copernicus(var):
+
+    """
+    Create empty netcdf file for requested variable for subsequent local storage.
+    Same dimensions as the online dataset.
+
+    Args:
+        var (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
+    Returns:
+        None
+    """
+
+    path = Path(sat_path, var['var_id'] + '.nc')
+    pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
+
+    remote_ds = copernicusmarine.open_dataset(var['url'])
+
+    varname = var['varname']
+    dimdict, var = get_metadata_copernicus(remote_ds, varname)
+
+    local_ds = nc.Dataset(str(path), mode = 'w')
+    local_ds.set_fill_off()
+    bool_ds = nc.Dataset(str(pathd), mode = 'w')
+
+    for name, length in remote_ds.dims.items():
+        if ('time' in dimdict) and (name == dimdict['time']['name']):
+            local_ds.createDimension(name, None)
+            bool_ds.createDimension(name, None)
+        else:
+            local_ds.createDimension(name, length)
+            bool_ds.createDimension(name, length)
+
+
+    for name, variable in remote_ds.variables.items():
+        if (name in dimdict) and (dimdict[name]['standard_name'] in ['time', 'latitude', 'longitude', 'depth']):
+            local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
+            local_ds.variables[name].setncatts({k: variable[k] for k in variable.attrs})
+            local_ds.variables[name][:] = variable.data
+
+
+    variable = remote_ds.variables[varname]
+    local_ds.createVariable(varname, variable.dtype, variable.dims, zlib = True)
+    local_ds.variables[varname].setncatts({k: variable[k] for k in variable.attrs})
+
+    bool_ds.createVariable(varname, 'B', variable.dims, zlib = True, fill_value = 0)
+
+    local_ds.close()
+    bool_ds.close()
+    remote_ds.close()
 
 
 def create_nc_calculated(var_id):

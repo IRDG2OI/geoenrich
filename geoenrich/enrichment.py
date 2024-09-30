@@ -278,7 +278,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
     if  not(Path(sat_path, var_id + '.nc').exists()) or \
         not(Path(sat_path, var_id + '_downloaded.nc').exists()):
 
-        create_nc(remote_ds, get_var_catalog()[var_id])
+        create_nc(get_var_catalog()[var_id])
 
     # Backup local netCDF files
 
@@ -389,7 +389,7 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
     if  not(Path(sat_path, var_id + '.nc').exists()) or \
         not(Path(sat_path, var_id + '_downloaded.nc').exists()):
 
-        create_nc(remote_ds, get_var_catalog()[var_id])
+        create_nc_copernicus(get_var_catalog()[var_id])
 
     # Backup local netCDF files
 
