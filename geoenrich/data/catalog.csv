@@ -1,7 +1,7 @@
 variable,source,spatial_resolution,time_resolution,time_coverage,depth_levels,url,varname
 backscattering3d,Copernicus,0.25°,7d,1998-01-01 - ongoing,36 levels,cmems_obs_glo_bgc3d_rep_weekly,bbp
 bathymetry,NOAA,0.017°,,,surface,https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO1_Bed_g_gmt4.nc,z
-chlorophyll,Copernicus,4km,1d,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-gapfree-multi-4km_P1D,CHL
+chlorophyll,Copernicus,4km,1d,1997 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-gapfree-multi-4km_P1D,CHL
 chlorophyll3d,Copernicus,0.25°,7d,1998-01-01 - ongoing,36 levels,cmems_obs_glo_bgc3d_rep_weekly,chl
 chlorophyll-occi,OCCI,0.042°,1d,1997-09-06 - 2021-12-31,surface,https://www.oceancolour.org/thredds/dodsC/CCI_ALL-v5.0-DAILY,chlor_a
 current3d-u,Copernicus,0.25°,7d,1993-01-01 - ongoing,50 levels,dataset-armor-3d-rep-weekly,ugo
