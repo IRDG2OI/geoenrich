@@ -286,7 +286,7 @@ def create_nc_copernicus(var):
     local_ds.set_fill_off()
     bool_ds = nc.Dataset(str(pathd), mode = 'w')
 
-    for name, length in remote_ds.dims.items():
+    for name, length in remote_ds.sizes.items():
         if ('time' in dimdict) and (name == dimdict['time']['name']):
             local_ds.createDimension(name, None)
             bool_ds.createDimension(name, None)
@@ -301,7 +301,7 @@ def create_nc_copernicus(var):
 
     for name, variable in remote_ds.variables.items():
         if (name in dimdict) and (dimdict[name]['standard_name'] in ['time', 'latitude', 'longitude', 'depth']):
-            local_ds.variables[name].setncatts(variable.attrs)
+            
             if dimdict[name]['standard_name'] == 'time':
                 times = []
                 for t in variable.data:
@@ -311,9 +311,12 @@ def create_nc_copernicus(var):
 
                 local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
                 local_ds.variables[name][:] = np.array(times)
+                
             else:
                 local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
                 local_ds.variables[name][:] = variable.data
+
+            local_ds.variables[name].setncatts(variable.attrs)
 
 
     variable = remote_ds.variables[varname]
