@@ -19,9 +19,10 @@ Documentation on [Read the Docs](https://geoenrich.readthedocs.io).
 
 ![Illustration of an occurrence dataset enriched with bathymetry data](https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/readme_illus_1.png?raw=true "Illustration of an occurrence dataset enriched with bathymetry data")
 
+# Acknowledgment
 This project is being developed as part of the G2OI project, cofinanced by the European union, the Reunion region, and the French Republic.
 
-<a href="https://european-union.europa.eu/index_fr"><img alt='Union Européenne' src="https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_ue.png" height="40" ></a> &nbsp; &nbsp; <a href="https://regionreunion.com/"><img alt='Région Réunion' src="https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_reunion.png" height="40" ></a> &nbsp; &nbsp; <a href="https://www.gouvernement.fr/"><img alt='République Française' src="https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_france.png" height="40" ></a>
+<a href="https://european-union.europa.eu/index_fr"><img alt='Union Européenne' src="https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_ue.png" height="60" ></a> &nbsp; &nbsp; <a href="https://regionreunion.com/"><img alt='Région Réunion' src="https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_reunion.png" height="60" ></a> &nbsp; &nbsp; <a href="https://www.gouvernement.fr/"><img alt='République Française' src="https://raw.githubusercontent.com/morand-g/geoenrich/main/docker/app/static/assets/logo_france.png" height="60" ></a>
 
 ## Installation
 
