@@ -277,7 +277,7 @@ def create_nc_copernicus(var):
     path = Path(sat_path, var['var_id'] + '.nc')
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
-    remote_ds = copernicusmarine.open_dataset(var['url'])
+    remote_ds = copernicusmarine.open_dataset(dataset_id = var['url'])
 
     varname = var['varname']
     dimdict, var = get_metadata_copernicus(remote_ds, varname)
