@@ -8,7 +8,7 @@ import netCDF4 as nc
 from pathlib import Path
 
 from datetime import datetime
-from cftime import num2date, num2pydate
+from cftime import num2date, num2pydate, date2num
 
 import geoenrich
 import copernicusmarine
@@ -295,11 +295,25 @@ def create_nc_copernicus(var):
             bool_ds.createDimension(name, length)
 
 
+    # Time conversion
+    unix_epoch = np.datetime64(0, 's')
+    one_second = np.timedelta64(1, 's')
+
     for name, variable in remote_ds.variables.items():
         if (name in dimdict) and (dimdict[name]['standard_name'] in ['time', 'latitude', 'longitude', 'depth']):
-            local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
             local_ds.variables[name].setncatts(variable.attrs)
-            local_ds.variables[name][:] = variable.data
+            if dimdict[name]['standard_name'] == 'time':
+                times = []
+                for t in variable.data:
+                    seconds_since_epoch = (t - unix_epoch) / one_second
+                    d = datetime.datetime.utcfromtimestamp(seconds_since_epoch)
+                    times.append(date2num(d, "days since 1950-01-01 00:00:00"))
+
+                local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
+                local_ds.variables[name][:] = np.array(times)
+            else:
+                local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
+                local_ds.variables[name][:] = variable.data
 
 
     variable = remote_ds.variables[varname]
