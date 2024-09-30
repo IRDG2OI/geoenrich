@@ -105,6 +105,78 @@ def get_metadata(ds, varname):
 
     return dimdict, var
 
+def get_metadata_copernicus(ds, varname):
+
+    """
+    Download and format useful metadata on dimensions and variables from a Copernicus dataset.
+    Generate a dictionary where dimensions can be accessed both with their original name and their standard name (if available).
+    
+    Args:
+        ds (xarray.Dataset): Dataset of interest.
+        varname (str): Name of the variable of interest in the dataset.
+    Returns:
+        dict, dict: dictionary with standardized information on dimensions, dictionary with information on the variable.
+    """
+
+    dimdict = {}
+    var = None
+
+    for name in ds.variables:
+
+        # Format time dimension
+
+        if ('standard_name' in ds.variables[name].attrs and ds.variables[name].attrs['standard_name'] == 'time') \
+            or name in ['time', 'time_agg']:
+            item = {'name': name, 'standard_name': 'time', 'vals': pd.Series(ds.variables['time']), 'unit': None}
+            dimdict[name] = item
+            dimdict['time'] = item
+
+        # Format lon & lat dimensions
+
+        elif ('standard_name' in ds.variables[name].attrs and ds.variables[name].attrs['standard_name'] in ['longitude', 'latitude', 'depth']):
+
+            item = {'name': name,
+                    'standard_name': ds.variables[name].attrs['standard_name'],
+                    'vals': np.array(ds.variables[name]),
+                    'unit': ds.variables[name].units}
+            dimdict[name] = item
+            dimdict[ds.variables[name].attrs['standard_name']] = item
+
+        # Format requested variable
+
+        elif name == varname:
+
+            var = {'name':name,
+                    'unit': ds.variables[name].units,
+                    'params': ds.variables[name].dims}
+
+            if 'standard_name' in ds.variables[name].attrs:
+                var['standard_name'] = ['standard_name']
+        
+
+        # Search for latitude and longitude in case standard names were not provided
+
+        elif name in ['lat', 'latitude']:
+
+            item = {'name': name,
+                    'standard_name': 'latitude',
+                    'vals': np.array(ds.variables[name]),
+                    'unit': ds.variables[name].units}
+            dimdict[name] = item
+            dimdict['latitude'] = item
+
+        elif name in ['lon', 'longitude']:
+
+            item = {'name': name,
+                    'standard_name': 'longitude',
+                    'vals': np.array(ds.variables[name]),
+                    'unit': ds.variables[name].units}
+            dimdict[name] = item
+            dimdict['longitude'] = item
+
+
+    return dimdict, var
+
 
 
 def get_var_catalog():
