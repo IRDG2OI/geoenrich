@@ -528,7 +528,7 @@ def add_bounds(geodf1, geo_buff, time_buff):
         geodf['bestt'] = pd.to_datetime(geodf['eventDate'])
         geodf['maxt'] = pd.to_datetime(geodf['eventDate'] + buff2)
 
-    if geodf['geometry']z.notna().any():
+    if geodf['geometry'].z.notna().any():
         geodf['bestz'] = geodf['geometry'].z
 
     return(geodf)
