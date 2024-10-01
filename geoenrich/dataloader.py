@@ -195,7 +195,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
 
 
-def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format = None,
+def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
                      crs="EPSG:4326", *args, **kwargs):
 
 
@@ -211,6 +211,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
+        depth (int or str): Name or index of the column containing occurrence longitudes (meters from the surface).
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
@@ -228,7 +229,10 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
         print('Dropped {} rows with missing coordinates'.format(len(rawdf) - len(idf)))
     
     # Convert Lat/Long to GEOS POINT
-    idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
+    if depth_col is None:
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
+    else:
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col].abs, crs=crs)
 
     # Remove rows with no event date
     idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format)

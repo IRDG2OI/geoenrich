@@ -60,7 +60,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
-        depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'surface' -> surface data. 'nearest' -> closest available depth. Anything else downloads everything.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
         maxpoints(int): Maximum number of points to download.
@@ -248,7 +248,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         url (str): Dataset url (including credentials if needed).
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
-        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'surface' -> surface data. 'nearest' -> closest available depth. Anything else downloads everything.       
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         maxpoints(int): Maximum number of points to download.
         force_download(bool): If True, download data regardless of cache status.
@@ -528,6 +528,9 @@ def add_bounds(geodf1, geo_buff, time_buff):
         geodf['bestt'] = pd.to_datetime(geodf['eventDate'])
         geodf['maxt'] = pd.to_datetime(geodf['eventDate'] + buff2)
 
+    if geodf['geometry']z.notna().any():
+        geodf['bestz'] = geodf['geometry'].z
+
     return(geodf)
 
 
@@ -719,8 +722,8 @@ def calculate_indices(row, dimdict, var, depth_request, downsample):
         if depth_request == 'surface':
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
-        elif depth_request == 'nearest':
-            d1 = np.argmin( np.abs( dimdict['depth']['vals'] - row['depth'] ) )
+        elif depth_request == 'nearest' and pd.notna(row['bestz']):
+            d1 = np.argmin( np.abs( dimdict['depth']['vals'] - row['bestz'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
         else:
             ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']) - 1, 'best': None, 'step': 1}
