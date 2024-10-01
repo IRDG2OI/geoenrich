@@ -235,7 +235,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
     if depth_col is None:
         idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
     else:
-        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col].abs, crs=crs)
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col].abs(), crs=crs)
 
     # Remove rows with no event date
     idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format)
