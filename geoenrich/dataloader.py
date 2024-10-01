@@ -219,8 +219,11 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
     """
 
     # Load file
+    if depth_col is None:
+        columns = [id_col, date_col, lat_col, lon_col]
+    else:
+        columns = [id_col, date_col, lat_col, lon_col, depth_col]
 
-    columns = [id_col, date_col, lat_col, lon_col]
     rawdf = pd.read_csv(path, usecols = columns, index_col = id_col, *args, **kwargs)
     idf = rawdf.dropna(subset = [lat_col, lon_col])
 
