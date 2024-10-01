@@ -82,7 +82,7 @@ def request_from_gbif(taxon_key, override = False):
     for e in l['results']:
         preds = e['request']['predicate']['predicates']
         for predicate in preds:
-            if predicate['key'] == 'TAXON_KEY' and predicate['value'] == str(taxonKey):
+            if predicate['key'] == 'TAXON_KEY' and predicate['value'] == str(taxon_key):
                 existing = True
                 if not(override):
                     print('Request already made on ' + e['created'])
@@ -90,7 +90,7 @@ def request_from_gbif(taxon_key, override = False):
                     request_id = e['key']
 
     if not(existing) or override:
-        req = ['taxonKey = {}'.format(taxonKey), 'hasCoordinate = True']
+        req = ['taxonKey = {}'.format(taxon_key), 'hasCoordinate = True']
         res = occ.download(req, user=gbif_username, pwd=gbif_pw, email = email, pred_type='and')
 
         return(res[0])
