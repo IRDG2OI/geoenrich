@@ -16,9 +16,13 @@ Other functions (for internal use)
 
 .. autofunction:: geoenrich.satellite.create_nc_calculated
 
+.. autofunction:: geoenrich.satellite.create_nc_copernicus
+
 .. autofunction:: geoenrich.satellite.ellipsoid_mask
 
 .. autofunction:: geoenrich.satellite.get_metadata
+
+.. autofunction:: geoenrich.satellite.get_metadata_copernicus
 
 .. autofunction:: geoenrich.satellite.get_var_catalog
 

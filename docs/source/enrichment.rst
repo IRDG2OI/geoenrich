@@ -33,6 +33,8 @@ Other functions (for internal use)
 
 .. autofunction:: geoenrich.enrichment.enrich_compute
 
+.. autofunction:: geoenrich.enrichment.enrich_copernicus
+
 .. autofunction:: geoenrich.enrichment.enrich_download
 
 .. autofunction:: geoenrich.enrichment.get_enrichment_id

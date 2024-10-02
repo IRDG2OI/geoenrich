@@ -1,7 +1,7 @@
 numpy
 pandas
 geopandas
-netCDF4==1.5.8
+netCDF4
 python-dwca-reader
 tqdm
 opencv-python
@@ -14,3 +14,4 @@ geojson_rewind
 geomet
 nbsphinx
 sphinx_copybutton
+copernicusmarine

@@ -1,4 +1,4 @@
-geoenrich 0.5.8 documentation
+geoenrich 0.6 documentation
 ==============================
 
 |Read the Docs| |License| |PyPI| |Python versions| |Last commit| |DOI|
@@ -6,7 +6,7 @@ geoenrich 0.5.8 documentation
 
 GeoEnrich provides functionalities to enrich georeferenced events (such as species occurrences) with environmental data from satellites or models. Users can specify a geographic or temporal buffer to include data in the neighbourhood of occurrences into their analyses. Two main outputs are available: a simple summary of the variable in the requested area, or the full data (as a geotiff raster, a png image, or a numpy array).
 
-Sea surface temperature, chlorophyll, and 40 other environmental variables are available natively, and others can easily be added by the user. This package is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers.
+Sea surface temperature, chlorophyll, and 40 other environmental variables are available natively, and other sources can easily be added by the user. This package is intended for large numbers of occurrences: local storage is implemented to avoid redundant requests to remote servers.
 
 The package provides functions to retrieve occurrence data directly from GBIF, or open a custom dataset from any source. Arbitrary areas defined by the user can also be enriched.
 
