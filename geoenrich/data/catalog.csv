@@ -36,3 +36,5 @@ temperature3d,Copernicus,0.083°,1d,1993-01-01 - ongoing,50 levels,cmems_mod_glo
 wave-height,Copernicus,0.2°,3h,1993-01-01 - 2023-04-30,surface,cmems_mod_glo_wav_my_0.2deg_PT3H-i,VHM0
 wind-u,Copernicus,0.125°,1h,2007-01-11 – ongoing,surface,cmems_obs-wind_glo_phy_my_l4_0.125deg_PT1H,eastward_wind
 wind-v,Copernicus,0.125°,1h,2007-01-11 – ongoing,surface,cmems_obs-wind_glo_phy_my_l4_0.125deg_PT1H,northward_wind
+wind-u-old,Copernicus,0.25°,1h,1994-06-01 – 2009-10-31,surface,cmems_obs-wind_glo_phy_my_l4_0.25deg_PT1H,eastward_wind
+wind-v-old,Copernicus,0.25°,1h,1994-06-01 – 2009-10-31,surface,cmems_obs-wind_glo_phy_my_l4_0.25deg_PT1H,northward_wind
