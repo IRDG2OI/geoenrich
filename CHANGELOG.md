@@ -1,3 +1,10 @@
+## v0.6
+
+#### New functions:
+ - Added support for the new Copernicus data store (using copernicusmarine API)
+ - Added Support for 'nearest' mode for data recovery at depth.
+
+
 ## v0.5.8
 
 #### New functions:

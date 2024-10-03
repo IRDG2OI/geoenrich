@@ -8,9 +8,11 @@ import netCDF4 as nc
 from pathlib import Path
 
 from datetime import datetime
-from cftime import num2date, num2pydate
+import pytz
+from cftime import num2date, num2pydate, date2num
 
 import geoenrich
+import copernicusmarine
 
 try:
     from geoenrich.credentials import *
@@ -105,6 +107,77 @@ def get_metadata(ds, varname):
 
     return dimdict, var
 
+def get_metadata_copernicus(ds, varname):
+
+    """
+    Download and format useful metadata on dimensions and variables from a Copernicus dataset.
+    Generate a dictionary where dimensions can be accessed both with their original name and their standard name (if available).
+    
+    Args:
+        ds (xarray.Dataset): Dataset of interest.
+        varname (str): Name of the variable of interest in the dataset.
+    Returns:
+        dict, dict: dictionary with standardized information on dimensions, dictionary with information on the variable.
+    """
+
+    dimdict = {}
+    var = None
+
+    for name in ds.variables:
+
+        # Format time dimension
+
+        if name in ['time', 'time_agg']:
+            item = {'name': name, 'standard_name': 'time', 'vals': pd.Series(ds.variables['time']), 'unit': None}
+            dimdict[name] = item
+            dimdict['time'] = item
+
+        # Format lon & lat dimensions
+
+        elif ('standard_name' in ds.variables[name].attrs) and (ds.variables[name].attrs['standard_name'] in ['longitude', 'latitude', 'depth']):
+
+            item = {'name': name,
+                    'standard_name': ds.variables[name].attrs['standard_name'],
+                    'vals': ds.variables[name].data,
+                    'unit': ds.variables[name].attrs['units']}
+            dimdict[name] = item
+            dimdict[ds.variables[name].attrs['standard_name']] = item
+
+        # Format requested variable
+
+        elif name == varname:
+
+            var = {'name':name,
+                    'unit': ds.variables[name].attrs['units'],
+                    'params': ds.variables[name].dims}
+
+            if 'standard_name' in ds.variables[name].attrs:
+                var['standard_name'] = ['standard_name']
+        
+
+        # Search for latitude and longitude in case standard names were not provided
+
+        elif name in ['lat', 'latitude']:
+
+            item = {'name': name,
+                    'standard_name': 'latitude',
+                    'vals': ds.variables[name].data,
+                    'unit': ds.variables[name].attrs['units']}
+            dimdict[name] = item
+            dimdict['latitude'] = item
+
+        elif name in ['lon', 'longitude']:
+
+            item = {'name': name,
+                    'standard_name': 'longitude',
+                    'vals': ds.variables[name].data,
+                    'unit': ds.variables[name].attrs['units']}
+            dimdict[name] = item
+            dimdict['longitude'] = item
+
+
+    return dimdict, var
+
 
 
 def get_var_catalog():
@@ -155,6 +228,7 @@ def create_nc(var):
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
     remote_ds = nc.Dataset(var['url'])
+
     varname = var['varname']
     dimdict, var = get_metadata(remote_ds, varname)
 
@@ -182,12 +256,79 @@ def create_nc(var):
     local_ds.createVariable(varname, variable.dtype, variable.dimensions, zlib = True)
     local_ds.variables[varname].setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
 
-    bool_ds.createVariable(varname, 'B', remote_ds.variables[varname].dimensions, zlib = True, fill_value = 0)
+    bool_ds.createVariable(varname, 'B', variable.dimensions, zlib = True, fill_value = 0)
 
     local_ds.close()
     bool_ds.close()
     remote_ds.close()
 
+
+def create_nc_copernicus(var):
+
+    """
+    Create empty netcdf file for requested variable for subsequent local storage.
+    Same dimensions as the online dataset.
+
+    Args:
+        var (dict): Variable dictionary, as returned by :func:`geoenrich.satellite.get_var_catalog`.
+    Returns:
+        None
+    """
+
+    path = Path(sat_path, var['var_id'] + '.nc')
+    pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
+
+    remote_ds = copernicusmarine.open_dataset(dataset_id = var['url'])
+
+    varname = var['varname']
+    dimdict, var = get_metadata_copernicus(remote_ds, varname)
+
+    local_ds = nc.Dataset(str(path), mode = 'w')
+    local_ds.set_fill_off()
+    bool_ds = nc.Dataset(str(pathd), mode = 'w')
+
+    for name, length in remote_ds.sizes.items():
+        if ('time' in dimdict) and (name == dimdict['time']['name']):
+            local_ds.createDimension(name, None)
+            bool_ds.createDimension(name, None)
+        else:
+            local_ds.createDimension(name, length)
+            bool_ds.createDimension(name, length)
+
+
+    # Time conversion
+    unix_epoch = np.datetime64(0, 's')
+    one_second = np.timedelta64(1, 's')
+
+    for name, variable in remote_ds.variables.items():
+        if (name in dimdict) and (dimdict[name]['standard_name'] in ['time', 'latitude', 'longitude', 'depth']):
+            
+            if dimdict[name]['standard_name'] == 'time':
+                times = []
+                for t in variable.data:
+                    seconds_since_epoch = (t - unix_epoch) / one_second
+                    d = datetime.fromtimestamp(seconds_since_epoch, pytz.utc)
+                    times.append(date2num(d, "days since 1950-01-01 00:00:00"))
+
+                local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
+                local_ds.variables[name][:] = np.array(times)
+
+            else:
+                local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
+                local_ds.variables[name][:] = variable.data
+
+            local_ds.variables[name].setncatts(variable.attrs)
+
+
+    variable = remote_ds.variables[varname]
+    local_ds.createVariable(varname, variable.dtype, variable.dims, zlib = True)
+    local_ds.variables[varname].setncatts(variable.attrs)
+
+    bool_ds.createVariable(varname, 'B', variable.dims, zlib = True, fill_value = 0)
+
+    local_ds.close()
+    bool_ds.close()
+    remote_ds.close()
 
 
 def create_nc_calculated(var_id):

@@ -7,6 +7,8 @@ Installation instructions for R
 
 Assuming you have a version of R installed on your computer, as well as Python3 and pip. This is automatic in all recent Linux distributions. Otherwise instructions are available here: `Python <https://wiki.python.org/moin/BeginnersGuide/Download>`_ and `pip <https://pip.pypa.io/en/stable/installation/>`_.
 
+If you want to use Copernicus data, you need to install Copernicus Marine API (`instructions <https://help.marine.copernicus.eu/en/articles/7970514-copernicus-marine-toolbox-installation>`_) and set it up with your Copernicus account (`instructions <https://help.marine.copernicus.eu/en/articles/8185007-copernicus-marine-toolbox-credentials-configuration>`_).
+
 
 
 2. Installation
@@ -64,14 +66,20 @@ There is also a dictionary named *dap_creds* that is intended to store credentia
 3.2. Adding other data sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-At the same location, there is a *catalog.csv* file that already contains a list of available variables. If you want to use a dataset from Copernicus, you first need to register on `their website <https://resources.marine.copernicus.eu/registration-form>`_ and write your credentials in the *credentials.py* file.
+At the same location, there is a *catalog.csv* file that already contains a list of available variables.
 
-If you need additional variables, you can update add a *personal_catalog.csv* file to the same folder (template on `GitHub <https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/personal_catalog.csv>`_). Three columns are compulsory:
+If you need additional variables, you can add a *personal_catalog.csv* file to the same folder (template on `GitHub <https://github.com/morand-g/geoenrich/blob/main/geoenrich/data/personal_catalog.csv>`_). Three columns are compulsory:
 
 - *variable*: A unique name for that variable (user defined). It needs to be different from the variable names already in the built-in catalog.
 - *url*: OpenDAP URL.
 - *varname*: Name of the variable in the remote dataset.
 
+If the required variable is from a Copernicus data set, the fields are slightly different:
+
+- *variable*: A unique name for that variable (user defined). It needs to be different from the variable names already in the built-in catalog.
+- *source*: Must be set to "Copernicus"
+- *url*: Copernicus Dataset ID
+- *varname*: Name of the variable in the remote dataset.
 
 4. Using the package
 --------------------
