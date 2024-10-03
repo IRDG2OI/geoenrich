@@ -194,7 +194,8 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
         dimdict_2, _ = get_metadata(remote_ds, firstvar)
         remote_ds.close()
         t1, t2 = min(dimdict_2['time']['vals']), max(dimdict_2['time']['vals'])
-        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        time_res = (t2 - t1) / (len(dimdict_2['time']['vals']) - 1)
+        geodf2 = geodf[(geodf['mint'] >= t1 - time_res) & (geodf['maxt'] <= t2 + time_res)]
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
@@ -297,7 +298,8 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     if 'time' in dimdict:
         t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
-        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        time_res = (t2 - t1) / (len(dimdict['time']['vals']) - 1)
+        geodf2 = geodf[(geodf['mint'] >= t1 - time_res) & (geodf['maxt'] <= t2 + time_res)]
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
@@ -408,7 +410,8 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
 
     if 'time' in dimdict:
         t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
-        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        time_res = (t2 - t1) / (len(dimdict['time']['vals']) - 1)
+        geodf2 = geodf[(geodf['mint'] >= t1 - time_res) & (geodf['maxt'] <= t2 + time_res)]
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
