@@ -376,7 +376,6 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
     # Get netcdf metadata
 
     remote_ds = copernicusmarine.open_dataset(dataset_id = dataset_id,
-                                              dataset_version = 'latest',
                                               dataset_part = 'default',
                                               service = 'arco-geo-series')
 
