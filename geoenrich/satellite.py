@@ -279,9 +279,7 @@ def create_nc_copernicus(var):
     path = Path(sat_path, var['var_id'] + '.nc')
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
-    remote_ds = copernicusmarine.open_dataset(dataset_id = var['url'],
-                                              dataset_part = 'default',
-                                              service = 'arco-geo-series')
+    remote_ds = copernicusmarine.open_dataset(dataset_id = var['url'])
 
 
     varname = var['varname']

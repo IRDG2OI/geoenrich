@@ -25,6 +25,9 @@ import xarray as xr
 import geoenrich
 from geoenrich.satellite import *
 
+import logging
+logging.getLogger("copernicus_marine_root_logger").setLevel("WARN")
+
 try:
     from geoenrich.credentials import *
 except:
@@ -375,9 +378,7 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
 
     # Get netcdf metadata
 
-    remote_ds = copernicusmarine.open_dataset(dataset_id = dataset_id,
-                                              dataset_part = 'default',
-                                              service = 'arco-geo-series')
+    remote_ds = copernicusmarine.open_dataset(dataset_id = dataset_id)
 
     dimdict, var = get_metadata_copernicus(remote_ds, varname)
     var['var_id'] = var_id
