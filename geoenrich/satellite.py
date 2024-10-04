@@ -309,14 +309,15 @@ def create_nc_copernicus(var):
                 for t in variable.data:
                     seconds_since_epoch = (t - unix_epoch) / one_second
                     d = datetime.fromtimestamp(seconds_since_epoch, pytz.utc)
-                    times.append(date2num(d, "days since 1950-01-01 00:00:00", calendar = 'gregorian'))
+                    times.append(date2num(d, "hours since 1950-01-01 00:00:00", calendar = 'gregorian'))
 
-                local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
+                local_ds.createVariable(name, 'u4', variable.dims, zlib= True)
                 local_ds.variables[name][:] = np.array(times)
                 local_ds.variables[name].axis = "T"
+                local_ds.variables[name].coverage_content_type = "coordinate"
                 local_ds.variables[name].standard_name = "time"
                 local_ds.variables[name].calendar = 'gregorian'
-                local_ds.variables[name].units = "days since 1950-01-01 00:00:00"
+                local_ds.variables[name].units = "hours since 1950-01-01 00:00:00"
 
             else:
                 local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
