@@ -1,3 +1,8 @@
+## v0.6.1
+
+#### Bug fixes:
+ - Fixed metadata generation when downlaoding Copernicus data
+ 
 ## v0.6
 
 #### New functions:
