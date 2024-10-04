@@ -49,10 +49,11 @@ def get_metadata(ds, varname):
             if 'months since' in ds.variables[name].__dict__['units']:
                 times = num2date(ds.variables[name][:], ds.variables[name].__dict__['units'], '360_day')
             else:
+                cal = getattr(ds.variables[name], 'calendar', 'gregorian')
                 if varname in ['uwnd', 'vwnd']:
-                    times = num2pydate(ds.variables[name][:] - 725563, 'days since 1987-01-01 00:00:00')
+                    times = num2pydate(ds.variables[name][:] - 725563, 'days since 1987-01-01 00:00:00', cal)
                 else:
-                    times = num2pydate(ds.variables[name][:], ds.variables[name].__dict__['units'])
+                    times = num2pydate(ds.variables[name][:], ds.variables[name].__dict__['units'], cal)
             times = pd.Series([datetime(*d.timetuple()[:-3]) for d in times])
             item = {'name': name, 'standard_name': 'time', 'vals': times, 'unit': None}
             dimdict[name] = item
