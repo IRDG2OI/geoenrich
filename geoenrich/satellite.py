@@ -49,10 +49,11 @@ def get_metadata(ds, varname):
             if 'months since' in ds.variables[name].__dict__['units']:
                 times = num2date(ds.variables[name][:], ds.variables[name].__dict__['units'], '360_day')
             else:
+                cal = getattr(ds.variables[name], 'calendar', 'gregorian')
                 if varname in ['uwnd', 'vwnd']:
-                    times = num2pydate(ds.variables[name][:] - 725563, 'days since 1987-01-01 00:00:00')
+                    times = num2pydate(ds.variables[name][:] - 725563, 'days since 1987-01-01 00:00:00', cal)
                 else:
-                    times = num2pydate(ds.variables[name][:], ds.variables[name].__dict__['units'])
+                    times = num2pydate(ds.variables[name][:], ds.variables[name].__dict__['units'], cal)
             times = pd.Series([datetime(*d.timetuple()[:-3]) for d in times])
             item = {'name': name, 'standard_name': 'time', 'vals': times, 'unit': None}
             dimdict[name] = item
@@ -278,7 +279,10 @@ def create_nc_copernicus(var):
     path = Path(sat_path, var['var_id'] + '.nc')
     pathd = Path(sat_path, var['var_id'] + '_downloaded.nc')
 
-    remote_ds = copernicusmarine.open_dataset(dataset_id = var['url'])
+    remote_ds = copernicusmarine.open_dataset(dataset_id = var['url'],
+                                              dataset_part = 'default',
+                                              service = 'arco-geo-series')
+
 
     varname = var['varname']
     dimdict, var = get_metadata_copernicus(remote_ds, varname)
@@ -308,16 +312,20 @@ def create_nc_copernicus(var):
                 for t in variable.data:
                     seconds_since_epoch = (t - unix_epoch) / one_second
                     d = datetime.fromtimestamp(seconds_since_epoch, pytz.utc)
-                    times.append(date2num(d, "days since 1950-01-01 00:00:00"))
+                    times.append(date2num(d, "hours since 1950-01-01 00:00:00", calendar = 'gregorian'))
 
-                local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
+                local_ds.createVariable(name, 'u4', variable.dims, zlib= True)
                 local_ds.variables[name][:] = np.array(times)
+                local_ds.variables[name].axis = "T"
+                local_ds.variables[name].coverage_content_type = "coordinate"
+                local_ds.variables[name].standard_name = "time"
+                local_ds.variables[name].calendar = 'gregorian'
+                local_ds.variables[name].units = "hours since 1950-01-01 00:00:00"
 
             else:
                 local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
                 local_ds.variables[name][:] = variable.data
-
-            local_ds.variables[name].setncatts(variable.attrs)
+                local_ds.variables[name].setncatts(variable.attrs)
 
 
     variable = remote_ds.variables[varname]

@@ -72,6 +72,8 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
     original, enrichment_metadata = load_enrichment_file(dataset_ref)
 
+    print(f"Starting enrichment for variable '{var_id}' on dataset '{dataset_ref}'...")
+
     input_type = enrichment_metadata['input_type']
     enrichments = enrichment_metadata['enrichments']
 
@@ -373,7 +375,9 @@ def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, d
 
     # Get netcdf metadata
 
-    remote_ds = copernicusmarine.open_dataset(dataset_id=dataset_id)
+    remote_ds = copernicusmarine.open_dataset(dataset_id = dataset_id,
+                                              dataset_part = 'default',
+                                              service = 'arco-geo-series')
 
     dimdict, var = get_metadata_copernicus(remote_ds, varname)
     var['var_id'] = var_id
