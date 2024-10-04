@@ -312,9 +312,10 @@ def create_nc_copernicus(var):
 
                 local_ds.createVariable(name, 'f8', variable.dims, zlib= True)
                 local_ds.variables[name][:] = np.array(times)
-                local_ds.variables[name].units = "days since 1950-01-01 00:00:00"
                 local_ds.variables[name].axis = "T"
                 local_ds.variables[name].standard_name = "time"
+                local_ds.variables[name].calendar = 'gregorian'
+                local_ds.variables[name].units = "days since 1950-01-01 00:00:00"
 
             else:
                 local_ds.createVariable(name, variable.dtype, variable.dims, zlib= True)
