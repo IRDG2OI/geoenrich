@@ -16,7 +16,7 @@ londict = {'longitude':'longitude', 'decimallongitude':'longitude', 'lon': 'long
 app = Flask(__name__)
 
 # enable debugging mode
-app.config["DEBUG"] = True
+app.config["DEBUG"] = False
 
 # App variables
 app.config['UPLOAD_FOLDER'] =  'static/uploads/'
