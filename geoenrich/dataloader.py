@@ -211,7 +211,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col =
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
-        depth (int or str): Name or index of the column containing occurrence longitudes (meters from the surface).
+        depth_col (int or str): Name or index of the column containing occurrence longitudes (meters from the surface).
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
