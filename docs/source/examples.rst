@@ -19,27 +19,31 @@ You may also use a custom csv file that does not follow any standard. In this ca
 A column with a unique ID is mandatory, to be able to link downloaded data to the corresponding occurrence. Date, latitude, and longitude columns are mandatory. Here is an exemple of such a file:
 
 .. list-table:: turtles.csv
-   :widths: 20 20 20 20 20
+   :widths: 10 20 20 10 20 20
    :header-rows: 1
 
    * - ID
      - Lat
      - Lon
+     - Depth
      - Day
      - Comments
    * - turtle1
      - -28.752241
      - 154.8926541
+     - 12
      - 2018-07-29
      - bottom feeding
    * - turtle2
      - 2.5754611
      - 72.964164
+     - 4
      - 2019-02-13
      - cruising
    * - turtle3
      - -21.2871554
      - 55.316446
+     - 3
      - 2021-01-05
      - resting
 
@@ -49,7 +53,8 @@ This file can be imported the following way::
 					id_col = 'ID',
 					date_col = 'Day',
 					lat_col = 'Lat',
-					lon_col = 'Lon')
+					lon_col = 'Lon',
+          depth_col = 'Depth')
 
 The date parser should work with any common date format. If you encounter problems with a custom date format, you can try to provide an explicit format string using the *date_format* parameter. See *strptime* documentation `here <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior>`_.
 

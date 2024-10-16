@@ -1,4 +1,4 @@
-id,latitude,longitude,date,Comments
-turtle1,-28.752241,154.8926541,2018-07-29,bottom feeding
-turtle2,2.5754611,72.964164,2019-02-13,cruising
-turtle3,-21.2871554,55.316446,2021-01-05,resting
+id,latitude,longitude,depth,date,Comments
+turtle1,-28.752241,154.8926541,14,2018-07-29,bottom feeding
+turtle2,2.5754611,72.964164,3,2019-02-13,cruising
+turtle3,-21.2871554,55.316446,8,2021-01-05,resting
