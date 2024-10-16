@@ -1,3 +1,22 @@
+## v0.6.2
+
+#### New functions:
+ - Accept semicolon delimited CSV files for personal variable catalogs
+ - Use closest lower depth instead of closest depth to stay in the water column
+
+
+## v0.6.1
+
+#### Bug fixes:
+ - Fixed metadata generation when downlaoding Copernicus data
+ 
+## v0.6
+
+#### New functions:
+ - Added support for the new Copernicus data store (using copernicusmarine API)
+ - Added Support for 'nearest' mode for data recovery at depth.
+
+
 ## v0.5.8
 
 #### New functions:

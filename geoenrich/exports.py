@@ -665,7 +665,7 @@ def export_raster(dataset_ref, occ_id, var_id, path = Path('./'), geo_buff = Non
             print('Abort. Array is smaller than 2x2 pixels.')
 
 
-def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {'surface-current-u': 2}):
+def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {'example-var': 2}):
 
     """
     Export a 3D numpy array with all layers for each occurrence of a dataset.

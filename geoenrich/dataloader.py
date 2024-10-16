@@ -82,7 +82,7 @@ def request_from_gbif(taxon_key, override = False):
     for e in l['results']:
         preds = e['request']['predicate']['predicates']
         for predicate in preds:
-            if predicate['key'] == 'TAXON_KEY' and predicate['value'] == str(taxonKey):
+            if predicate['key'] == 'TAXON_KEY' and predicate['value'] == str(taxon_key):
                 existing = True
                 if not(override):
                     print('Request already made on ' + e['created'])
@@ -90,7 +90,7 @@ def request_from_gbif(taxon_key, override = False):
                     request_id = e['key']
 
     if not(existing) or override:
-        req = ['taxonKey = {}'.format(taxonKey), 'hasCoordinate = True']
+        req = ['taxonKey = {}'.format(taxon_key), 'hasCoordinate = True']
         res = occ.download(req, user=gbif_username, pwd=gbif_pw, email = email, pred_type='and')
 
         return(res[0])
@@ -195,7 +195,7 @@ def open_dwca(path = None, taxonKey = None, max_number = 10000):
 
 
 
-def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format = None,
+def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, depth_col = None, date_format = None,
                      crs="EPSG:4326", *args, **kwargs):
 
 
@@ -211,6 +211,7 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
         date_col (int or str): Name or index of the column containing occurrence dates.
         lat_col (int or str): Name or index of the column containing occurrence latitudes (decimal degrees).
         lon_col (int or str): Name or index of the column containing occurrence longitudes (decimal degrees).
+        depth_col (int or str): Name or index of the column containing occurrence longitudes (meters from the surface).
         date_format (str): To avoid date parsing mistakes, specify your date format (according to strftime syntax).
         crs (str): Crs of the provided coordinates.
     Returns:
@@ -218,8 +219,11 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
     """
 
     # Load file
+    if depth_col is None:
+        columns = [id_col, date_col, lat_col, lon_col]
+    else:
+        columns = [id_col, date_col, lat_col, lon_col, depth_col]
 
-    columns = [id_col, date_col, lat_col, lon_col]
     rawdf = pd.read_csv(path, usecols = columns, index_col = id_col, *args, **kwargs)
     idf = rawdf.dropna(subset = [lat_col, lon_col])
 
@@ -228,7 +232,10 @@ def import_occurrences_csv(path, id_col, date_col, lat_col, lon_col, date_format
         print('Dropped {} rows with missing coordinates'.format(len(rawdf) - len(idf)))
     
     # Convert Lat/Long to GEOS POINT
-    idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
+    if depth_col is None:
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], crs=crs)
+    else:
+        idf['geometry'] = gpd.points_from_xy(idf[lon_col], idf[lat_col], idf[depth_col].abs(), crs=crs)
 
     # Remove rows with no event date
     idf['eventDate'] = pd.to_datetime(idf[date_col], errors = 'coerce', format = date_format)

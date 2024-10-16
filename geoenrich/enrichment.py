@@ -19,8 +19,14 @@ from copy import deepcopy
 
 from tqdm import tqdm
 
+import copernicusmarine
+import xarray as xr
+
 import geoenrich
 from geoenrich.satellite import *
+
+import logging
+logging.getLogger("copernicus_marine_root_logger").setLevel("WARN")
 
 try:
     from geoenrich.credentials import *
@@ -57,7 +63,7 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
-        depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         slice (int tuple): Slice of the enrichment file to use for enrichment.
         maxpoints(int): Maximum number of points to download.
@@ -68,6 +74,8 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
     """
 
     original, enrichment_metadata = load_enrichment_file(dataset_ref)
+
+    print(f"Starting enrichment for variable '{var_id}' on dataset '{dataset_ref}'...")
 
     input_type = enrichment_metadata['input_type']
     enrichments = enrichment_metadata['enrichments']
@@ -93,6 +101,10 @@ def enrich(dataset_ref, var_id, geo_buff = None, time_buff = None, depth_request
 
     if var_source['url'] == 'calculated':
         indices = enrich_compute(to_enrich, var_id, geo_buff, time_buff, downsample)
+    elif var_source['source'] == 'Copernicus':
+        indices = enrich_copernicus(to_enrich, var_source['varname'], var_id, var_source['url'],
+                                    geo_buff, time_buff, depth_request, downsample, maxpoints,
+                                    force_download)
     else:
         indices = enrich_download(  to_enrich, var_source['varname'], var_id, var_source['url'],
                                     geo_buff, time_buff, depth_request, downsample, maxpoints,
@@ -187,7 +199,8 @@ def enrich_compute(geodf, var_id, geo_buff, time_buff, downsample):
         dimdict_2, _ = get_metadata(remote_ds, firstvar)
         remote_ds.close()
         t1, t2 = min(dimdict_2['time']['vals']), max(dimdict_2['time']['vals'])
-        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        time_res = (t2 - t1) / (len(dimdict_2['time']['vals']) - 1)
+        geodf2 = geodf[(geodf['mint'] >= t1 - time_res) & (geodf['maxt'] <= t2 + time_res)]
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
@@ -241,7 +254,7 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
         url (str): Dataset url (including credentials if needed).
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
-        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         maxpoints(int): Maximum number of points to download.
         force_download(bool): If True, download data regardless of cache status.
@@ -290,7 +303,8 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
 
     if 'time' in dimdict:
         t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
-        geodf2 = geodf[(geodf['mint'] >= t1) & (geodf['maxt'] <= t2)]
+        time_res = (t2 - t1) / (len(dimdict['time']['vals']) - 1)
+        geodf2 = geodf[(geodf['mint'] >= t1 - time_res) & (geodf['maxt'] <= t2 + time_res)]
         print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
     else:
         geodf2 = geodf
@@ -339,6 +353,116 @@ def enrich_download(geodf, varname, var_id, url, geo_buff, time_buff, depth_requ
     return(res)
 
 
+def enrich_copernicus(geodf, varname, var_id, dataset_id, geo_buff, time_buff, depth_request, downsample, maxpoints, force_download):
+    
+    """
+    Download Copernicus data for the requested occurrences and buffer into local netcdf file.
+    Calculate and return indices of the data of interest in the ncdf file.
+
+    Args:
+        geodf (geopandas.GeoDataFrame): Data to be enriched.
+        varname(str): Variable name in the dataset.
+        var_id (str): ID of the variable to download.
+        dataset_id (str): Copernicus dataset ID.
+        geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
+        time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
+        downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
+        maxpoints(int): Maximum number of points to download.
+        force_download(bool): If True, download data regardless of cache status.
+
+    Returns:
+        pandas.DataFrame: DataFrame with indices of relevant data in the netCDF file.
+
+    """
+
+    # Get netcdf metadata
+
+    remote_ds = copernicusmarine.open_dataset(dataset_id = dataset_id)
+
+    dimdict, var = get_metadata_copernicus(remote_ds, varname)
+    var['var_id'] = var_id
+
+    # Add bounds if occurrences
+
+    if 'minx' not in geodf.columns:
+        if geo_buff is None or (time_buff is None and 'time' in dimdict):
+            raise BufferError('Please specify time_buff and geo_buff.')
+        geodf = add_bounds(geodf, geo_buff, time_buff)
+
+
+    # Check if local netcdf files already exist
+
+    if  not(Path(sat_path, var_id + '.nc').exists()) or \
+        not(Path(sat_path, var_id + '_downloaded.nc').exists()):
+
+        create_nc_copernicus(get_var_catalog()[var_id])
+
+    # Backup local netCDF files
+
+    timestamp = datetime.now().strftime('%d-%H-%M')
+    shutil.copy2(   str(Path(sat_path, var_id + '.nc')),
+                    str(Path(sat_path, var_id + '.nc.' + timestamp)))
+    shutil.copy2(   str(Path(sat_path, var_id + '_downloaded.nc')),
+                    str(Path(sat_path, var_id + '_downloaded.nc.' + timestamp)))
+
+    # Load files
+
+    local_ds = nc.Dataset(str(Path(sat_path, var_id + '.nc.' + timestamp)), mode ='r+')
+    bool_ds = nc.Dataset(str(Path(sat_path, var_id + '_downloaded.nc.' + timestamp)), mode ='r+')
+
+    # Remove out of timeframe datapoints
+
+    if 'time' in dimdict:
+        t1, t2 = min(dimdict['time']['vals']), max(dimdict['time']['vals'])
+        time_res = (t2 - t1) / (len(dimdict['time']['vals']) - 1)
+        geodf2 = geodf[(geodf['mint'] >= t1 - time_res) & (geodf['maxt'] <= t2 + time_res)]
+        print('Ignoring {} rows because data is not available at these dates'.format(len(geodf) - len(geodf2)))
+    else:
+        geodf2 = geodf
+
+    # Apply query to each row sequentially
+
+    if not(len(geodf2)):
+        print('No data in input dataframe.')
+        return(pd.DataFrame())
+
+    geodf2['ind'] = geodf2.apply(calculate_indices, axis = 1, args = (dimdict, var, depth_request, downsample))
+
+    if maxpoints is not None and (s:= checksize(geodf2['ind'])) > maxpoints:
+
+        print(f"You are requesting a download of {s:,} points and the limit is set to {maxpoints:,}\n"
+               "Please reduce your buffer size, your number of occurrences, or use geoenrich locally")
+        res = pd.DataFrame()
+
+    else:
+        res = geodf2.progress_apply(row_enrich, axis=1, args = (remote_ds, local_ds, bool_ds, dimdict, var, depth_request, downsample, force_download), 
+                            result_type = 'expand')
+    
+    # Update time variable in local dataset if needed
+    
+    if 'time' in dimdict and local_ds.variables[dimdict['time']['name']][:].mask.any():
+
+        local_ds.variables[dimdict['time']['name']][:] = remote_ds.variables[dimdict['time']['name']][:]
+
+
+    # Close datasets
+
+    local_ds.close()
+    bool_ds.close()
+    remote_ds.close()
+
+
+    # Remove backup
+
+    Path(sat_path, var_id + '.nc').unlink()
+    Path(sat_path, var_id + '_downloaded.nc').unlink()
+
+    Path(sat_path, var_id + '.nc.' + timestamp).rename(Path(sat_path, var_id + '.nc'))
+    Path(sat_path, var_id + '_downloaded.nc.' + timestamp).rename(Path(sat_path, var_id + '_downloaded.nc'))
+
+    print('Enrichment over')
+    return(res)
 
 
 def checksize(ind):
@@ -412,6 +536,9 @@ def add_bounds(geodf1, geo_buff, time_buff):
         geodf['bestt'] = pd.to_datetime(geodf['eventDate'])
         geodf['maxt'] = pd.to_datetime(geodf['eventDate'] + buff2)
 
+    if geodf['geometry'].z.notna().any():
+        geodf['bestz'] = geodf['geometry'].z
+
     return(geodf)
 
 
@@ -432,7 +559,7 @@ def row_enrich(row, remote_ds, local_ds, bool_ds, dimdict, var, depth_request, d
         bool_ds (netCDF4.Dataset): Local dataset recording whether data has already been downloaded.
         dimdict (dict): Dictionary of dimensions as returned by :func:`geoenrich.satellite.get_metadata`.
         var (dict): Variable dictionary as returned by :func:`geoenrich.satellite.get_metadata`.
-        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
         force_download(bool): If True, download data regardless of cache status.    
     Returns:
@@ -552,7 +679,7 @@ def calculate_indices(row, dimdict, var, depth_request, downsample):
         row (pandas.Series): GeoDataFrame row to enrich.
         dimdict (dict): Dictionary of dimensions as returned by geoenrich.satellite.get_metadata.
         var (dict): Variable dictionary as returned by geoenrich.satellite.get_metadata.
-        depth_request (str): For 4D data: 'surface' only download surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         dict: Dictionary of indices for each dimension (keys are standard dimension names).
@@ -597,14 +724,23 @@ def calculate_indices(row, dimdict, var, depth_request, downsample):
             t1 = np.argmin( np.abs( dimdict['time']['vals'] - row['bestt'] ) )
             ind['time']['best'] = t1
 
-    # if depth is a dimension, either select surface layer or return everything
+    # if depth is a dimension, select surface layer, nearest lower value or everything
 
     if ('depth' in dimdict) and (dimdict['depth']['name'] in var['params']):
-        if depth_request == 'surface':
+        if depth_request == 'nearest' and pd.notna(row['bestz']):
+            diffs = (row['bestz'] - dimdict['depth']['vals']).astype('float')
+            diffs[diffs < 0] = np.nan
+            d1 = np.nanargmin(diffs)
+            ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
+        
+        elif depth_request == 'all':
+            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']) - 1, 'best': None, 'step': 1}
+
+        else:
+            # Surface
             d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
             ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
-        else:
-            ind['depth'] = {'min': 0, 'max': len(dimdict['depth']['vals']) - 1, 'best': None, 'step': 1}
+
 
     for dim in downsample:
         ind[dim]['step'] = downsample[dim] + 1
@@ -650,7 +786,7 @@ def download_data(remote_ds, local_ds, bool_ds, var, dimdict, ind, force_downloa
 
     elif ('time' in ind) and (check.ndim == len(ind)):
 
-        # If time is a dimension, check wich timepoints already have the data.
+        # If time is a dimension, check which timepoints already have the data.
 
         time_pos = var['params'].index(dimdict['time']['name'])
         expected_lentime = 1 + (ind['time']['max'] - ind['time']['min']) // ind['time']['step']
@@ -951,7 +1087,7 @@ def get_enrichment_id(enrichments, var_id, geo_buff, time_buff, depth_request, d
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
-        depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     
     Returns:
@@ -988,7 +1124,7 @@ def save_enrichment_config(dataset_ref, enrichment_id, var_id, geo_buff, time_bu
         var_id (str): ID of the variable to download.
         geo_buff (int): Geographic buffer for which to download data around occurrence point (kilometers).
         time_buff (float list): Time bounds for which to download data around occurrence day (days). For instance, time_buff = [-7, 0] will download data from 7 days before the occurrence to the occurrence date.
-        depth_request (str): Used when depth is a dimension. 'surface' only downloads surface data. Anything else downloads everything.
+        depth_request (str): For 4D data: 'all' -> data for all depths. 'nearest' -> closest lower available depth. Anything else downloads surface data.
         downsample (dict): Number of points to skip between each downloaded point, for each dimension, using its standard name as a key.
     Returns:
         None

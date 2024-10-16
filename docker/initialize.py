@@ -53,9 +53,9 @@ for asset in assets:
         Path('/app/static/assets/' + asset).open('wb').write(r.content)
 
 if Path('/app/conf/credentials.py').exists():
-    shutil.copy(Path('/app/conf/credentials.py'), Path('/usr/local/lib/python3.8/site-packages/geoenrich/credentials.py'))
+    shutil.copy(Path('/app/conf/credentials.py'), Path('/usr/local/lib/python3.10/site-packages/geoenrich/credentials.py'))
 
 if Path('/app/conf/personal_catalog.csv').exists():
-    shutil.copy(Path('/app/conf/personal_catalog.csv'), Path('/usr/local/lib/python3.8/site-packages/geoenrich/data/personal_catalog.csv'))
+    shutil.copy(Path('/app/conf/personal_catalog.csv'), Path('/usr/local/lib/python3.10/site-packages/geoenrich/data/personal_catalog.csv'))
 
 print('Initialization complete.')

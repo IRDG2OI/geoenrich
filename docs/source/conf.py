@@ -21,11 +21,11 @@ sys.path.insert(0, os.path.abspath('../../geoenrich'))
 # -- Project information -----------------------------------------------------
 
 project = 'geoenrich'
-copyright = '2022, Gaétan Morand (UMR Marbec). Project under GNU GPL v3 license'
+copyright = '2024, Gaétan Morand (UMR Marbec). Project under GNU GPL v3 license'
 author = 'Gaétan Morand (UMR Marbec)'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.8'
+release = '0.6.2'
 
 
 # -- General configuration ---------------------------------------------------
