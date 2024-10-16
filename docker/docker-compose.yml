@@ -13,7 +13,6 @@ services:
       - "8080:8080"
     environment:
       - FLASK_APP=main.py
-      - FLASK_DEBUG=1
       - 'RUN=flask run --host=0.0.0.0 --port=8080'
     command: bash -c "python /home/initialize.py
              && flask run --host=0.0.0.0 --port=8080"

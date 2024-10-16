@@ -16,7 +16,6 @@ microphytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_g
 mixed-layer-thickness,Copernicus,0.083°,1d,1993-01-01 - 2021-06-30,surface,cmems_mod_glo_phy_my_0.083deg_P1D-m,mlotst
 nanophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,NANO
 nitrate,Copernicus,0.25°,1d,1993-01-01 - 2022-12-31,75 levels,cmems_mod_glo_bgc_my_0.25deg_P1D-m,no3
-ocean-heat-content,NOAA,1°,3m,1955-01-01 - ongoing,surface,https://www.ncei.noaa.gov/thredds-ocean/dodsC/woa/heat_content/heat_content/heat_content_anomaly_0-700_seasonal.nc,h18_hc
 organic-carbon3d,Copernicus,0.25°,7d,1998-01-01 - 2021-12-29,36 levels,cmems_obs_glo_bgc3d_rep_weekly,poc
 oxygen,Copernicus,0.25°,1d,1993-01-01 - 2022-12-31,75 levels,cmems_mod_glo_bgc_my_0.25deg_P1D-m,o2
 ph,Copernicus,0.25°,1m,1985-01-01 - 2022-12-01,surface,dataset-carbon-rep-monthly,ph
@@ -24,7 +23,6 @@ picophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_gl
 primary-production,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-pp_my_l4-multi-4km_P1M,PP
 prochlorophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROCHLO
 prokaryotes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROKAR
-salinity,SMOS+Aquarius,0.25°,7d,2011-09-01 - 2021-09-08,surface,[FillMismatch]https://thredds.jpl.nasa.gov/thredds/dodsC/SalinityDensity/OISSS_L4_multimission_7day_v1.nc,sss
 salinity3d,Copernicus,0.083°,1d,1993-01-01 - ongoing,50 levels,cmems_mod_glo_phy_my_0.083deg_P1D-m,so
 ssh,Copernicus,0.083°,1d,1993-01-01 - ongoing,50 levels,cmems_mod_glo_phy_my_0.083deg_P1D-m,zos
 sst,Copernicus,0.05°,1d,1981-10-01 - ongoing,surface,METOFFICE-GLO-SST-L4-REP-OBS-SST,analysed_sst
