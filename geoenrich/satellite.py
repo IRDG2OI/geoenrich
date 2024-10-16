@@ -197,7 +197,15 @@ def get_var_catalog():
     var_catalog = pd.read_csv(path / 'data' / 'catalog.csv', index_col = 0).to_dict('index')
 
     if (path / 'data' / 'personal_catalog.csv').exists():
-        pers_vars = pd.read_csv(path / 'data' / 'personal_catalog.csv', index_col = 0).to_dict('index')
+        cat_comma = pd.read_csv(path / 'data' / 'personal_catalog.csv', index_col = 0)
+        cat_semicolon = pd.read_csv(path / 'data' / 'personal_catalog.csv', index_col = 0, sep = ';')
+
+        if len(cat_semicolon.columns) > len(cat_comma.columns):
+            pers_cat = cat_semicolon
+        else:
+            pers_cat = cat_comma
+
+        pers_vars = pers_cat.to_dict('index')
         var_catalog = {**var_catalog, **pers_vars}
 
     for v in var_catalog:
