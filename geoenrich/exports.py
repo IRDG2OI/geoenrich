@@ -694,17 +694,17 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
 
     # Prepare variable-specific data to be passed to retrieve_data function.
 
-for en in enrichments:
-        
-    params = en['parameters']
-    var_id = params['var_id']
+    for en in enrichments:
+            
+        params = en['parameters']
+        var_id = params['var_id']
 
-    ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
-    var_source = get_var_catalog()[var_id]
-    serial_dict[en['id']] = {'df': df} 
-    serial_dict[en['id']]['var_source'] = var_source
-    serial_dict[en['id']]['dimdict'], serial_dict[en['id']]['var'] = get_metadata(ds, var_source['varname'])
-    serial_dict[en['id']]['ds'] = ds
+        ds = nc.Dataset(str(Path(sat_path, var_id + '.nc')))
+        var_source = get_var_catalog()[var_id]
+        serial_dict[en['id']] = {'df': df} 
+        serial_dict[en['id']]['var_source'] = var_source
+        serial_dict[en['id']]['dimdict'], serial_dict[en['id']]['var'] = get_metadata(ds, var_source['varname'])
+        serial_dict[en['id']]['ds'] = ds
 
 
     # Define ids to be exported
