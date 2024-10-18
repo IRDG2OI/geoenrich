@@ -719,7 +719,9 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
 
     # Export np arrays for each occurrence
 
-    var_list = list(set([en['parameters']['var_id'] for en in enrichments]) - set(duplicates.keys()))
+    var_list = [en['parameters']['var_id'] for en in enrichments]
+    for v in duplicates.keys():
+        var_list.remove(v)
 
     for occ_id in tqdm(ids):
         all_bands = {}
