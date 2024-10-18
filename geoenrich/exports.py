@@ -665,7 +665,7 @@ def export_raster(dataset_ref, occ_id, var_id, path = Path('./'), geo_buff = Non
             print('Abort. Array is smaller than 2x2 pixels.')
 
 
-def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {'example-var': 2}):
+def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {'example-var': 2}, duplicates = {'var_to_remove':'var_to_keep'}):
 
     """
     Export a 3D numpy array with all layers for each occurrence of a dataset.
@@ -718,7 +718,7 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
     # Export np arrays for each occurrence
 
     for occ_id in tqdm(ids):
-        all_bands = []
+        all_bands = {}
         for en in enrichments:
             
             params = en['parameters']
@@ -742,10 +742,23 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
                                               stack = True,
                                               squeeze = False,
                                               target_len = target_len)
-            all_bands.append(band)
+            all_bands[var_id] = band
+        
+        # replace missing values with value from duplicate variable; and remove said duplicates
+        for to_rem in duplicates:
+            if np.isnan(all_bands[duplicates[to_rem]]).all():
+                all_bands[duplicates[to_rem]] = all_bands[to_rem]
+            all_bands.pop(to_rem)
 
-        to_save = np.concatenate(all_bands, -1)
+        var_list = list(all_bands.keys)
+        var_data = [all_bands[k] for k in var_list]
+
+        to_save = np.concatenate(var_data, -1)
         np.save(folderpath / (str(occ_id) + '.npy'), to_save)
+        with open(folderpath / 'metadata.txt', 'w') as f:
+            for line in var_list:
+                f.write(f"{line}\n")
+
 
 
     # close NC datasets
