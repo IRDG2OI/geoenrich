@@ -752,7 +752,7 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
                 all_bands[duplicates[to_rem]] = all_bands[to_rem]
             all_bands.pop(to_rem)
 
-        var_list = list(all_bands.keys)
+        var_list = list(all_bands.keys())
         var_data = [all_bands[k] for k in var_list]
 
         to_save = np.concatenate(var_data, -1)
