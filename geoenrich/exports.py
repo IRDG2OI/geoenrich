@@ -757,7 +757,7 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
 
         to_save = np.concatenate(var_data, -1)
         np.save(folderpath / (str(occ_id) + '.npy'), to_save)
-        with open(folderpath / 'metadata.txt', 'w') as f:
+        with open(folderpath / '0000_npy_metadata.txt', 'w') as f:
             for line in var_list:
                 f.write(f"{line}\n")
 
