@@ -1,3 +1,8 @@
+## v0.6.3
+
+#### New functions
+- Added possibility to merge duplicate variables in geoenrich.exports.collate_npy
+
 ## v0.6.2
 
 #### New functions:
