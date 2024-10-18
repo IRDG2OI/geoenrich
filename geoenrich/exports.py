@@ -719,6 +719,8 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
 
     # Export np arrays for each occurrence
 
+    var_list = list(set([en['parameters']['var_id'] for en in enrichments]) - set(duplicates.keys()))
+
     for occ_id in tqdm(ids):
         all_bands = {}
         for en in enrichments:
@@ -752,14 +754,14 @@ def collate_npy(ds_ref, data_path, output_res = 32, slice = None, dimension3 = {
                 all_bands[duplicates[to_rem]] = all_bands[to_rem]
             all_bands.pop(to_rem)
 
-        var_list = list(all_bands.keys())
         var_data = [all_bands[k] for k in var_list]
 
         to_save = np.concatenate(var_data, -1)
         np.save(folderpath / (str(occ_id) + '.npy'), to_save)
-        with open(folderpath / '0000_npy_metadata.txt', 'w') as f:
-            for line in var_list:
-                f.write(f"{line}\n")
+
+    with open(folderpath / '0000_npy_metadata.txt', 'w') as f:
+        for line in var_list:
+            f.write(f"{line}\n")
 
 
 
