@@ -246,7 +246,7 @@ def create_nc(var):
     bool_ds = nc.Dataset(str(pathd), mode = 'w')
 
     for name, dimension in remote_ds.dimensions.items():
-        if name in remote_ds.variables[name] and \
+        if name in remote_ds.variables and \
                 (getattr(remote_ds.variables[name], 'standard_name', 'Unknown') == 'time' or name in ['time', 'time_agg']):
             local_ds.createDimension(name, None)
             bool_ds.createDimension(name, None)
