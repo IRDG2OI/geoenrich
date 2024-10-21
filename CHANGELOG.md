@@ -2,6 +2,7 @@
 
 #### New functions
 - Added possibility to merge duplicate variables in geoenrich.exports.collate_npy
+- Added population density and distance to port.
 
 ## v0.6.2
 
