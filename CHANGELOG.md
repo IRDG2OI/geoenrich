@@ -2,7 +2,11 @@
 
 #### New functions
 - Added possibility to merge duplicate variables in geoenrich.exports.collate_npy
-- Added population density and distance to port.
+- Added population density and distance to port
+
+#### Bug fixes:
+ - Fixed issue that occured when degenerate dimensions are present in remote netcdf file
+
 
 ## v0.6.2
 
