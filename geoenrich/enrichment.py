@@ -730,8 +730,15 @@ def calculate_indices(row, dimdict, var, depth_request, downsample):
         if depth_request == 'nearest_lower' and pd.notna(row['bestz']):
             diffs = (row['bestz'] - dimdict['depth']['vals']).astype('float')
             diffs[diffs < 0] = np.nan
-            d1 = np.nanargmin(diffs)
-            ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
+
+            if np.isnan(diffs).all():
+                # Requested depth is inferior to all available depths -> Return surface data
+                d1 = np.argmin( np.abs( dimdict['depth']['vals'] ) )
+                ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
+                
+            else:
+                d1 = np.nanargmin(diffs)
+                ind['depth'] = {'min': d1, 'max': d1, 'best': d1, 'step': 1}
         
         elif depth_request == 'nearest' and pd.notna(row['bestz']):
             d1 = np.argmin( np.abs(row['bestz'] - dimdict['depth']['vals'] ) )
