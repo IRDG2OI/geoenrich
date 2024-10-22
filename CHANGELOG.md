@@ -1,3 +1,8 @@
+## v0.6.4
+
+#### Bug fixes:
+ - Fixed bug that occurred when requesting data for surface points in 'nearest_lower' mode.
+ 
 ## v0.6.3
 
 #### New functions
