@@ -5,6 +5,7 @@ current3d-u,Copernicus,0.25°,7d,1993-01-01 - 2022-12-28,50 levels,dataset-armor
 current3d-v,Copernicus,0.25°,7d,1993-01-01 - 2022-12-28,50 levels,dataset-armor-3d-rep-weekly,vgo
 diatoms,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,DIATO
 dinophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,DINO
+distance-to-port,Global Fishing Watch,0.01°,,,surface,http://tds.marbec-tools.ird.fr/thredds/dodsC/testAll/geoenrich/dist_port.nc,Band1
 eke,,,,,,calculated,eke
 fsle,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,https://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,fsle_max
 fsle-orientation,Aviso+,0.04°,1d,1994-01-04 – ongoing,surface,https://tds.aviso.altimetry.fr/thredds/dodsC/dataset-duacs-dt-global-allsat-madt-fsle,theta_max
@@ -20,6 +21,7 @@ organic-carbon3d,Copernicus,0.25°,7d,1998-01-01 - 2021-12-29,36 levels,cmems_ob
 oxygen,Copernicus,0.25°,1d,1993-01-01 - 2022-12-31,75 levels,cmems_mod_glo_bgc_my_0.25deg_P1D-m,o2
 ph,Copernicus,0.25°,1m,1985-01-01 - 2022-12-01,surface,dataset-carbon-rep-monthly,ph
 picophytoplankton,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PICO
+pop-density-log,GPW v3v4,0.0083°,5y,1995-2020,surface,http://tds.marbec-tools.ird.fr/thredds/dodsC/testAll/geoenrich/pop_density3.nc,Band1
 primary-production,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-pp_my_l4-multi-4km_P1M,PP
 prochlorophytes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROCHLO
 prokaryotes,Copernicus,4km,1m,1997-09-04 - ongoing,surface,cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M,PROKAR
